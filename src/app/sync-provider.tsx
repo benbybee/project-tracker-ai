@@ -1,26 +1,33 @@
 'use client';
 
-import { useEffect } from 'react';
-import { db } from '@/lib/db';
-import { syncManager } from '@/lib/sync-manager';
+import { useEffect, useRef } from 'react';
+import { getDB, isBrowser } from '@/lib/db.client';
 import { OfflineToast } from '@/components/ui/offline-toast';
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
+  const started = useRef(false);
+
   useEffect(() => {
-    // Initialize the database
+    if (!isBrowser() || started.current) return;
+    started.current = true;
+
     const initializeDB = async () => {
       try {
-        // Open the database
-        await db().open();
+        // Initialize the database lazily
+        const db = await getDB();
         console.log('Dexie database initialized');
         
         // Initialize sync status
-        await db().syncStatus.put({
+        await db.syncStatus.put({
           isOnline: navigator.onLine,
           isSyncing: false,
           pendingCount: 0,
           failedCount: 0,
         });
+
+        // Initialize SyncManager lazily
+        const { createSyncManager } = await import('@/lib/sync-manager.client');
+        const syncManager = await createSyncManager();
         
         // Start sync manager
         syncManager.on('start', () => {
@@ -35,18 +42,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           console.error('Sync error:', error);
         });
         
+        console.log('SyncManager initialized');
       } catch (error) {
         console.error('Failed to initialize database:', error);
       }
     };
 
     initializeDB();
-
-    // Cleanup on unmount
-    return () => {
-      // Close database connection
-      db().close();
-    };
   }, []);
 
   return (

@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
 import { EmptyState } from '@/components/ui/empty-state';
-import { useOfflineOperations } from '@/hooks/useSync';
-import { db } from '@/lib/db';
+import { useOfflineOperations } from '@/hooks/useSync.client';
+import { getDB } from '@/lib/db.client';
 
 interface KanbanBoardProps {
   projectId: string;

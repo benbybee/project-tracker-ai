@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wifi, WifiOff, Clock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import { useSync, useEntitySyncStatus } from '@/hooks/useSync';
+import { useSync, useEntitySyncStatus } from '@/hooks/useSync.client';
 
 interface OfflineToastProps {
   onDismiss?: () => void;

@@ -1,5 +1,5 @@
-import { getDB, SyncQueueItem, SyncStatus } from './db';
-import { trpc } from './trpc';
+// Client-only sync manager with lazy imports
+import { getDB, SyncQueueItem, SyncStatus } from './db.client';
 
 export type SyncEvent = 'start' | 'progress' | 'complete' | 'error' | 'conflict';
 
@@ -16,6 +16,9 @@ class SyncManager {
   private retryDelays = [1000, 2000, 5000, 10000, 30000]; // Exponential backoff
 
   constructor() {
+    // Only run in browser
+    if (typeof window === 'undefined') return;
+    
     // Listen for online/offline events
     window.addEventListener('online', () => this.handleOnline());
     window.addEventListener('offline', () => this.handleOffline());
@@ -58,7 +61,8 @@ class SyncManager {
     try {
       await this.updateSyncStatus({ isSyncing: true });
       
-      const pendingItems = await getDB().getPendingSyncItems();
+      const db = await getDB();
+      const pendingItems = await db.syncQueue.where('retryCount').below(5).toArray();
       const progress: SyncProgress = {
         total: pendingItems.length,
         completed: 0,
@@ -73,8 +77,11 @@ class SyncManager {
           this.emit('progress', progress);
 
           await this.syncItem(item);
-          await getDB().removeFromSyncQueue(item.id);
-          await getDB().updateEntitySyncStatus(item.entityType, item.entityId, 'synced');
+          await db.syncQueue.delete(item.id);
+          
+          // Update entity sync status
+          const table = db[item.entityType + 's' as keyof typeof db] as any;
+          await table.update(item.entityId, { syncStatus: 'synced' });
           
           progress.completed++;
           this.emit('progress', progress);
@@ -82,7 +89,7 @@ class SyncManager {
           console.error(`Failed to sync ${item.entityType} ${item.entityId}:`, error);
           
           // Increment retry count
-          await getDB().syncQueue.update(item.id, {
+          await db.syncQueue.update(item.id, {
             retryCount: item.retryCount + 1,
             lastError: error instanceof Error ? error.message : 'Unknown error',
           });
@@ -94,9 +101,9 @@ class SyncManager {
 
       await this.updateSyncStatus({ 
         isSyncing: false, 
-        lastSyncAt: Date.now(),
-        pendingCount: await getDB().getPendingCount(),
-        failedCount: await getDB().getFailedCount(),
+        lastSyncAt: new Date().toISOString(),
+        pendingCount: await db.getPendingCount(),
+        failedCount: await db.getFailedCount(),
       });
 
       this.emit('complete', progress);
@@ -128,7 +135,8 @@ class SyncManager {
   }
 
   private async syncProject(entityId: string, operationType: string, payload: any): Promise<void> {
-    // TODO: Implement proper tRPC sync
+    // TODO: Implement proper tRPC sync with lazy import
+    // const { trpc } = await import('./trpc');
     // switch (operationType) {
     //   case 'create':
     //     await trpc.projects.create.mutate(payload);
@@ -144,7 +152,8 @@ class SyncManager {
   }
 
   private async syncTask(entityId: string, operationType: string, payload: any): Promise<void> {
-    // TODO: Implement proper tRPC sync
+    // TODO: Implement proper tRPC sync with lazy import
+    // const { trpc } = await import('./trpc');
     // switch (operationType) {
     //   case 'create':
     //     await trpc.tasks.create.mutate(payload);
@@ -173,12 +182,22 @@ class SyncManager {
     operationType: 'create' | 'update' | 'delete',
     payload: any
   ): Promise<void> {
-    await getDB().addToSyncQueue(entityType, entityId, operationType, payload);
-    await this.updateSyncStatus({ pendingCount: await getDB().getPendingCount() });
+    const db = await getDB();
+    await db.syncQueue.add({
+      id: `${entityType}_${entityId}_${Date.now()}`,
+      entityType,
+      entityId,
+      operationType,
+      payload,
+      timestamp: new Date().toISOString(),
+      retryCount: 0,
+    });
+    await this.updateSyncStatus({ pendingCount: await db.getPendingCount() });
   }
 
   async getSyncStatus(): Promise<SyncStatus | null> {
-    return getDB().getSyncStatus();
+    const db = await getDB();
+    return db.getSyncStatus();
   }
 
   async isOnline(): Promise<boolean> {
@@ -205,7 +224,8 @@ class SyncManager {
   }
 
   private async updateSyncStatus(updates: Partial<SyncStatus>): Promise<void> {
-    await getDB().updateSyncStatus(updates);
+    const db = await getDB();
+    await db.updateSyncStatus(updates);
   }
 
   // Conflict resolution
@@ -220,7 +240,7 @@ class SyncManager {
 
     if (serverTime > localTime) {
       // Server version is newer, use it
-      const db = getDB();
+      const db = await getDB();
       const table = db[entityType + 's' as keyof typeof db] as any;
       await table.put(serverItem);
       return serverItem;
@@ -231,5 +251,10 @@ class SyncManager {
   }
 }
 
-// Create and export singleton instance
-export const syncManager = new SyncManager();
+// Export the class and a function to create instances
+export { SyncManager };
+
+export async function createSyncManager() {
+  const db = await getDB();
+  return new SyncManager();
+}

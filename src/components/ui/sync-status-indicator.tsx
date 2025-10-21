@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, CheckCircle, AlertCircle, Clock, Wifi, WifiOff } from 'lucide-react';
-import { useSync } from '@/hooks/useSync';
+import { useSync } from '@/hooks/useSync.client';
 
 interface SyncStatusIndicatorProps {
   className?: string;

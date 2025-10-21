@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState } from 'react';
 import { Plus, X, GripVertical } from 'lucide-react';
-import { useOfflineOperations } from '@/hooks/useSync';
-import { db } from '@/lib/db';
+import { useOfflineOperations } from '@/hooks/useSync.client';
+import { getDB } from '@/lib/db.client';
 
 const TaskSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
