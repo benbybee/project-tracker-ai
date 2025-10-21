@@ -11,11 +11,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const initializeDB = async () => {
       try {
         // Open the database
-        await db.open();
+        await db().open();
         console.log('Dexie database initialized');
         
         // Initialize sync status
-        await db.syncStatus.put({
+        await db().syncStatus.put({
           isOnline: navigator.onLine,
           isSyncing: false,
           pendingCount: 0,
