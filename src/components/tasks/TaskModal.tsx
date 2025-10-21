@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState } from 'react';
 import { Plus, X, GripVertical } from 'lucide-react';
-import { useOfflineOperations } from '@/hooks/useSync.client';
+import { useOfflineOperations, useSync } from '@/hooks/useSync.client';
 import { getDB } from '@/lib/db.client';
 
 const TaskSchema = z.object({
@@ -40,7 +40,8 @@ interface TaskModalProps {
 
 export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskModalProps) {
   const [addToDaily, setAddToDaily] = useState(defaultValues?.isDaily || false);
-  const { createOffline, updateOffline, isOnline } = useOfflineOperations();
+  const { createOffline, updateOffline } = useOfflineOperations();
+  const { isOnline } = useSync();
   
   const createTask = trpc.tasks.create.useMutation();
   const updateTask = trpc.tasks.update.useMutation();

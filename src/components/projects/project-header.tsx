@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { WebsiteConversionModal } from "./website-conversion-modal";
 import { EditProjectModal } from "./edit-project-modal";
-import { useSync } from "@/hooks/useSync";
+import { useSync } from "@/hooks/useSync.client";
 import { RefreshCw } from "lucide-react";
 
 type Role = { id:string; name:string; color:string };
@@ -35,7 +35,7 @@ export function ProjectHeader({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
   const utils = trpc.useUtils();
-  const { triggerSync, isSyncing, isOnline } = useSync();
+  const { startSync, isSyncing, isOnline } = useSync();
   const convertToGeneralMutation = trpc.projects.convertToGeneral.useMutation({
     onSuccess: () => {
       utils.projects.get.invalidate({ id: project.id });
@@ -71,7 +71,7 @@ export function ProjectHeader({
 
   const handleSyncNow = async () => {
     try {
-      await triggerSync();
+      await startSync();
     } catch (error) {
       console.error('Failed to sync:', error);
     }

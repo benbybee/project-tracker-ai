@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
 import { EmptyState } from '@/components/ui/empty-state';
-import { useOfflineOperations } from '@/hooks/useSync.client';
+import { useOfflineOperations, useSync } from '@/hooks/useSync.client';
 import { getDB } from '@/lib/db.client';
 
 interface KanbanBoardProps {
@@ -21,7 +21,8 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ projectId, columns, fetchQuery, onMove }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<any>(null);
-  const { updateOffline, isOnline } = useOfflineOperations();
+  const { updateOffline } = useOfflineOperations();
+  const { isOnline } = useSync();
   
   const { data: tasks = [], isLoading, error } = fetchQuery;
 

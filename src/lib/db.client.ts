@@ -13,13 +13,13 @@ export async function getDB() {
       const { Dexie } = await import("dexie");
       
       class TaskTrackerDB extends Dexie {
-        projects!: Dexie.Table<any>;
-        tasks!: Dexie.Table<any>;
-        roles!: Dexie.Table<any>;
-        syncQueue!: Dexie.Table<any>;
-        conflicts!: Dexie.Table<any>;
-        activity_log!: Dexie.Table<any>;
-        syncStatus!: Dexie.Table<any>;
+        projects!: any;
+        tasks!: any;
+        roles!: any;
+        syncQueue!: any;
+        conflicts!: any;
+        activity_log!: any;
+        syncStatus!: any;
 
         constructor() {
           super("tasktracker-v1");
@@ -35,32 +35,32 @@ export async function getDB() {
           });
 
           // Add hooks for automatic sync status tracking
-          this.projects.hook('creating', (primKey, obj, trans) => {
+          this.projects.hook('creating', (primKey: any, obj: any, trans: any) => {
             (obj as any).syncStatus = 'pending';
             (obj as any).updatedAt = new Date().toISOString();
           });
 
-          this.projects.hook('updating', (modifications, primKey, obj, trans) => {
+          this.projects.hook('updating', (modifications: any, primKey: any, obj: any, trans: any) => {
             (modifications as any).syncStatus = 'pending';
             (modifications as any).updatedAt = new Date().toISOString();
           });
 
-          this.tasks.hook('creating', (primKey, obj, trans) => {
+          this.tasks.hook('creating', (primKey: any, obj: any, trans: any) => {
             (obj as any).syncStatus = 'pending';
             (obj as any).updatedAt = new Date().toISOString();
           });
 
-          this.tasks.hook('updating', (modifications, primKey, obj, trans) => {
+          this.tasks.hook('updating', (modifications: any, primKey: any, obj: any, trans: any) => {
             (modifications as any).syncStatus = 'pending';
             (modifications as any).updatedAt = new Date().toISOString();
           });
 
-          this.roles.hook('creating', (primKey, obj, trans) => {
+          this.roles.hook('creating', (primKey: any, obj: any, trans: any) => {
             (obj as any).syncStatus = 'pending';
             (obj as any).updatedAt = new Date().toISOString();
           });
 
-          this.roles.hook('updating', (modifications, primKey, obj, trans) => {
+          this.roles.hook('updating', (modifications: any, primKey: any, obj: any, trans: any) => {
             (modifications as any).syncStatus = 'pending';
             (modifications as any).updatedAt = new Date().toISOString();
           });
