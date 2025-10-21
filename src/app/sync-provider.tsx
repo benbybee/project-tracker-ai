@@ -45,7 +45,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Cleanup on unmount
     return () => {
       // Close database connection
-      db.close();
+      db().close();
     };
   }, []);
 
