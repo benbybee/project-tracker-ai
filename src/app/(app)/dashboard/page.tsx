@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, Clock, Search, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { trpc } from "@/lib/trpc";
 import { GlassCard } from "@/components/ui/glass-card";
 import { SkeletonGlass } from "@/components/ui/skeleton-glass";
