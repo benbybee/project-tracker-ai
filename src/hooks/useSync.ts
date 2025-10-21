@@ -196,6 +196,7 @@ export function useOfflineOperations() {
     entityId: string
   ) => {
     // Mark as deleted in local database
+    const db = getDB();
     const table = db[entityType + 's' as keyof typeof db] as any;
     await table.update(entityId, {
       syncStatus: 'pending',
