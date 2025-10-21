@@ -9,8 +9,6 @@ import Board from '@/components/kanban/Board';
 import { TaskModal } from '@/components/tasks/TaskModal';
 import { useTaskModal } from '@/components/tasks/useTaskModal';
 
-// Disable static generation for this page
-export const dynamic = 'force-dynamic';
 
 export default function BoardPage() {
   const [search, setSearch] = useState('');

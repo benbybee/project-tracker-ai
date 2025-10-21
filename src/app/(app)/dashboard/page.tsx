@@ -13,8 +13,6 @@ import { EmptyProjects } from "@/components/dashboard/EmptyProjects";
 import { TaskCard } from "@/components/tasks/task-card";
 import { useRouter } from "next/navigation";
 
-// Disable static generation for this page
-export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
   const router = useRouter();

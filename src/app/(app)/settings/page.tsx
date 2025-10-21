@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 
-// Disable static generation for this page
-export const dynamic = 'force-dynamic';
 
 export default function SettingsPage() {
   const [newRoleName, setNewRoleName] = useState('');

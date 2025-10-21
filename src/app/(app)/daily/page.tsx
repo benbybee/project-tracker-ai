@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 
-// Disable static generation for this page
-export const dynamic = 'force-dynamic';
 
 export default function DailyPage() {
   const utils = trpc.useUtils();
