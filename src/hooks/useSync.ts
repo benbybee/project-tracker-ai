@@ -133,7 +133,8 @@ export function useEntitySyncStatus(entityType: 'task' | 'project' | 'role', ent
 
   useEffect(() => {
     const checkSyncStatus = async () => {
-      const table = getDB()[entityType + 's' as keyof typeof getDB()] as any;
+      const db = getDB();
+      const table = db[entityType + 's' as keyof typeof db] as any;
       const item = await table.get(entityId);
       if (item) {
         setSyncStatus(item.syncStatus);
