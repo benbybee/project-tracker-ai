@@ -1,4 +1,4 @@
-import { db, SyncQueueItem, SyncStatus } from './db';
+import { getDB, SyncQueueItem, SyncStatus } from './db';
 import { trpc } from './trpc';
 
 export type SyncEvent = 'start' | 'progress' | 'complete' | 'error' | 'conflict';
@@ -58,7 +58,7 @@ class SyncManager {
     try {
       await this.updateSyncStatus({ isSyncing: true });
       
-      const pendingItems = await db.getPendingSyncItems();
+      const pendingItems = await getDB().getPendingSyncItems();
       const progress: SyncProgress = {
         total: pendingItems.length,
         completed: 0,
@@ -73,8 +73,8 @@ class SyncManager {
           this.emit('progress', progress);
 
           await this.syncItem(item);
-          await db.removeFromSyncQueue(item.id);
-          await db.updateEntitySyncStatus(item.entityType, item.entityId, 'synced');
+          await getDB().removeFromSyncQueue(item.id);
+          await getDB().updateEntitySyncStatus(item.entityType, item.entityId, 'synced');
           
           progress.completed++;
           this.emit('progress', progress);
@@ -82,7 +82,7 @@ class SyncManager {
           console.error(`Failed to sync ${item.entityType} ${item.entityId}:`, error);
           
           // Increment retry count
-          await db.syncQueue.update(item.id, {
+          await getDB().syncQueue.update(item.id, {
             retryCount: item.retryCount + 1,
             lastError: error instanceof Error ? error.message : 'Unknown error',
           });
@@ -95,8 +95,8 @@ class SyncManager {
       await this.updateSyncStatus({ 
         isSyncing: false, 
         lastSyncAt: Date.now(),
-        pendingCount: await db.getPendingCount(),
-        failedCount: await db.getFailedCount(),
+        pendingCount: await getDB().getPendingCount(),
+        failedCount: await getDB().getFailedCount(),
       });
 
       this.emit('complete', progress);
@@ -173,12 +173,12 @@ class SyncManager {
     operationType: 'create' | 'update' | 'delete',
     payload: any
   ): Promise<void> {
-    await db.addToSyncQueue(entityType, entityId, operationType, payload);
-    await this.updateSyncStatus({ pendingCount: await db.getPendingCount() });
+    await getDB().addToSyncQueue(entityType, entityId, operationType, payload);
+    await this.updateSyncStatus({ pendingCount: await getDB().getPendingCount() });
   }
 
   async getSyncStatus(): Promise<SyncStatus | null> {
-    return db.getSyncStatus();
+    return getDB().getSyncStatus();
   }
 
   async isOnline(): Promise<boolean> {
@@ -205,7 +205,7 @@ class SyncManager {
   }
 
   private async updateSyncStatus(updates: Partial<SyncStatus>): Promise<void> {
-    await db.updateSyncStatus(updates);
+    await getDB().updateSyncStatus(updates);
   }
 
   // Conflict resolution

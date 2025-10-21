@@ -187,12 +187,25 @@ export class TaskTrackerDB extends Dexie {
   }
 }
 
-// Create and export the database instance
-export const db = new TaskTrackerDB();
+// Create and export the database instance (only on client side)
+let db: TaskTrackerDB | null = null;
+
+export function getDB(): TaskTrackerDB {
+  if (typeof window === 'undefined') {
+    throw new Error('Database can only be accessed on the client side');
+  }
+  if (!db) {
+    db = new TaskTrackerDB();
+  }
+  return db;
+}
+
+// For backward compatibility, export db as a getter
+export { getDB as db };
 
 // Initialize sync status only on client side
 if (typeof window !== 'undefined') {
-  db.syncStatus.put({
+  getDB().syncStatus.put({
     isOnline: navigator.onLine,
     isSyncing: false,
     pendingCount: 0,

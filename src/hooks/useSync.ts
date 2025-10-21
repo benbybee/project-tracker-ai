@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { syncManager, SyncProgress } from '@/lib/sync-manager';
-import { db, SyncStatus } from '@/lib/db';
+import { getDB, SyncStatus } from '@/lib/db';
 // Custom online status hook
 function useOnline() {
   const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? navigator.onLine : true);
@@ -34,7 +34,7 @@ export function useSync() {
   // Load initial sync status
   useEffect(() => {
     const loadSyncStatus = async () => {
-      const status = await db.getSyncStatus();
+      const status = await getDB().getSyncStatus();
       setSyncStatus(status);
     };
     loadSyncStatus();
@@ -54,7 +54,7 @@ export function useSync() {
       setIsSyncing(false);
       setSyncProgress(null);
       // Refresh sync status
-      db.getSyncStatus().then(setSyncStatus);
+      getDB().getSyncStatus().then(setSyncStatus);
     });
 
     const unsubscribeError = syncManager.on('error', (error: any) => {
@@ -74,8 +74,8 @@ export function useSync() {
   // Update sync status when online status changes
   useEffect(() => {
     const updateStatus = async () => {
-      await db.updateSyncStatus({ isOnline });
-      const status = await db.getSyncStatus();
+      await getDB().updateSyncStatus({ isOnline });
+      const status = await getDB().getSyncStatus();
       setSyncStatus(status);
     };
     updateStatus();
@@ -101,18 +101,18 @@ export function useSync() {
   ) => {
     await syncManager.addToSyncQueue(entityType, entityId, operationType, payload);
     // Refresh sync status
-    const status = await db.getSyncStatus();
+    const status = await getDB().getSyncStatus();
     setSyncStatus(status);
   }, []);
 
   // Get pending count
   const getPendingCount = useCallback(async () => {
-    return db.getPendingCount();
+    return getDB().getPendingCount();
   }, []);
 
   // Get failed count
   const getFailedCount = useCallback(async () => {
-    return db.getFailedCount();
+    return getDB().getFailedCount();
   }, []);
 
   return {
