@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, Clock, Search, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { trpc } from "@/lib/trpc";
 import { GlassCard } from "@/components/ui/glass-card";
 import { SkeletonGlass } from "@/components/ui/skeleton-glass";
@@ -12,6 +13,9 @@ import { RoleFilter } from "@/components/dashboard/RoleFilter";
 import { EmptyProjects } from "@/components/dashboard/EmptyProjects";
 import { TaskCard } from "@/components/tasks/task-card";
 import { useRouter } from "next/navigation";
+
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
   const router = useRouter();

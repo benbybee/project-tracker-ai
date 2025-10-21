@@ -7,6 +7,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
+  // Disable static optimization for client-side heavy pages
+  trailingSlash: false,
+  skipTrailingSlashRedirect: true,
   // experimental: {
   //   appDir: true, // Deprecated in Next.js 15
   // },
