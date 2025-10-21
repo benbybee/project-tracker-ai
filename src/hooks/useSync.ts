@@ -179,6 +179,7 @@ export function useOfflineOperations() {
     updates: any
   ) => {
     // Update local database
+    const db = getDB();
     const table = db[entityType + 's' as keyof typeof db] as any;
     await table.update(entityId, {
       ...updates,
