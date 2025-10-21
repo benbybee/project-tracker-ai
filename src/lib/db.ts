@@ -190,10 +190,12 @@ export class TaskTrackerDB extends Dexie {
 // Create and export the database instance
 export const db = new TaskTrackerDB();
 
-// Initialize sync status
-db.syncStatus.put({
-  isOnline: navigator.onLine,
-  isSyncing: false,
-  pendingCount: 0,
-  failedCount: 0,
-}).catch(console.error);
+// Initialize sync status only on client side
+if (typeof window !== 'undefined') {
+  db.syncStatus.put({
+    isOnline: navigator.onLine,
+    isSyncing: false,
+    pendingCount: 0,
+    failedCount: 0,
+  }).catch(console.error);
+}

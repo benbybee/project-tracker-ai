@@ -5,9 +5,11 @@ import { syncManager, SyncProgress } from '@/lib/sync-manager';
 import { db, SyncStatus } from '@/lib/db';
 // Custom online status hook
 function useOnline() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? navigator.onLine : true);
   
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     
