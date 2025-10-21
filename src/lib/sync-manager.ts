@@ -220,6 +220,7 @@ class SyncManager {
 
     if (serverTime > localTime) {
       // Server version is newer, use it
+      const db = getDB();
       const table = db[entityType + 's' as keyof typeof db] as any;
       await table.put(serverItem);
       return serverItem;
