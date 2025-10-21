@@ -157,6 +157,7 @@ export function useOfflineOperations() {
     const entityId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // Add to local database
+    const db = getDB();
     const table = db[entityType + 's' as keyof typeof db] as any;
     await table.add({
       id: entityId,
