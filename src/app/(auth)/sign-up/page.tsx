@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function SignUpPage() {
   const [name,setName]=useState(""); const [email,setEmail]=useState("");
   const [password,setPassword]=useState(""); const [err,setErr]=useState<string|null>(null);
