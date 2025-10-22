@@ -258,3 +258,50 @@ export async function createSyncManager() {
   const db = await getDB();
   return new SyncManager();
 }
+
+// Wire service worker messages for sync coordination
+export function wireServiceWorkerMessages() {
+  if (typeof window === 'undefined' || !navigator.serviceWorker) return;
+
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const { type, data } = event.data || {};
+    
+    switch (type) {
+      case 'SYNC_REQUEST':
+        // Handle sync requests from service worker
+        console.log('Service worker requested sync:', data);
+        break;
+      case 'OFFLINE_DETECTED':
+        // Handle offline detection from service worker
+        console.log('Service worker detected offline state');
+        break;
+      case 'ONLINE_DETECTED':
+        // Handle online detection from service worker
+        console.log('Service worker detected online state');
+        break;
+    }
+  });
+}
+
+// Start fallback interval for periodic sync attempts
+export function startFallbackInterval(intervalMs: number = 30000) {
+  if (typeof window === 'undefined') return;
+
+  const intervalId = setInterval(async () => {
+    try {
+      const { createSyncManager } = await import('./sync-manager.client');
+      const manager = await createSyncManager();
+      
+      // Only attempt sync if online and has pending items
+      if (navigator.onLine && await manager.hasPendingSync()) {
+        console.log('Fallback sync attempt...');
+        await manager.startSync();
+      }
+    } catch (error) {
+      console.warn('Fallback sync failed:', error);
+    }
+  }, intervalMs);
+
+  // Store interval ID for potential cleanup
+  (window as any).__TT_FALLBACK_INTERVAL__ = intervalId;
+}

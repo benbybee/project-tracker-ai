@@ -5,6 +5,9 @@ import { motion } from "framer-motion";
 import { CalendarDays, Clock, Search, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
+
+// Use auto dynamic rendering to avoid chunk loading issues
+export const dynamic = 'force-dynamic';
 import { GlassCard } from "@/components/ui/glass-card";
 import { SkeletonGlass } from "@/components/ui/skeleton-glass";
 import { ProjectTile } from "@/components/dashboard/ProjectTile";

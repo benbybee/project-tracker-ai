@@ -179,17 +179,23 @@ export function useOfflineOperations() {
         updatedAt: new Date().toISOString(),
       });
 
-      // Add to sync queue
-      if (syncManager) {
-        await syncManager.addToSyncQueue(entityType, entityId, 'create', payload);
-      }
+      // Add to ops queue using the new system
+      const { enqueueOp } = await import('@/lib/ops-helpers');
+      await enqueueOp({
+        entityType: entityType as 'task' | 'project',
+        entityId,
+        action: 'create',
+        payload,
+        projectId: payload.projectId,
+        baseVersion: 0
+      });
 
       return entityId;
     } catch (error) {
       console.error('Failed to create offline:', error);
       throw error;
     }
-  }, [syncManager]);
+  }, []);
 
   const updateOffline = useCallback(async (
     entityType: 'task' | 'project' | 'role',
@@ -199,21 +205,29 @@ export function useOfflineOperations() {
     try {
       const db = await getDB();
       const table = db[entityType + 's' as keyof typeof db] as any;
+      const existing = await table.get(entityId);
+      
       await table.update(entityId, {
         ...updates,
         syncStatus: 'pending',
         updatedAt: new Date().toISOString(),
       });
 
-      // Add to sync queue
-      if (syncManager) {
-        await syncManager.addToSyncQueue(entityType, entityId, 'update', updates);
-      }
+      // Add to ops queue using the new system
+      const { enqueueOp } = await import('@/lib/ops-helpers');
+      await enqueueOp({
+        entityType: entityType as 'task' | 'project',
+        entityId,
+        action: 'update',
+        payload: updates,
+        projectId: updates.projectId || existing?.projectId,
+        baseVersion: existing?.updatedAt ? new Date(existing.updatedAt).getTime() : undefined
+      });
     } catch (error) {
       console.error('Failed to update offline:', error);
       throw error;
     }
-  }, [syncManager]);
+  }, []);
 
   const deleteOffline = useCallback(async (
     entityType: 'task' | 'project' | 'role',
@@ -222,20 +236,27 @@ export function useOfflineOperations() {
     try {
       const db = await getDB();
       const table = db[entityType + 's' as keyof typeof db] as any;
+      const existing = await table.get(entityId);
+      
       await table.update(entityId, {
         syncStatus: 'pending',
         updatedAt: new Date().toISOString(),
       });
 
-      // Add to sync queue
-      if (syncManager) {
-        await syncManager.addToSyncQueue(entityType, entityId, 'delete', {});
-      }
+      // Add to ops queue using the new system
+      const { enqueueOp } = await import('@/lib/ops-helpers');
+      await enqueueOp({
+        entityType: entityType as 'task' | 'project',
+        entityId,
+        action: 'delete',
+        payload: {},
+        projectId: existing?.projectId
+      });
     } catch (error) {
       console.error('Failed to delete offline:', error);
       throw error;
     }
-  }, [syncManager]);
+  }, []);
 
   return {
     createOffline,

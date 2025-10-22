@@ -100,6 +100,72 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Background sync message handling
+self.addEventListener('message', (event) => {
+  // Accept "PING" or "REQUEST_SYNC" from client
+  const { type } = event.data || {};
+  if (type === 'REQUEST_SYNC' && 'sync' in self.registration) {
+    (self.registration as any).sync.register('tt-sync').catch(() => {});
+  }
+});
+
+self.addEventListener('sync', (event: any) => {
+  if (event.tag === 'tt-sync') {
+    event.waitUntil(handleBackgroundSync());
+  }
+});
+
+async function handleBackgroundSync() {
+  // We can't access Dexie inside the SW. Instead, ask each client to push.
+  const allClients = await self.clients.matchAll({ includeUncontrolled: true });
+  for (const client of allClients) {
+    client.postMessage({ type: 'DO_PUSH_PULL' });
+  }
+}
+
+// Enhanced message handling for sync coordination
+self.addEventListener('message', (event) => {
+  const { type, data } = event.data || {};
+  
+  switch (type) {
+    case 'SYNC_REQUEST':
+      // Forward sync request to all clients
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SYNC_REQUEST',
+            data: data
+          });
+        });
+      });
+      break;
+      
+    case 'OFFLINE_DETECTED':
+      // Notify clients about offline state
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'OFFLINE_DETECTED',
+            data: data
+          });
+        });
+      });
+      break;
+      
+    case 'ONLINE_DETECTED':
+      // Notify clients about online state
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'ONLINE_DETECTED',
+            data: data
+          });
+        });
+      });
+      break;
+  }
+});
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([

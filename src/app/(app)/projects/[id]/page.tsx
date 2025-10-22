@@ -2,6 +2,9 @@
 
 import { useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
+
+// Use auto dynamic rendering to avoid chunk loading issues
+export const dynamic = 'force-dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';

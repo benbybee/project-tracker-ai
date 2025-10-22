@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 
+// Use auto dynamic rendering to avoid chunk loading issues
+export const dynamic = 'force-dynamic';
+
 
 export default function DailyPage() {
   const utils = trpc.useUtils();

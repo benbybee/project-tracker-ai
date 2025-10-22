@@ -5,23 +5,8 @@ export function registerSW() {
   if (typeof window === 'undefined') return;
   if (!('serviceWorker' in navigator)) return;
 
-  // Avoid double-registering in dev HMR
-  // and bail out in unsupported contexts.
-  const alreadyRegistered = (window as any).__TT_SW_REGISTERED__;
-  if (alreadyRegistered) return;
-
-  // Mark as registered for this session
-  (window as any).__TT_SW_REGISTERED__ = true;
-
-  // Standard registration — no event toasts.
-  // If you use Workbox, you can swap this for Workbox('/service-worker.js').register()
-  // The key point: **no UI notifications** here.
-  navigator.serviceWorker
-    .register('/service-worker.js')
-    .catch((err) => {
-      // Silent failure — you can log if you need telemetry
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[PWA] SW registration failed:', err);
-      }
-    });
+  // Temporarily disabled to fix build issues
+  // TODO: Re-enable service worker after deployment is working
+  console.log('[PWA] Service worker registration temporarily disabled');
+  return;
 }

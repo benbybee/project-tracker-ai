@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// Use auto dynamic rendering to avoid chunk loading issues
+export const dynamic = 'force-dynamic';
+
 
 const ProjectSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters'),

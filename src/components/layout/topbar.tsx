@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Search, Bell, Menu } from "lucide-react";
 import { GradientButton } from "@/components/ui/gradient-button";
+import SyncIndicator from "@/components/sync/SyncIndicator";
 
 export function Topbar() {
   const [isMobile, setIsMobile] = useState(false);
@@ -51,6 +52,7 @@ export function Topbar() {
           <Search className="h-4 w-4" /> <span className="hidden sm:block">Search (Ctrl+K)</span>
         </button>
         <div className="ml-auto flex items-center gap-2">
+          <SyncIndicator />
           <button 
             aria-label="Notifications" 
             className="h-9 w-9 rounded-full border border-white/40 bg-white/50 backdrop-blur hover:bg-white/70 transition"

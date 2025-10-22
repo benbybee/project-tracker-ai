@@ -3,6 +3,27 @@ let dbPromise: Promise<any> | null = null;
 
 export const isBrowser = () => typeof window !== "undefined";
 
+// New types for sync system
+export type EntityType = 'task' | 'project';
+
+export type LocalOp = {
+  id: string;               // cuid or uuid
+  entityType: EntityType;
+  entityId: string;
+  action: 'create' | 'update' | 'delete';
+  payload: any;             // partial entity
+  ts: number;               // client timestamp (ms)
+  baseVersion?: number;     // server version we edited from (optional)
+  userId?: string;          // current user (for audit)
+  projectId?: string;       // routing convenience for project-scoped sync
+};
+
+export type SyncVector = {
+  id: 'global';
+  lastPullVersion: number;  // server change number we last pulled
+  lastPushAt: number;       // ms
+};
+
 export async function getDB() {
   if (!isBrowser()) {
     throw new Error("getDB() called on server - this should only run in the browser");
@@ -20,39 +41,47 @@ export async function getDB() {
         conflicts!: any;
         activity_log!: any;
         syncStatus!: any;
+        opsQueue!: any;
+        syncVector!: any;
 
         constructor() {
           super("tasktracker-v1");
           
-          this.version(1).stores({
-            projects: "id, updatedAt, syncStatus",
-            tasks: "id, projectId, status, updatedAt, syncStatus",
+          this.version(2).stores({
+            projects: "id, updatedAt, syncStatus, version",
+            tasks: "id, projectId, status, updatedAt, syncStatus, version",
             roles: "id, updatedAt, syncStatus", 
             syncQueue: "id, entityType, entityId, operationType, timestamp",
             conflicts: "id, entityType, entityId, timestamp",
             activity_log: "id, entityType, entityId, timestamp",
-            syncStatus: "id"
+            syncStatus: "id",
+            opsQueue: "id, entityType, entityId, projectId, ts",
+            syncVector: "id"
           });
 
-          // Add hooks for automatic sync status tracking
+          // Add hooks for automatic sync status tracking and version management
           this.projects.hook('creating', (primKey: any, obj: any, trans: any) => {
             (obj as any).syncStatus = 'pending';
             (obj as any).updatedAt = new Date().toISOString();
+            (obj as any).version = 1;
           });
 
           this.projects.hook('updating', (modifications: any, primKey: any, obj: any, trans: any) => {
             (modifications as any).syncStatus = 'pending';
             (modifications as any).updatedAt = new Date().toISOString();
+            (modifications as any).version = (obj as any).version + 1;
           });
 
           this.tasks.hook('creating', (primKey: any, obj: any, trans: any) => {
             (obj as any).syncStatus = 'pending';
             (obj as any).updatedAt = new Date().toISOString();
+            (obj as any).version = 1;
           });
 
           this.tasks.hook('updating', (modifications: any, primKey: any, obj: any, trans: any) => {
             (modifications as any).syncStatus = 'pending';
             (modifications as any).updatedAt = new Date().toISOString();
+            (modifications as any).version = (obj as any).version + 1;
           });
 
           this.roles.hook('creating', (primKey: any, obj: any, trans: any) => {
