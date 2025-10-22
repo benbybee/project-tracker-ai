@@ -1,12 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['postgres'],
-  typescript: {
-    ignoreBuildErrors: false,
-  },
-  eslint: {
-    ignoreDuringBuilds: true, // Skip ESLint on CI
-  },
+  reactStrictMode: true,
+  eslint: { ignoreDuringBuilds: true }, // re-enable later if you want
   // Disable static optimization for client-side heavy pages
   trailingSlash: false,
   skipTrailingSlashRedirect: true,

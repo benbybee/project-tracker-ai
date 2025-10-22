@@ -17,7 +17,9 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx scripts/seed.ts",
-    "vercel:sim": "node scripts/vercel-sim-build.mjs"
+    "vercel:sim": "node scripts/vercel-sim-build.mjs",
+    "repo:doctor": "node scripts/repo-doctor.mjs --root .",
+    "repo:doctor:fix": "node scripts/repo-doctor.mjs --root . --fix"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^0.7.0",
