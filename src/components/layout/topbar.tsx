@@ -43,14 +43,32 @@ export function Topbar() {
             className="h-8 w-auto"
           />
         </div>
-        <button aria-label="Search" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+        <button 
+          aria-label="Search" 
+          className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"
+          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { ctrlKey: true, key: "k" }))}
+        >
           <Search className="h-4 w-4" /> <span className="hidden sm:block">Search (Ctrl+K)</span>
         </button>
         <div className="ml-auto flex items-center gap-2">
-          <button aria-label="Notifications" className="h-9 w-9 rounded-full border border-white/40 bg-white/50 backdrop-blur hover:bg-white/70 transition" >
+          <button 
+            aria-label="Notifications" 
+            className="h-9 w-9 rounded-full border border-white/40 bg-white/50 backdrop-blur hover:bg-white/70 transition"
+            onClick={() => {
+              // TODO: Implement notifications functionality
+              console.log('Notifications clicked');
+            }}
+          >
             <Bell className="mx-auto h-4 w-4" />
           </button>
-          <GradientButton>New Task</GradientButton>
+          <GradientButton
+            onClick={() => {
+              // TODO: Implement new task functionality
+              console.log('New Task clicked');
+            }}
+          >
+            New Task
+          </GradientButton>
         </div>
       </div>
     </header>

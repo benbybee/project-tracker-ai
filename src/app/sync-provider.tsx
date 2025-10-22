@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { getDB, isBrowser } from '@/lib/db.client';
-import { OfflineToast } from '@/components/ui/offline-toast';
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const started = useRef(false);
@@ -54,7 +53,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <OfflineToast />
     </>
   );
 }

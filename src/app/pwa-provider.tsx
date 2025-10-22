@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePWAToast } from '@/components/ui/toast-pwa';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -19,8 +18,6 @@ declare global {
 }
 
 export function PWAProvider({ children }: { children: React.ReactNode }) {
-  const { showToast, ToastContainer } = usePWAToast();
-
   useEffect(() => {
     // Only run in production
     if (process.env.NODE_ENV !== 'production') {
@@ -36,14 +33,13 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       // Stash the event so it can be triggered later
       deferredPrompt = e;
       
-      // Show install prompt
-      showToast('Add TaskTracker AI to Home Screen', 'info');
+      // No toast - silent handling
     };
 
     // Handle appinstalled event
     const handleAppInstalled = () => {
       console.log('PWA was installed');
-      showToast('App installed successfully', 'success');
+      // No toast - silent handling
       deferredPrompt = null;
     };
 
@@ -55,8 +51,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
           
           console.log('SW registered: ', registration);
           
-          // Show offline mode available
-          showToast('Offline mode available', 'info');
+          // No toast - silent handling
           
           // Handle updates
           registration.addEventListener('updatefound', () => {
@@ -88,12 +83,11 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, [showToast]);
+  }, []);
 
   return (
     <>
       {children}
-      <ToastContainer />
     </>
   );
 }

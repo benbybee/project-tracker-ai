@@ -103,10 +103,24 @@ export default function SettingsPage() {
                       <span className="font-medium text-gray-900">{role.name}</span>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // TODO: Implement edit role functionality
+                          console.log('Edit role:', role.id);
+                        }}
+                      >
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // TODO: Implement delete role functionality
+                          console.log('Delete role:', role.id);
+                        }}
+                      >
                         Delete
                       </Button>
                     </div>

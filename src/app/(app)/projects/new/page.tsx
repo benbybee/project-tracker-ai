@@ -1,6 +1,8 @@
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { trpc } from '@/lib/trpc';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
@@ -8,18 +10,20 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
-type Form = {
-  name: string;
-  type: 'general' | 'website';
-  description?: string;
-  roleId?: string;
-  domain?: string;
-  hostingProvider?: string;
-  dnsStatus?: string;
-  goLiveDate?: string;
-  repoUrl?: string;
-  stagingUrl?: string;
-};
+const ProjectSchema = z.object({
+  name: z.string().min(2, 'Project name must be at least 2 characters'),
+  type: z.enum(['general', 'website']),
+  description: z.string().optional(),
+  roleId: z.string().optional(),
+  domain: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  hostingProvider: z.string().optional(),
+  dnsStatus: z.string().optional(),
+  goLiveDate: z.string().optional(),
+  repoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  stagingUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+});
+
+type Form = z.infer<typeof ProjectSchema>;
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -32,7 +36,8 @@ export default function NewProjectPage() {
   });
   const { data: roles } = trpc.roles.list.useQuery();
   
-  const { control, register, handleSubmit, watch } = useForm<Form>({ 
+  const { control, register, handleSubmit, watch, formState: { errors } } = useForm<Form>({ 
+    resolver: zodResolver(ProjectSchema),
     defaultValues: { type: 'general' } 
   });
   
@@ -62,8 +67,11 @@ export default function NewProjectPage() {
             <Input
               {...register('name')}
               placeholder="Enter project name"
-              className="w-full"
+              className={`w-full ${errors.name ? 'border-red-500' : ''}`}
             />
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+            )}
           </div>
 
           {/* Type and Role */}

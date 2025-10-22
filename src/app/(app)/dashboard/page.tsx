@@ -60,7 +60,7 @@ export default function DashboardPage() {
               Dashboard Overview
             </h1>
             <button
-              onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { metaKey: true, key: "k" }))}
+              onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { ctrlKey: true, key: "k" }))}
               className="text-xs rounded-full px-3 py-1 border border-white/40 bg-white/50 backdrop-blur hover:bg-white/70 transition-colors"
             >
               Search tasks & projects (⌘K)
@@ -270,9 +270,8 @@ export default function DashboardPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
-              // This would open the command palette
-              // For now, just navigate to search
-              router.push('/search');
+              // Trigger the command palette
+              document.dispatchEvent(new KeyboardEvent("keydown", { ctrlKey: true, key: "k" }));
             }}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/50 shadow-lg hover:shadow-xl transition-all"
           >

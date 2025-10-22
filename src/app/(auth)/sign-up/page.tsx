@@ -1,52 +1,102 @@
-"use client";
-import { useState } from "react";
-import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 
-
+/**
+ * Sign-up page that:
+ * 1) Creates the account via /api/register
+ * 2) Automatically signs the user in with Credentials
+ * 3) Redirects to /dashboard on success
+ */
 export default function SignUpPage() {
-  const [name,setName]=useState(""); const [email,setEmail]=useState("");
-  const [password,setPassword]=useState(""); const [err,setErr]=useState<string|null>(null);
-  const [ok,setOk]=useState(false); const [loading,setLoading]=useState(false);
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault(); setErr(null); setLoading(true);
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-    setLoading(false);
-    if (!res.ok) { const j = await res.json().catch(()=>null); setErr(j?.error ?? "Failed to create account"); return; }
-    setOk(true);
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const form = new FormData(e.currentTarget);
+    const email = String(form.get('email') || '').trim();
+    const password = String(form.get('password') || '');
+
+    try {
+      // 1) Create account
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || 'Unable to create account.');
+        setLoading(false);
+        return;
+      }
+
+      // 2) Immediately sign in with the same creds (Credentials provider)
+      const si = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (si?.error) {
+        setError('Account created, but auto sign-in failed. Please log in.');
+        setLoading(false);
+        router.replace('/sign-in?from=signup');
+        return;
+      }
+
+      // 3) Go to dashboard
+      router.replace('/dashboard');
+    } catch (err) {
+      setError('Unexpected error. Please try again.');
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="max-w-lg">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold">Create an account</h1>
-        <p className="text-sm text-slate-600 mt-1">It's quick and painless.</p>
-      </div>
-
-      {ok ? (
-        <div className="rounded-xl border p-4 bg-white/70">Account created! <Link href="/sign-in" className="underline">Sign in</Link></div>
-      ) : (
-        <form onSubmit={submit} className="space-y-4">
-          <Field label="Name"><Input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" /></Field>
-          <Field label="Email"><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@company.com" /></Field>
-          <Field label="Password"><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" /></Field>
-          {err && <div className="text-sm text-red-600">{err}</div>}
-          <Button type="submit" className="w-full">{loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating…</> : "Create Account"}</Button>
-        </form>
-      )}
-
-      <div className="mt-4 text-sm">Already have an account? <Link href="/sign-in" className="underline">Log in</Link></div>
-    </div>
+    <main className="mx-auto max-w-md p-6">
+      <h1 className="text-2xl font-semibold mb-4">Create your account</h1>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="space-y-1">
+          <label htmlFor="email" className="text-sm font-medium">Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            className="w-full rounded-md border px-3 py-2"
+            placeholder="you@example.com"
+            autoComplete="email"
+          />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="password" className="text-sm font-medium">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            className="w-full rounded-md border px-3 py-2"
+            placeholder="••••••••"
+            autoComplete="new-password"
+          />
+        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-md bg-black text-white py-2"
+        >
+          {loading ? 'Creating…' : 'Create Account'}
+        </button>
+      </form>
+    </main>
   );
-}
-
-function Field({ label, children }: any) {
-  return <div><label className="text-sm font-medium">{label}</label><div className="mt-1">{children}</div></div>;
 }
