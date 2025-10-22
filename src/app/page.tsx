@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <main>
       <h1>TaskTracker AI</h1>
-      <p>Redirecting…</p>
+      <p>Redirecting to dashboard…</p>
     </main>
   );
 }
