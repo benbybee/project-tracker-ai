@@ -3,6 +3,7 @@ import './globals.css';
 import PWAInit from '@/components/system/PWAInit';
 import SyncBootstrap from '@/components/sync/SyncBootstrap';
 import ConflictModal from '@/components/sync/ConflictModal';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'TaskTracker AI',
@@ -16,12 +17,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        {/* Ensure SW is registered on the client with **no toasts** */}
-        <PWAInit />
-        <SyncBootstrap />
-        {children}
-        {/* Global conflict resolution modal */}
-        <ConflictModal />
+        <Providers>
+          {/* Ensure SW is registered on the client with **no toasts** */}
+          <PWAInit />
+          <SyncBootstrap />
+          {children}
+          {/* Global conflict resolution modal */}
+          <ConflictModal />
+        </Providers>
       </body>
     </html>
   );
