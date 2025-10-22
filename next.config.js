@@ -10,7 +10,7 @@ const nextConfig = {
   poweredByHeader: false,
   // Force fresh build to clear cache
   generateBuildId: async () => {
-    return 'fresh-build-' + Math.random().toString(36).substring(7);
+    return 'cache-bust-' + Date.now() + '-' + Math.random().toString(36).substring(7);
   },
   // Optimize for production
   compress: true,
@@ -28,11 +28,11 @@ const nextConfig = {
       };
     }
     
-    // Ensure deterministic builds
+    // Force non-deterministic builds to generate new chunks
     config.optimization = {
       ...config.optimization,
-      moduleIds: 'deterministic',
-      chunkIds: 'deterministic',
+      moduleIds: 'named',
+      chunkIds: 'named',
     };
     
     return config;
