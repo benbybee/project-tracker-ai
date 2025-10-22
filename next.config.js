@@ -8,9 +8,9 @@ const nextConfig = {
   // Ensure proper asset handling
   // Disable x-powered-by header
   poweredByHeader: false,
-  // Ensure consistent builds
+  // Force fresh build to clear cache
   generateBuildId: async () => {
-    return 'build-' + Date.now();
+    return 'fresh-build-' + Math.random().toString(36).substring(7);
   },
   // Optimize for production
   compress: true,
@@ -80,6 +80,15 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
           },
         ],
       },

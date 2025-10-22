@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm build",
+  "buildCommand": "rm -rf .next && pnpm build",
   "outputDirectory": ".next",
   "functions": {
     "app/**": {
@@ -10,7 +10,6 @@
     }
   },
   "regions": ["iad1"],
-  "framework": "nextjs",
   "headers": [
     {
       "source": "/service-worker-simple.js",
