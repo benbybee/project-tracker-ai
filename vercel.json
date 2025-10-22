@@ -2,13 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "rm -rf .next && rm -rf node_modules/.cache && pnpm build",
+  "buildCommand": "pnpm build",
   "outputDirectory": ".next",
-  "functions": {
-    "app/**": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "regions": ["iad1"],
   "headers": [
     {
