@@ -70,7 +70,13 @@ jspm_packages/
 
 # Gatsby files
 .cache/
-public
+
+# Exclude specific public files we don't need
+public/cyberpunk-hero.jpg
+public/hero.jpg
+public/images/cyberpunk-hero.jpg
+public/test-image.jpg
+public/test-download*.jpg
 
 # Storybook build outputs
 .out
