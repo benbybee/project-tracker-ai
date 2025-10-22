@@ -1,5 +1,8 @@
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 
-export default function AppHomePage() {
-  redirect('/dashboard');
+export const dynamic = "force-dynamic"; // ensure no stale SSG artifact
+export const revalidate = 0;
+
+export default function AppRootPage() {
+  redirect("/dashboard");
 }

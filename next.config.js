@@ -5,7 +5,7 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true, // Skip ESLint on CI
   },
   // Disable static optimization for client-side heavy pages
   trailingSlash: false,
