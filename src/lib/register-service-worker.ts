@@ -56,9 +56,6 @@ export function registerServiceWorker() {
           
           console.log('SW registered: ', registration);
           
-          // Show offline mode available
-          showToast('Offline mode available', 'info');
-          
           // Handle updates
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
