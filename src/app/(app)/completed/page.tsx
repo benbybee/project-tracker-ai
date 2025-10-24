@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Calendar, FolderOpen, Users } from 'lucide-react';
 import { format } from 'date-fns';
+import { trpc } from '@/lib/trpc';
 
 // Use auto dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -35,9 +36,13 @@ export default function CompletedTasksPage() {
   const [roleFilter, setRoleFilter] = useState<string>('');
   const [dateRange, setDateRange] = useState<string>('30');
 
-  // Unique projects and roles for filters
-  const [projects, setProjects] = useState<Array<{ id: string; name: string }>>([]);
-  const [roles, setRoles] = useState<Array<{ id: string; name: string; color: string }>>([]);
+  // Fetch projects and roles using tRPC
+  const { data: projectsList = [] } = trpc.projects.list.useQuery({});
+  const { data: rolesList = [] } = trpc.roles.list.useQuery();
+
+  // Extract unique projects and roles for filters
+  const projects = projectsList.map(p => ({ id: p.id, name: p.name }));
+  const roles = (rolesList || []).map((r: any) => ({ id: r.id, name: r.name, color: r.color }));
 
   const fetchTasks = useCallback(async (resetPage = false) => {
     setLoading(true);
@@ -54,6 +59,9 @@ export default function CompletedTasksPage() {
 
     try {
       const res = await fetch(`/api/tasks/completed?${params}`);
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
       const data = await res.json();
       
       if (resetPage) {
@@ -66,34 +74,11 @@ export default function CompletedTasksPage() {
       setHasMore(data.hasMore || false);
     } catch (error) {
       console.error('Failed to fetch completed tasks:', error);
+      setTasks([]);
     } finally {
       setLoading(false);
     }
   }, [page, projectFilter, roleFilter, dateRange]);
-
-  // Fetch unique projects and roles
-  useEffect(() => {
-    (async () => {
-      try {
-        const [projectsRes, rolesRes] = await Promise.all([
-          fetch('/api/trpc/projects.list'),
-          fetch('/api/trpc/roles.list'),
-        ]);
-        
-        if (projectsRes.ok) {
-          const projectsData = await projectsRes.json();
-          setProjects(projectsData.result?.data || []);
-        }
-        
-        if (rolesRes.ok) {
-          const rolesData = await rolesRes.json();
-          setRoles(rolesData.result?.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch filters:', error);
-      }
-    })();
-  }, []);
 
   // Fetch tasks on mount and when filters change
   useEffect(() => {

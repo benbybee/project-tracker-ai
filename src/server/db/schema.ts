@@ -49,6 +49,7 @@ export const projects = pgTable('projects', {
   repoUrl: text('repo_url'),
   stagingUrl: text('staging_url'),
   checklistJson: jsonb('checklist_json'),
+  websiteStatus: text('website_status', { enum: ['discovery', 'development', 'client_review', 'completed', 'blocked'] }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

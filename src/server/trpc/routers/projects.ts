@@ -66,6 +66,7 @@ export const projectsRouter = createTRPCRouter({
           repoUrl: projects.repoUrl,
           stagingUrl: projects.stagingUrl,
           checklistJson: projects.checklistJson,
+          websiteStatus: projects.websiteStatus,
           createdAt: projects.createdAt,
           updatedAt: projects.updatedAt,
           role: {
@@ -98,6 +99,7 @@ export const projectsRouter = createTRPCRouter({
           repoUrl: projects.repoUrl,
           stagingUrl: projects.stagingUrl,
           checklistJson: projects.checklistJson,
+          websiteStatus: projects.websiteStatus,
           createdAt: projects.createdAt,
           updatedAt: projects.updatedAt,
           role: {
@@ -164,6 +166,7 @@ export const projectsRouter = createTRPCRouter({
         repoUrl: z.string().optional(),
         stagingUrl: z.string().optional(),
         checklistJson: z.record(z.any()).optional(),
+        websiteStatus: z.enum(['discovery', 'development', 'client_review', 'completed', 'blocked']).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -171,7 +174,10 @@ export const projectsRouter = createTRPCRouter({
 
       const [updatedProject] = await ctx.db
         .update(projects)
-        .set(updateData)
+        .set({
+          ...updateData,
+          updatedAt: new Date(),
+        })
         .where(eq(projects.id, id))
         .returning();
 
@@ -218,6 +224,7 @@ export const projectsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await ctx.db.update(projects).set({
         type: "website",
+        websiteStatus: "discovery",
         ...input.website,
         updatedAt: new Date(),
       }).where(eq(projects.id, input.id));
@@ -235,6 +242,7 @@ export const projectsRouter = createTRPCRouter({
         goLiveDate: null,
         repoUrl: null,
         stagingUrl: null,
+        websiteStatus: null,
         updatedAt: new Date(),
       }).where(eq(projects.id, input.id));
       return { ok: true };
