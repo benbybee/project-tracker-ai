@@ -149,3 +149,8 @@ export type NewSubtask = typeof subtasks.$inferInsert;
 
 export type Embedding = typeof embeddings.$inferSelect;
 export type NewEmbedding = typeof embeddings.$inferInsert;
+
+// Import notification, activity, and chat schemas
+export * from './schema/notifications';
+export * from './schema/activity';
+export * from './schema/chat';

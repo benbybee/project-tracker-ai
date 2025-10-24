@@ -12,6 +12,8 @@ import { useState } from 'react';
 import { Plus, X, GripVertical } from 'lucide-react';
 import { useOfflineOperations, useSync } from '@/hooks/useSync.client';
 import { getDB } from '@/lib/db.client';
+import { useRealtime } from '@/app/providers';
+import { useParams } from 'next/navigation';
 
 const TaskSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
@@ -40,12 +42,19 @@ interface TaskModalProps {
 
 export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskModalProps) {
   const [addToDaily, setAddToDaily] = useState(defaultValues?.isDaily || false);
+  const [submitting, setSubmitting] = useState(false);
   const { createOffline, updateOffline } = useOfflineOperations();
   const { isOnline } = useSync();
+  const { startTyping, stopTyping, updatePresence } = useRealtime();
+  const params = useParams<{ id?: string }>();
   
   const createTask = trpc.tasks.create.useMutation();
   const updateTask = trpc.tasks.update.useMutation();
   const { data: roles } = trpc.roles.list.useQuery();
+  const { data: projects } = trpc.projects.list.useQuery({});
+  
+  // Auto-preselect project from URL params
+  const defaultProjectId = params?.id || projectId;
 
   const { 
     register, 
@@ -57,7 +66,7 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
   } = useForm<TaskForm>({
     resolver: zodResolver(TaskSchema),
     defaultValues: { 
-      projectId, 
+      projectId: defaultProjectId, 
       status: 'not_started', 
       priorityScore: '2',
       isDaily: false,
@@ -72,7 +81,16 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
   });
 
   const onSubmit = async (data: TaskForm) => {
+    setSubmitting(true);
     try {
+      // Update presence to show user is working on this task
+      if (defaultValues?.id) {
+        updatePresence({
+          currentTask: defaultValues.id,
+          isEditing: false
+        });
+      }
+
       const taskData = {
         ...data,
         dueDate: addToDaily ? null : data.dueDate,
@@ -97,9 +115,13 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
           await createOffline('task', taskData);
         }
       }
+      
+      // Close modal after successful save
       onClose();
     } catch (error) {
       console.error('Failed to save task:', error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -130,6 +152,16 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
               {...register('title')}
               placeholder="Enter task title"
               className={errors.title ? 'border-red-500' : ''}
+              onFocus={() => {
+                if (defaultValues?.id) {
+                  startTyping('task', defaultValues.id);
+                }
+              }}
+              onBlur={() => {
+                if (defaultValues?.id) {
+                  stopTyping('task', defaultValues.id);
+                }
+              }}
             />
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
@@ -146,6 +178,16 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
               placeholder="Enter task description"
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onFocus={() => {
+                if (defaultValues?.id) {
+                  startTyping('task', defaultValues.id);
+                }
+              }}
+              onBlur={() => {
+                if (defaultValues?.id) {
+                  stopTyping('task', defaultValues.id);
+                }
+              }}
             />
           </div>
 
@@ -220,6 +262,28 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
             </div>
           </div>
 
+          {/* Project Selection */}
+          <div>
+            <label htmlFor="projectId" className="block text-sm font-medium text-gray-700 mb-2">
+              Project *
+            </label>
+            <Select
+              value={watch('projectId') || defaultProjectId || ''}
+              onValueChange={(value) => setValue('projectId', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects?.map((project: any) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Role */}
           <div>
             <label htmlFor="roleId" className="block text-sm font-medium text-gray-700 mb-2">
@@ -233,7 +297,7 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
                 <SelectValue placeholder="Select role (optional)" />
               </SelectTrigger>
               <SelectContent>
-                {roles?.map((role) => (
+                {roles?.map((role: any) => (
                   <SelectItem key={role.id} value={role.id}>
                     <div className="flex items-center">
                       <div
@@ -304,8 +368,8 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : (defaultValues?.id ? 'Update Task' : 'Create Task')}
+            <Button type="submit" disabled={submitting}>
+              {submitting ? 'Saving...' : (defaultValues?.id ? 'Update Task' : 'Create Task')}
             </Button>
           </DialogFooter>
         </form>

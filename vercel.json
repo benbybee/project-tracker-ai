@@ -4,6 +4,9 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
   "outputDirectory": ".next",
+  "crons": [
+    { "path": "/api/maintenance/archive-completed", "schedule": "59 23 * * 0" }
+  ],
   "regions": ["iad1"],
   "headers": [
     {

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Search, Bell, Menu } from "lucide-react";
 import { GradientButton } from "@/components/ui/gradient-button";
 import SyncIndicator from "@/components/sync/SyncIndicator";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export function Topbar() {
   const [isMobile, setIsMobile] = useState(false);
@@ -23,46 +24,15 @@ export function Topbar() {
   };
 
   return (
-    <header
-      className="sticky top-4 z-30 mx-4 md:mx-6 rounded-[var(--radius-xl)] border shadow-soft px-4 md:px-6 py-3 backdrop-blur-xl
-                 bg-[color:rgb(var(--glass-bg))] border-[color:rgb(var(--glass-border))]"
-    >
-      <div className="flex items-center gap-3">
-        {isMobile && (
-          <button 
-            onClick={openMobileSidebar}
-            aria-label="Open navigation menu"
-            className="h-9 w-9 rounded-full border border-white/40 bg-white/50 backdrop-blur hover:bg-white/70 transition flex items-center justify-center"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-        )}
+    <header className="sticky top-0 z-40 bg-white/70 backdrop-blur border-b">
+      <div className="mx-auto flex items-center gap-3 px-4 py-2">
+        <input
+          className="flex-1 rounded-lg border px-3 py-2 text-sm"
+          placeholder="Search (Ctrl+K)"
+        />
         <div className="flex items-center gap-3">
-          <img 
-            src="/tasktracker-logo.png" 
-            alt="TaskTracker AI" 
-            className="h-8 w-auto"
-          />
-        </div>
-        <button 
-          aria-label="Search" 
-          className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"
-          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { ctrlKey: true, key: "k" }))}
-        >
-          <Search className="h-4 w-4" /> <span className="hidden sm:block">Search (Ctrl+K)</span>
-        </button>
-        <div className="ml-auto flex items-center gap-2">
           <SyncIndicator />
-          <button 
-            aria-label="Notifications" 
-            className="h-9 w-9 rounded-full border border-white/40 bg-white/50 backdrop-blur hover:bg-white/70 transition"
-            onClick={() => {
-              // TODO: Implement notifications functionality
-              console.log('Notifications clicked');
-            }}
-          >
-            <Bell className="mx-auto h-4 w-4" />
-          </button>
+          <NotificationBell />
           <GradientButton
             onClick={() => {
               // TODO: Implement new task functionality

@@ -1,0 +1,76 @@
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+
+export type PresenceData = {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  isOnline: boolean;
+  lastActiveAt: number;
+  currentProject?: string;
+  currentTask?: string;
+  isEditing?: boolean;
+};
+
+export function usePresence() {
+  const { data: session } = useSession();
+  const [onlineUsers, setOnlineUsers] = useState<PresenceData[]>([]);
+  const [isOnline, setIsOnline] = useState(false);
+
+  useEffect(() => {
+    if (!session?.user) return;
+
+    // Simulate presence tracking
+    setIsOnline(true);
+    
+    // Mock online users for demonstration
+    setOnlineUsers([
+      {
+        userId: session.user.id || '1',
+        userName: session.user.name || 'Current User',
+        userEmail: session.user.email || 'user@example.com',
+        isOnline: true,
+        lastActiveAt: Date.now(),
+        currentProject: undefined,
+        currentTask: undefined,
+        isEditing: false
+      }
+    ]);
+
+    // Cleanup on unmount
+    return () => {
+      setIsOnline(false);
+    };
+  }, [session]);
+
+  const updatePresence = useCallback((data: Partial<PresenceData>) => {
+    if (!session?.user) return;
+    
+    console.log('Updating presence:', data);
+    // In a real implementation, this would send to the WebSocket
+  }, [session]);
+
+  const startTyping = useCallback((entityType: 'task' | 'project', entityId: string) => {
+    if (!session?.user) return;
+    
+    console.log('Starting typing:', entityType, entityId);
+    // In a real implementation, this would send to the WebSocket
+  }, [session]);
+
+  const stopTyping = useCallback((entityType: 'task' | 'project', entityId: string) => {
+    if (!session?.user) return;
+    
+    console.log('Stopping typing:', entityType, entityId);
+    // In a real implementation, this would send to the WebSocket
+  }, [session]);
+
+  return {
+    onlineUsers,
+    isOnline,
+    updatePresence,
+    startTyping,
+    stopTyping
+  };
+}

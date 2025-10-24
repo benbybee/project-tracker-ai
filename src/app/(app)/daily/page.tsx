@@ -6,6 +6,7 @@ import { TaskCard, Task } from "@/components/tasks/task-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
+import TaskEditModal from "@/components/tasks/TaskEditModal";
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -22,13 +23,15 @@ export default function DailyPage() {
   const remove = trpc.tasks.remove.useMutation({ onSuccess: () => utils.tasks.invalidate() });
 
   const [nextPick, setNextPick] = useState<1|2|3>(1);
+  const [selected, setSelected] = useState<Task | null>(null);
+  const [suggestions, setSuggestions] = useState<any[] | null>(null);
 
   const today = new Date(); today.setHours(0,0,0,0);
   const isSameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
 
   const { todayList, next3, noDue } = useMemo(() => {
-    const T: Task[] = [], N: Task[] = [], Z: Task[] = [];
-    for (const t of all as Task[]) {
+    const T: any[] = [], N: any[] = [], Z: any[] = [];
+    for (const t of all as any[]) {
       if (t.isDaily && t.dueDate === null) { Z.push(t); continue; }
       if (t.dueDate) {
         const d = new Date(t.dueDate); d.setHours(0,0,0,0);
@@ -49,17 +52,46 @@ export default function DailyPage() {
     if (dest === "nodue") moveToNoDue.mutate({ id });
   };
 
+  async function generatePlan() {
+    const res = await fetch('/api/ai/daily-plan', { method: 'POST' });
+    const data = await res.json();
+    setSuggestions(data.suggestions);
+  }
+
+  async function acceptPlan() {
+    await fetch('/api/ai/daily-plan/accept', { method: 'POST', body: JSON.stringify({ suggestions }) });
+    setSuggestions(null);
+  }
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Daily Planner</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-500">Next-3 target:</span>
-          {[1,2,3].map(d => (
-            <Button key={d} variant={d===nextPick?"default":"outline"} onClick={()=>setNextPick(d as 1|2|3)}>{d}d</Button>
-          ))}
-        </div>
+    <div className="px-6 py-4">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Daily Planner</h1>
+        <button onClick={generatePlan} className="px-3 py-2 rounded bg-black text-white">Generate Plan</button>
       </div>
+
+      {suggestions && (
+        <div className="mb-4 p-3 rounded-lg border bg-white/70">
+          <h3 className="font-medium mb-2">AI Suggested Plan</h3>
+          <ul className="list-disc ml-5 text-sm">
+            {suggestions.map((s, i) => <li key={i}>{s.title} — {s.reason}</li>)}
+          </ul>
+          <div className="mt-3 flex gap-2">
+            <button onClick={acceptPlan} className="px-3 py-1 rounded bg-black text-white">Accept</button>
+            <button onClick={()=>setSuggestions(null)} className="px-3 py-1 rounded border">Dismiss</button>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-500">Next-3 target:</span>
+            {[1,2,3].map(d => (
+              <Button key={d} variant={d===nextPick?"default":"outline"} onClick={()=>setNextPick(d as 1|2|3)}>{d}d</Button>
+            ))}
+          </div>
+        </div>
 
       <DndContext onDragEnd={onDragEnd}>
         <Bucket id="today" title={`Today (${todayList.length})`}>
@@ -67,7 +99,7 @@ export default function DailyPage() {
             <div key={t.id} id={String(t.id)} data-task>
               <TaskCard
                 task={t}
-                onOpen={(task)=>{/* open modal if you like */}}
+                onOpen={(task)=>setSelected(task)}
                 onComplete={(id)=>complete.mutate({ id })}
                 onSnooze={(id)=>snooze.mutate({ id, days: 1 })}
                 onDelete={(id)=>remove.mutate({ id })}
@@ -81,7 +113,7 @@ export default function DailyPage() {
             <div key={t.id} id={String(t.id)} data-task>
               <TaskCard
                 task={t}
-                onOpen={(task)=>{/* open modal */}}
+                onOpen={(task)=>setSelected(task)}
                 onComplete={(id)=>complete.mutate({ id })}
                 onSnooze={(id)=>snooze.mutate({ id, days: 1 })}
                 onDelete={(id)=>remove.mutate({ id })}
@@ -95,7 +127,7 @@ export default function DailyPage() {
             <div key={t.id} id={String(t.id)} data-task>
               <TaskCard
                 task={t}
-                onOpen={(task)=>{/* open modal */}}
+                onOpen={(task)=>setSelected(task)}
                 onComplete={(id)=>complete.mutate({ id })}
                 onSnooze={(id)=>snooze.mutate({ id, days: 1 })}
                 onDelete={(id)=>remove.mutate({ id })}
@@ -104,6 +136,9 @@ export default function DailyPage() {
           ))}
         </Bucket>
       </DndContext>
+      </div>
+
+      <TaskEditModal task={selected!} open={!!selected} onClose={()=>setSelected(null)} />
     </div>
   );
 }

@@ -19,9 +19,17 @@ export default function ProjectsPage() {
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
   });
+  
+  // TODO: Add togglePinned mutation to tRPC router
+  const togglePinned = {
+    mutate: (data: { id: string }) => {
+      console.log('Toggle pinned:', data.id);
+      // TODO: Implement actual mutation
+    }
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="px-6 py-4 max-w-none">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
         <Button onClick={() => router.push('/projects/new')}>
@@ -52,7 +60,7 @@ export default function ProjectsPage() {
       {isLoading ? (
         <div className="text-center py-8">Loading projects...</div>
       ) : projects && projects.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {projects.map((project) => (
             <div
               key={project.id}
@@ -61,15 +69,23 @@ export default function ProjectsPage() {
             >
               <div className="flex justify-between items-start mb-3">
                 <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    project.type === 'website'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {project.type}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="text-xs rounded-full border px-2 py-1 hover:bg-gray-50"
+                    onClick={(e)=>{ e.stopPropagation(); togglePinned.mutate({ id: project.id }); }}
+                  >
+                    {project.pinned ? 'Unpin' : 'Pin'}
+                  </button>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      project.type === 'website'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {project.type}
+                  </span>
+                </div>
               </div>
               
               {project.description && (

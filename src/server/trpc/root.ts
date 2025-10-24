@@ -5,6 +5,10 @@ import { projectsRouter } from './routers/projects';
 import { tasksRouter } from './routers/tasks';
 import { searchRouter } from './routers/search';
 import { dashboardRouter } from './routers/dashboard';
+import { realtimeRouter } from './routers/realtime';
+import { notificationsRouter } from './routers/notifications';
+import { activityRouter } from './routers/activity';
+import { chatRouter } from './routers/chat';
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -13,6 +17,10 @@ export const appRouter = createTRPCRouter({
   tasks: tasksRouter,
   search: searchRouter,
   dashboard: dashboardRouter,
+  realtime: realtimeRouter,
+  notifications: notificationsRouter,
+  activity: activityRouter,
+  chat: chatRouter,
 });
 
 export type AppRouter = typeof appRouter;

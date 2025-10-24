@@ -16,6 +16,8 @@ import { ProjectHeader } from '@/components/projects/project-header';
 import { ProjectStats } from '@/components/projects/project-stats';
 import { QuickAddTask } from '@/components/projects/quick-add-task';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
+import { useRealtime } from '@/app/providers';
+import { RealtimeTest } from '@/components/sync/RealtimeTest';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -24,6 +26,7 @@ export default function ProjectDetailPage() {
   const { data: project, isLoading: projectLoading } = trpc.projects.get.useQuery({ id: projectId });
   const { data: tasks, isLoading: tasksLoading } = trpc.tasks.list.useQuery({ projectId });
   const { data: roles } = trpc.roles.list.useQuery();
+  const { isConnected, status, onlineUsers } = useRealtime();
   
   // Add the byProjectId query at the top level
   const { data: projectTasks, isLoading: projectTasksLoading } = trpc.tasks.byProjectId.useQuery({ 
@@ -77,6 +80,18 @@ export default function ProjectDetailPage() {
         {/* Project Header */}
         <ProjectHeader project={project} role={projectRole} onNewTask={() => openModal(projectId)} />
         
+        {/* Real-time Status Indicator */}
+        {isConnected && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-green-700">
+                Real-time collaboration active ({onlineUsers.length} users online)
+              </span>
+            </div>
+          </div>
+        )}
+        
         {/* Project Stats */}
         <ProjectStats 
           counts={{
@@ -123,6 +138,9 @@ export default function ProjectDetailPage() {
           isOpen={isOpen}
           onClose={closeModal}
         />
+        
+        {/* Real-time Test Panel (only in development) */}
+        {process.env.NODE_ENV === 'development' && <RealtimeTest />}
       </div>
     </div>
   );

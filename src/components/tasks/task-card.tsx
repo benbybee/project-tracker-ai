@@ -17,6 +17,8 @@ export type Task = {
   role?: Role|null;
   subtasks?: Subtask[];
   isDaily?: boolean;
+  updatedAt?: string;
+  projectName?: string;
 };
 
 export function TaskCard({
@@ -43,6 +45,11 @@ export function TaskCard({
 
   const due = task.dueDate ? new Date(task.dueDate) : null;
   const { badge, dueText, overdue } = dueBadge(due);
+  
+  // Calculate status indicators
+  const daysStale = task.updatedAt ? (Date.now() - new Date(task.updatedAt).getTime()) / 86400000 : 0;
+  const dueToday = due && new Date().toDateString() === due.toDateString();
+  const stale = daysStale > 7;
 
   return (
     <motion.div
@@ -65,14 +72,20 @@ export function TaskCard({
       {/* content */}
       <div className="px-3.5 py-3 pl-5">
         <div className="flex items-start gap-2">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="truncate font-medium">{task.title}</h4>
-              {badge}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between">
+              <h4 className="truncate font-semibold">{task.title}</h4>
+              <div className="flex gap-1">
+                {overdue && <span className="px-2 py-0.5 text-xs rounded bg-red-100 text-red-700">Overdue</span>}
+                {dueToday && <span className="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-700">Due Today</span>}
+                {stale && <span className="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700">Stale</span>}
+              </div>
             </div>
+            {task.projectName && <div className="text-xs text-gray-500">{task.projectName}</div>}
             {task.description && (
-              <p className="truncate text-xs text-slate-500 mt-0.5">{task.description}</p>
+              <p className="text-sm text-gray-700 line-clamp-2 mt-1">{task.description}</p>
             )}
+            {task.dueDate && <div className="text-xs text-gray-500 mt-1">Due {new Date(task.dueDate).toLocaleDateString()}</div>}
           </div>
           <button
             className="ml-auto opacity-0 group-hover:opacity-100 transition"

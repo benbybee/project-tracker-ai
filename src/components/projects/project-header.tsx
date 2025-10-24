@@ -12,6 +12,7 @@ import { WebsiteConversionModal } from "./website-conversion-modal";
 import { EditProjectModal } from "./edit-project-modal";
 import { useSync } from "@/hooks/useSync.client";
 import { RefreshCw } from "lucide-react";
+import { useRealtime } from "@/app/providers";
 
 type Role = { id:string; name:string; color:string };
 type Project = {
@@ -36,6 +37,7 @@ export function ProjectHeader({
   
   const utils = trpc.useUtils();
   const { startSync, isSyncing, isOnline } = useSync();
+  const { onlineUsers, isConnected } = useRealtime();
   const convertToGeneralMutation = trpc.projects.convertToGeneral.useMutation({
     onSuccess: () => {
       utils.projects.get.invalidate({ id: project.id });
@@ -130,6 +132,34 @@ export function ProjectHeader({
               </div>
               {project.description && (
                 <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2">{project.description}</p>
+              )}
+              
+              {/* Presence Indicator */}
+              {isConnected && onlineUsers.length > 0 && (
+                <div className="flex items-center space-x-2 mt-2">
+                  <div className="flex -space-x-2">
+                    {onlineUsers.slice(0, 3).map((user, index) => (
+                      <div
+                        key={user.userId}
+                        className="relative"
+                        style={{ zIndex: onlineUsers.length - index }}
+                      >
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-medium border-2 border-white">
+                          {user.userName?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
+                      </div>
+                    ))}
+                    {onlineUsers.length > 3 && (
+                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white">
+                        +{onlineUsers.length - 3}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {onlineUsers.length} {onlineUsers.length === 1 ? 'person' : 'people'} online
+                  </span>
+                </div>
               )}
             </div>
 
