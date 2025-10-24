@@ -58,9 +58,9 @@ export function TaskCard({
       transition={{ type:"spring", stiffness:350, damping:30 }}
       onClick={() => onOpen?.(task)}
       className={cn(
-        "group relative overflow-hidden rounded-[var(--radius-lg)] border shadow-soft",
-        "bg-white/60 dark:bg-white/10 border-white/50 backdrop-blur",
-        "hover:shadow-softer cursor-pointer",
+        "group relative overflow-hidden rounded-xl border shadow-sm",
+        "bg-white/80 dark:bg-white/10 border-gray-200 backdrop-blur",
+        "hover:shadow-md cursor-pointer transition-all",
         className
       )}
     >
@@ -71,15 +71,15 @@ export function TaskCard({
         style={{ backgroundImage: priorityGradient(p) }}
       />
       {/* content */}
-      <div className="px-3.5 py-3 pl-5">
-        <div className="flex items-start gap-2">
+      <div className="px-4 py-3 pl-5">
+        <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <h4 className="truncate font-semibold">{task.title}</h4>
-              <div className="flex gap-1">
-                {overdue && <span className="px-2 py-0.5 text-xs rounded bg-red-100 text-red-700">Overdue</span>}
-                {dueToday && <span className="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-700">Due Today</span>}
-                {stale && <span className="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700">Stale</span>}
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h4 className="font-semibold text-gray-900 leading-snug">{task.title}</h4>
+              <div className="flex gap-1 flex-shrink-0">
+                {overdue && <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 font-medium">Overdue</span>}
+                {dueToday && <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700 font-medium">Due Today</span>}
+                {stale && <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">Stale</span>}
               </div>
             </div>
             {task.projectName && <div className="text-xs text-gray-500">{task.projectName}</div>}

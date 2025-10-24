@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { db } from '@/server/db';
 import { projects, roles } from '@/server/db';
-import { eq, and, like, or } from 'drizzle-orm';
+import { eq, and, like, or, desc } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { upsertEmbedding } from '@/server/search/upsertEmbedding';
 
@@ -77,7 +77,7 @@ export const projectsRouter = createTRPCRouter({
         .from(projects)
         .leftJoin(roles, eq(projects.roleId, roles.id))
         .where(whereClause || eq(projects.id, projects.id))
-        .orderBy(projects.createdAt);
+        .orderBy(desc(projects.pinned), desc(projects.updatedAt));
     }),
 
   get: protectedProcedure

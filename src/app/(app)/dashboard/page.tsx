@@ -15,6 +15,7 @@ import { RoleFilter } from "@/components/dashboard/RoleFilter";
 import { EmptyProjects } from "@/components/dashboard/EmptyProjects";
 import { TaskCard } from "@/components/tasks/task-card";
 import { useRouter } from "next/navigation";
+import { togglePin } from "@/lib/projects-client";
 
 
 export default function DashboardPage() {
@@ -28,9 +29,35 @@ export default function DashboardPage() {
   const { data: dashboardData, isLoading } = trpc.dashboard.get.useQuery({
     roleId: selectedRoleId || undefined,
   });
+  
+  const utils = trpc.useUtils();
 
   const handleRoleChange = (roleId: string | null) => {
     setSelectedRoleId(roleId);
+  };
+  
+  const handleTogglePin = async (projectId: string, pinned: boolean) => {
+    try {
+      // Optimistic update
+      utils.dashboard.get.setData({ roleId: selectedRoleId || undefined }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          projects: old.projects.map(p => 
+            p.id === projectId ? { ...p, pinned } : p
+          ),
+        };
+      });
+      
+      await togglePin(projectId, pinned);
+      
+      // Invalidate to refetch with proper sorting
+      await utils.dashboard.get.invalidate();
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+      // Revert on error
+      await utils.dashboard.get.invalidate();
+    }
   };
 
   const containerVariants = {
@@ -187,11 +214,21 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : dashboardData?.projects && dashboardData.projects.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {dashboardData.projects.map((project, index) => (
-                  <ProjectTile key={project.id} project={project} index={index} />
-                ))}
-              </div>
+              <>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                  💡 Pinned projects appear first
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {dashboardData.projects.map((project, index) => (
+                    <ProjectTile 
+                      key={project.id} 
+                      project={project} 
+                      index={index} 
+                      onTogglePin={handleTogglePin}
+                    />
+                  ))}
+                </div>
+              </>
             ) : (
               <EmptyProjects />
             )}

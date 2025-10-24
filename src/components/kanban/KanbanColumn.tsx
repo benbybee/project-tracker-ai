@@ -49,13 +49,13 @@ export function KanbanColumn({ status, items, title, onEditTask }: KanbanColumnP
   return (
     <div 
       ref={setNodeRef}
-      className={`rounded-xl bg-white/70 backdrop-blur p-3 border border-gray-200 min-h-[500px] transition-all ${isOver ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
+      className={`rounded-xl bg-white/80 backdrop-blur-sm p-4 border border-gray-200 min-h-[500px] transition-all ${isOver ? 'ring-2 ring-blue-500 bg-blue-50 shadow-md' : 'shadow-sm'}`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm capitalize text-gray-700">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-sm uppercase tracking-wide text-gray-800">
           {columnTitle.replace('_', ' ')}
         </h3>
-        <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-gray-600 font-semibold bg-gray-100 px-2.5 py-1 rounded-full">
           {items.length}
         </span>
       </div>

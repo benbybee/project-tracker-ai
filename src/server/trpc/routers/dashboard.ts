@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { db } from '@/server/db';
 import { projects, tasks, roles } from '@/server/db';
-import { eq, and, sql, isNotNull, lt, gte, lte, or } from 'drizzle-orm';
+import { eq, and, sql, isNotNull, lt, gte, lte, or, desc } from 'drizzle-orm';
 
 export const dashboardRouter = createTRPCRouter({
   get: protectedProcedure
@@ -26,13 +26,15 @@ export const dashboardRouter = createTRPCRouter({
         roleConditions.push(eq(projects.roleId, input.roleId));
       }
 
-      // Get projects with task counts
+      // Get projects with task counts (sorted by pinned DESC, then updatedAt DESC)
       const projectsWithCounts = await ctx.db
         .select({
           id: projects.id,
           name: projects.name,
           type: projects.type,
           roleId: projects.roleId,
+          pinned: projects.pinned,
+          updatedAt: projects.updatedAt,
           role: {
             id: roles.id,
             name: roles.name,
@@ -51,7 +53,8 @@ export const dashboardRouter = createTRPCRouter({
             ? and(...roleConditions)
             : undefined
         )
-        .groupBy(projects.id, roles.id);
+        .groupBy(projects.id, roles.id)
+        .orderBy(desc(projects.pinned), desc(projects.updatedAt));
 
       // Get today's tasks count
       const todayTasks = await ctx.db
@@ -122,6 +125,7 @@ export const dashboardRouter = createTRPCRouter({
           type: p.type,
           roleId: p.roleId,
           role: p.role,
+          pinned: p.pinned ?? false,
           totalTasks: Number(p.totalTasks),
           completedTasks: Number(p.completedTasks),
         })),

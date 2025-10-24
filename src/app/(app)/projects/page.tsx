@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
+import { togglePin } from '@/lib/projects-client';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -20,11 +21,14 @@ export default function ProjectsPage() {
     type: typeFilter === 'all' ? undefined : typeFilter,
   });
   
-  // TODO: Add togglePinned mutation to tRPC router
-  const togglePinned = {
-    mutate: (data: { id: string }) => {
-      console.log('Toggle pinned:', data.id);
-      // TODO: Implement actual mutation
+  const utils = trpc.useUtils();
+
+  const handleTogglePin = async (projectId: string, currentlyPinned: boolean) => {
+    try {
+      await togglePin(projectId, !currentlyPinned);
+      await utils.projects.list.invalidate();
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
     }
   };
 
@@ -60,22 +64,24 @@ export default function ProjectsPage() {
       {isLoading ? (
         <div className="text-center py-8">Loading projects...</div>
       ) : projects && projects.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => router.push(`/projects/${project.id}`)}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    className="text-xs rounded-full border px-2 py-1 hover:bg-gray-50"
-                    onClick={(e)=>{ e.stopPropagation(); togglePinned.mutate({ id: project.id }); }}
-                  >
-                    {project.pinned ? 'Unpin' : 'Pin'}
-                  </button>
+        <>
+          <p className="text-xs text-gray-500 mb-4">💡 Pinned projects appear first</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => router.push(`/projects/${project.id}`)}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="text-xs rounded-full border border-gray-300 px-2 py-1 hover:bg-gray-50 transition-colors"
+                      onClick={(e)=>{ e.stopPropagation(); handleTogglePin(project.id, project.pinned ?? false); }}
+                    >
+                      {project.pinned ? '📌 Pinned' : '📌 Pin'}
+                    </button>
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       project.type === 'website'
@@ -107,7 +113,8 @@ export default function ProjectsPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        </>
       ) : (
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>

@@ -19,13 +19,21 @@ interface ProjectTileProps {
     } | null;
     totalTasks: number;
     completedTasks: number;
+    pinned?: boolean;
   };
   index?: number;
+  onTogglePin?: (projectId: string, pinned: boolean) => void;
 }
 
-export function ProjectTile({ project, index = 0 }: ProjectTileProps) {
+export function ProjectTile({ project, index = 0, onTogglePin }: ProjectTileProps) {
   const progress = project.totalTasks > 0 ? (project.completedTasks / project.totalTasks) * 100 : 0;
   const progressRounded = Math.round(progress);
+
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onTogglePin?.(project.id, !project.pinned);
+  };
 
   return (
     <Link href={`/projects/${project.id}`} prefetch>
@@ -42,6 +50,16 @@ export function ProjectTile({ project, index = 0 }: ProjectTileProps) {
         className="cursor-pointer block"
       >
       <GlassCard className="relative overflow-hidden group">
+        {/* Pin button */}
+        <button
+          onClick={handlePinClick}
+          className="absolute top-3 left-3 z-10 text-xs px-2 py-1 rounded-full border border-white/40 bg-white/60 backdrop-blur hover:bg-white/80 transition-all"
+          aria-label={project.pinned ? 'Unpin project' : 'Pin project'}
+          title={project.pinned ? 'Unpin' : 'Pin'}
+        >
+          {project.pinned ? '📌 Pinned' : '📌 Pin'}
+        </button>
+
         {/* Role color accent */}
         {project.role && (
           <div

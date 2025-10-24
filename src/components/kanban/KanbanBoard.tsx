@@ -5,6 +5,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useState, useEffect, useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
+import KanbanFilters from './KanbanFilters';
 import { EmptyState } from '@/components/ui/empty-state';
 import { getDB } from '@/lib/db.client';
 import { enqueueOp } from '@/lib/ops-helpers';
@@ -17,13 +18,12 @@ type BoardVariant = 'default' | 'website';
 interface KanbanBoardProps {
   projectId?: string;
   variant?: BoardVariant;
-  role?: string;
 }
 
 const DEFAULT_COLS: TaskStatus[] = ['not_started', 'in_progress', 'blocked', 'completed'];
 const WEB_COLS: TaskStatus[] = ['not_started', 'content', 'design', 'dev', 'qa', 'launch', 'completed'];
 
-export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoardProps) {
+export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps) {
   const columns = variant === 'website' ? WEB_COLS : DEFAULT_COLS;
   const sensors = useSensors(useSensor(PointerSensor, {
     activationConstraint: {
@@ -34,6 +34,7 @@ export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoar
   const { byId, bulkUpsert, upsert } = useTasksStore();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
 
   // Load tasks from Dexie on mount
   useEffect(() => {
@@ -53,6 +54,18 @@ export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoar
     })();
   }, [projectId, bulkUpsert]);
 
+  // Derive unique roles from tasks
+  const uniqueRoles = useMemo(() => {
+    const roleSet = new Set<string>();
+    Object.values(byId).forEach(task => {
+      if (task.role) {
+        const roleName = typeof task.role === 'string' ? task.role : task.role.name;
+        if (roleName) roleSet.add(roleName);
+      }
+    });
+    return ['All', ...Array.from(roleSet).sort()];
+  }, [byId]);
+
   // Group tasks by column
   const tasksByCol = useMemo(() => {
     const allTasks = Object.values(byId);
@@ -60,7 +73,13 @@ export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoar
     // Apply filters
     const filtered = allTasks
       .filter(t => !projectId || t.projectId === projectId)
-      .filter(t => !role || t.role === role);
+      .filter(t => {
+        if (!roleFilter) return true;
+        const taskRole = t.role;
+        if (!taskRole) return false;
+        const roleName = typeof taskRole === 'string' ? taskRole : taskRole.name;
+        return roleName === roleFilter;
+      });
 
     // Group by status
     const bucket: Record<string, Task[]> = {};
@@ -87,7 +106,7 @@ export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoar
     }
 
     return bucket;
-  }, [byId, projectId, role, columns]);
+  }, [byId, projectId, roleFilter, columns]);
 
   const onDragStart = (event: DragStartEvent) => {
     const task: Task | undefined = event.active.data.current?.task;
@@ -159,13 +178,24 @@ export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoar
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      collisionDetection={closestCorners}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <>
+      {/* Role Filter Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">Tasks</h2>
+        <KanbanFilters
+          roles={uniqueRoles}
+          value={roleFilter}
+          onChange={setRoleFilter}
+        />
+      </div>
+
+      <DndContext
+        sensors={sensors}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        collisionDetection={closestCorners}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {columns.map((status) => {
           const items = tasksByCol[status] || [];
           return (
@@ -178,13 +208,14 @@ export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoar
         })}
       </div>
 
-      <DragOverlay>
-        {activeTask ? (
-          <div className="rotate-3 scale-105 opacity-90">
-            <KanbanTask task={activeTask} />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay>
+          {activeTask ? (
+            <div className="rotate-3 scale-105 opacity-90">
+              <KanbanTask task={activeTask} />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </>
   );
 }
