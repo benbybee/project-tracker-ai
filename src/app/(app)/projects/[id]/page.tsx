@@ -110,19 +110,7 @@ export default function ProjectDetailPage() {
 
           <KanbanBoard 
             projectId={projectId}
-            columns={["not_started", "in_progress", "blocked", "completed"]}
-            fetchQuery={{
-              data: projectTasks,
-              isLoading: projectTasksLoading,
-              error: null
-            }}
-            onMove={({ taskId, status }) =>
-              moveTaskMutation.mutate({ 
-                taskId, 
-                projectId: project.id, 
-                status: status as "not_started" | "in_progress" | "blocked" | "completed" | "next_steps"
-              })
-            }
+            variant="default"
           />
         </section>
 

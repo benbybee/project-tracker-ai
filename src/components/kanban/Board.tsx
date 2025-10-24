@@ -99,7 +99,7 @@ export default function Board({ initial, projectId, onEditTask }: BoardProps) {
       </div>
 
       <DragOverlay>
-        {activeTask ? <KanbanTask task={activeTask} onEdit={onEditTask || (() => {})} /> : null}
+        {activeTask ? <KanbanTask task={activeTask} /> : null}
       </DragOverlay>
     </DndContext>
   );

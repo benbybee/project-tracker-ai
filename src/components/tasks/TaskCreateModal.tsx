@@ -1,32 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Task, TaskStatus } from '@/types/task';
 import { getDB } from '@/lib/db.client';
 import { enqueueOp } from '@/lib/ops-helpers';
 import { useTasksStore } from '@/lib/tasks-store';
+import { useParams } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-interface TaskEditModalProps {
-  task: Task;
+interface TaskCreateModalProps {
   open: boolean;
   onClose: () => void;
+  projectId?: string;
+  defaultStatus?: TaskStatus;
 }
 
-export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
+export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: TaskCreateModalProps) {
   const { upsert } = useTasksStore();
-  const [form, setForm] = useState<Task>(task);
+  const params = useParams<{ id?: string }>();
+  
+  const [form, setForm] = useState<Partial<Task>>({
+    projectId: projectId || params?.id,
+    status: defaultStatus || 'not_started',
+    title: '',
+    description: '',
+    dueDate: '',
+    priorityScore: 2,
+  });
+  
   const [saving, setSaving] = useState(false);
-
-  // Update form when task prop changes
-  useEffect(() => {
-    if (open) {
-      setForm(task);
-    }
-  }, [task, open]);
 
   const updateForm = (updates: Partial<Task>) => {
     setForm(prev => ({ ...prev, ...updates }));
@@ -42,34 +47,51 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     
     try {
       const now = new Date().toISOString();
-      const updatedTask: Task = {
-        ...form,
+      const task: Task = {
+        id: crypto.randomUUID(),
         title: form.title.trim(),
+        description: form.description || null,
+        status: form.status || 'not_started',
+        projectId: form.projectId || null,
+        roleId: form.roleId || null,
+        role: form.role || null,
+        dueDate: form.dueDate || null,
+        priorityScore: form.priorityScore || 2,
         updatedAt: now,
-        version: (form.version ?? 0) + 1,
+        createdAt: now,
+        version: 0,
       };
 
       // Optimistic update
-      upsert(updatedTask);
+      upsert(task);
 
       // Write to Dexie
       const db = await getDB();
-      await db.tasks.put(updatedTask);
+      await db.tasks.put(task);
 
       // Enqueue sync operation
       await enqueueOp({
         entityType: 'task',
-        entityId: updatedTask.id,
-        action: 'update',
-        payload: updatedTask,
-        baseVersion: task.version ?? 0,
-        projectId: updatedTask.projectId || undefined,
+        entityId: task.id,
+        action: 'create',
+        payload: task,
+        baseVersion: 0,
+        projectId: task.projectId || undefined,
       });
 
+      // Reset form and close
+      setForm({
+        projectId: projectId || params?.id,
+        status: defaultStatus || 'not_started',
+        title: '',
+        description: '',
+        dueDate: '',
+        priorityScore: 2,
+      });
       onClose();
     } catch (error) {
-      console.error('Failed to update task:', error);
-      alert('Failed to update task. Please try again.');
+      console.error('Failed to create task:', error);
+      alert('Failed to create task. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -81,7 +103,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit Task</DialogTitle>
+          <DialogTitle>Create New Task</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -178,10 +200,11 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
             Cancel
           </Button>
           <Button type="button" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? 'Creating...' : 'Create Task'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+

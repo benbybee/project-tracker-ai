@@ -50,7 +50,7 @@ export function KanbanColumn({ status, items, title, onEditTask }: KanbanColumnP
       <div ref={setNodeRef} className="space-y-3 min-h-[200px]">
         <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
           {items.map((task) => (
-            <KanbanTask key={task.id} task={task} onEdit={onEditTask || (() => {})} />
+            <KanbanTask key={task.id} task={task} />
           ))}
         </SortableContext>
         

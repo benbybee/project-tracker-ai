@@ -6,7 +6,7 @@ import { TaskCard, Task } from "@/components/tasks/task-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
-import TaskEditModal from "@/components/tasks/TaskEditModal";
+import { TaskEditModal } from "@/components/tasks/TaskEditModal";
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';

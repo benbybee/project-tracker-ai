@@ -1,125 +1,147 @@
 'use client';
 
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useState, useEffect } from 'react';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors, DragOverEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useState, useEffect, useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
 import { EmptyState } from '@/components/ui/empty-state';
-import { useOfflineOperations, useSync } from '@/hooks/useSync.client';
 import { getDB } from '@/lib/db.client';
 import { enqueueOp } from '@/lib/ops-helpers';
+import { useTasksStore } from '@/lib/tasks-store';
+import { Task, TaskStatus } from '@/types/task';
 
 type BoardVariant = 'default' | 'website';
 
 interface KanbanBoardProps {
-  projectId: string;
-  columns?: string[];
-  fetchQuery?: {
-    data?: any[];
-    isLoading: boolean;
-    error?: any;
-  };
-  onMove?: (params: { taskId: string; status: string; position: number }) => void;
+  projectId?: string;
   variant?: BoardVariant;
   role?: string;
 }
 
-export function KanbanBoard({ projectId, columns, fetchQuery, onMove, variant = 'default', role }: KanbanBoardProps) {
-  const [activeTask, setActiveTask] = useState<any>(null);
-  const [itemsByCol, setItemsByCol] = useState<Record<string, any[]>>({});
-  const { updateOffline } = useOfflineOperations();
-  const { isOnline } = useSync();
-  const sensors = useSensors(useSensor(PointerSensor));
-  
-  // Define columns based on variant
-  const defaultColumns = variant === 'website'
-    ? ['not_started', 'content', 'design', 'dev', 'qa', 'launch', 'completed']
-    : ['not_started', 'in_progress', 'next_steps', 'blocked', 'completed'];
-  
-  const boardColumns = columns || defaultColumns;
-  
-  const { data: tasks = [], isLoading, error } = fetchQuery || { data: [], isLoading: false, error: null };
+const DEFAULT_COLS: TaskStatus[] = ['not_started', 'in_progress', 'next_steps', 'blocked', 'completed'];
+const WEB_COLS: TaskStatus[] = ['not_started', 'content', 'design', 'dev', 'qa', 'launch', 'completed'];
 
-  // Filter tasks by role if specified
-  const filtered = tasks.filter(t => !role || t.role === role);
-
-  // Group tasks by status
-  const tasksByStatus = filtered.reduce((acc, task) => {
-    if (!acc[task.status]) {
-      acc[task.status] = [];
+export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoardProps) {
+  const columns = variant === 'website' ? WEB_COLS : DEFAULT_COLS;
+  const sensors = useSensors(useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 8, // Require 8px movement before drag starts
     }
-    acc[task.status].push(task);
-    return acc;
-  }, {} as Record<string, any[]>);
+  }));
+  
+  const { byId, bulkUpsert, upsert } = useTasksStore();
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize itemsByCol when tasks change
+  // Load tasks from Dexie on mount
   useEffect(() => {
-    setItemsByCol(tasksByStatus);
-  }, [tasks]);
+    (async () => {
+      try {
+        setIsLoading(true);
+        const db = await getDB();
+        const tasks = projectId 
+          ? await db.tasks.where('projectId').equals(projectId).toArray()
+          : await db.tasks.toArray();
+        bulkUpsert(tasks);
+      } catch (error) {
+        console.error('Failed to load tasks:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [projectId, bulkUpsert]);
+
+  // Group tasks by column
+  const tasksByCol = useMemo(() => {
+    const allTasks = Object.values(byId);
+    
+    // Apply filters
+    const filtered = allTasks
+      .filter(t => !projectId || t.projectId === projectId)
+      .filter(t => !role || t.role === role);
+
+    // Group by status
+    const bucket: Record<string, Task[]> = {};
+    for (const col of columns) {
+      bucket[col] = [];
+    }
+
+    for (const task of filtered) {
+      if (bucket[task.status]) {
+        bucket[task.status].push(task);
+      } else {
+        // If task status doesn't match columns, put in first column
+        bucket[columns[0]].push(task);
+      }
+    }
+
+    // Sort by updatedAt (most recent first)
+    for (const col of columns) {
+      bucket[col].sort((a, b) => {
+        const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        return bTime - aTime;
+      });
+    }
+
+    return bucket;
+  }, [byId, projectId, role, columns]);
 
   const onDragStart = (event: DragStartEvent) => {
-    const taskId = event.active.id as string;
-    const task = tasks.find((t: any) => t.id === taskId);
-    setActiveTask(task);
+    const task: Task | undefined = event.active.data.current?.task;
+    if (task) {
+      setActiveTask(task);
+    }
   };
 
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    setActiveTask(null);
     
-    const fromCol = active.data.current?.col as string;
-    const toCol = over.data.current?.col as string;
-    if (!fromCol || !toCol || fromCol === toCol) {
-      setActiveTask(null);
-      return;
-    }
+    if (!over) return;
 
-    const task: any = active.data.current?.task;
-    if (!task) {
-      setActiveTask(null);
-      return;
-    }
+    const task: Task | undefined = active.data.current?.task;
+    const toCol: TaskStatus | undefined = over.data.current?.col;
 
-    // Optimistic UI update
-    setItemsByCol(prev => {
-      const from = prev[fromCol]?.filter(t => t.id !== task.id) || [];
-      const to = [{ ...task, status: toCol, updatedAt: new Date().toISOString() }, ...(prev[toCol] || [])];
-      return { ...prev, [fromCol]: from, [toCol]: to };
-    });
+    if (!task || !toCol || task.status === toCol) return;
 
     try {
-      const db = await getDB();
-      await db.tasks.update(task.id, { 
+      const now = new Date().toISOString();
+      const updatedTask: Task = { 
+        ...task, 
         status: toCol, 
-        updatedAt: new Date().toISOString() 
-      });
-      
+        updatedAt: now,
+        version: (task.version || 0) + 1
+      };
+
+      // Optimistic update
+      upsert(updatedTask);
+
+      // Write to Dexie
+      const db = await getDB();
+      await db.tasks.put(updatedTask);
+
+      // Enqueue sync operation
       await enqueueOp({
         entityType: 'task',
         entityId: task.id,
         action: 'update',
         payload: { status: toCol },
         baseVersion: task.version || 0,
-        projectId: task.projectId,
+        projectId: task.projectId || undefined,
       });
     } catch (error) {
       console.error('Failed to update task:', error);
       // Revert optimistic update on error
-      setItemsByCol(prev => {
-        const from = [...(prev[fromCol] || []), task];
-        const to = prev[toCol]?.filter(t => t.id !== task.id) || [];
-        return { ...prev, [fromCol]: from, [toCol]: to };
-      });
+      upsert(task);
     }
-
-    setActiveTask(null);
   };
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {boardColumns.map((column) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {columns.map((column) => (
           <div key={column} className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
             <div className="space-y-3">
@@ -132,15 +154,6 @@ export function KanbanBoard({ projectId, columns, fetchQuery, onMove, variant = 
     );
   }
 
-  if (error) {
-    return (
-      <EmptyState
-        title="Failed to load tasks"
-        subtitle="There was an error loading the tasks for this project."
-      />
-    );
-  }
-
   return (
     <DndContext
       sensors={sensors}
@@ -148,23 +161,50 @@ export function KanbanBoard({ projectId, columns, fetchQuery, onMove, variant = 
       onDragEnd={onDragEnd}
       collisionDetection={closestCorners}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {boardColumns.map((status) => (
-          <SortableContext 
-            key={status} 
-            items={itemsByCol[status]?.map(t => t.id) || []} 
-            strategy={verticalListSortingStrategy}
-          >
-            <KanbanColumn
-              status={status}
-              items={itemsByCol[status] || tasksByStatus[status] || []}
-            />
-          </SortableContext>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+        {columns.map((status) => {
+          const items = tasksByCol[status] || [];
+          return (
+            <SortableContext
+              key={status}
+              items={items.map(t => t.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div
+                data-col={status}
+                className="rounded-xl bg-white/70 backdrop-blur p-3 border border-gray-200 min-h-[500px]"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-sm capitalize text-gray-700">
+                    {status.replace('_', ' ')}
+                  </h3>
+                  <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full">
+                    {items.length}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {items.map(task => (
+                    <KanbanTask key={task.id} task={task} />
+                  ))}
+                  {/* Droppable area indicator */}
+                  <div 
+                    data-droppable 
+                    data-col={status}
+                    className="min-h-[50px] rounded-lg border-2 border-dashed border-transparent"
+                  />
+                </div>
+              </div>
+            </SortableContext>
+          );
+        })}
       </div>
 
       <DragOverlay>
-        {activeTask ? <KanbanTask task={activeTask} onEdit={() => {}} /> : null}
+        {activeTask ? (
+          <div className="rotate-3 scale-105 opacity-90">
+            <KanbanTask task={activeTask} />
+          </div>
+        ) : null}
       </DragOverlay>
     </DndContext>
   );
