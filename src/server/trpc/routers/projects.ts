@@ -137,6 +137,8 @@ export const projectsRouter = createTRPCRouter({
         goLiveDate: input.goLiveDate ? input.goLiveDate : null,
         repoUrl: input.repoUrl ?? null,
         stagingUrl: input.stagingUrl ?? null,
+        // Set initial websiteStatus for website projects
+        websiteStatus: input.type === 'website' ? 'discovery' : null,
       }).returning();
 
       // Create embedding for search

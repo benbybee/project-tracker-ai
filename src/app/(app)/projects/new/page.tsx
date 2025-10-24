@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,10 +32,16 @@ type Form = z.infer<typeof ProjectSchema>;
 export default function NewProjectPage() {
   const router = useRouter();
   const utils = trpc.useUtils();
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+  
   const create = trpc.projects.create.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate projects list to refresh UI
-      utils.projects.list.invalidate();
+      await utils.projects.list.invalidate();
+    },
+    onError: (error) => {
+      setErrorMsg(error.message || 'Failed to create project');
+      console.error('Project creation error:', error);
     },
   });
   const { data: roles } = trpc.roles.list.useQuery();
@@ -51,14 +58,28 @@ export default function NewProjectPage() {
       <div className="max-w-2xl">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">New Project</h1>
         
+        {errorMsg && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
+            <p className="text-sm text-red-800">{errorMsg}</p>
+          </div>
+        )}
+
+        {create.isSuccess && (
+          <div className="rounded-lg bg-green-50 border border-green-200 p-4 mb-6">
+            <p className="text-sm text-green-800">✓ Project created successfully! Redirecting...</p>
+          </div>
+        )}
+
         <form 
           className="space-y-6" 
           onSubmit={handleSubmit(async (data) => {
+            setErrorMsg(null);
             try {
               const res = await create.mutateAsync(data);
               router.push(`/projects/${res.id}`);
-            } catch (error) {
+            } catch (error: any) {
               console.error('Failed to create project:', error);
+              setErrorMsg(error?.message || 'An unexpected error occurred');
             }
           })}
         >
