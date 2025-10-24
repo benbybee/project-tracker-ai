@@ -69,6 +69,8 @@ export const tasks = pgTable('tasks', {
   blockedReason: text('blocked_reason'),
   blockedDetails: text('blocked_details'),
   blockedAt: timestamp('blocked_at'),
+  archived: boolean('archived').default(false),
+  archivedAt: timestamp('archived_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

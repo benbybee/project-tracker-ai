@@ -41,7 +41,8 @@ export async function POST(req: Request) {
           dueDate: newDueStr,
           updatedAt: new Date()
         })
-        .where(inArray(tasks.id, [task.id]));
+        .where(inArray(tasks.id, [task.id]))
+        .returning();
     }
 
     return NextResponse.json({ ok: true, ids, days });
