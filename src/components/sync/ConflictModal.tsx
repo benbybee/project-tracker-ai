@@ -1,28 +1,54 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { pushAndPull } from '@/lib/sync-manager';
+import { useState } from 'react';
 
 type Conflict = { entityType: string; entityId: string; local: any; remote: any; reason: string };
 
-export default function ConflictModal() {
-  const [conflicts, setConflicts] = useState<Conflict[]>([]);
+// Simple in-memory store for conflicts (in production, use Zustand or similar)
+let globalConflicts: Conflict[] = [];
+export function addConflict(c: Conflict) {
+  globalConflicts.push(c);
+}
+export function getConflicts() {
+  return [...globalConflicts];
+}
+export function clearConflict(idx: number) {
+  globalConflicts = globalConflicts.filter((_, i) => i !== idx);
+}
+
+// Conflict Review Button for topbar
+export function ConflictReviewButton() {
   const [open, setOpen] = useState(false);
+  const count = globalConflicts.length;
+  
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className={`relative rounded-lg border px-2 py-1 text-sm transition-colors ${
+          count ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100' : 'text-gray-600 hover:bg-gray-50'
+        }`}
+        title={count ? `${count} conflicts to review` : 'No conflicts'}
+      >
+        Conflicts
+        {count > 0 && (
+          <span className="ml-1 inline-block rounded-full bg-red-500 text-white text-xs px-2 font-medium">
+            {count}
+          </span>
+        )}
+      </button>
+      {open && <ConflictModal onClose={() => setOpen(false)} />}
+    </>
+  );
+}
 
-  async function checkConflicts() {
-    const c = await pushAndPull();
-    if (c?.length) {
-      setConflicts(c);
-      setOpen(true);
-    }
+// Conflict Modal Component
+export default function ConflictModal({ onClose }: { onClose?: () => void }) {
+  const [conflicts, setConflicts] = useState(getConflicts());
+
+  if (conflicts.length === 0) {
+    if (onClose) onClose();
+    return null;
   }
-
-  useEffect(() => {
-    // Poll for conflicts after push/pull cycles
-    const id = setInterval(checkConflicts, 15_000);
-    return () => clearInterval(id);
-  }, []);
-
-  if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-4 w-[680px] max-w-[95vw]">
@@ -51,7 +77,7 @@ export default function ConflictModal() {
           ))}
         </div>
         <div className="mt-4 text-right">
-          <button className="px-3 py-1 rounded border" onClick={()=>setOpen(false)}>Close</button>
+          <button className="px-3 py-1 rounded border" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
@@ -65,7 +91,12 @@ export default function ConflictModal() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ entityType: c.entityType, entityId: c.entityId, winner, local: c.local, remote: c.remote }),
     }).catch(()=>{});
-    setConflicts(prev => prev.filter((_, i) => i !== idx));
-    if (conflicts.length <= 1) setOpen(false);
+    
+    clearConflict(idx);
+    setConflicts(getConflicts());
+    
+    if (conflicts.length <= 1 && onClose) {
+      onClose();
+    }
   }
 }

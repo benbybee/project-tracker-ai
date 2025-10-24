@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Task, TaskStatus } from '@/types/task';
 import { getDB } from '@/lib/db.client';
 import { enqueueOp } from '@/lib/ops-helpers';
+import { getFreshBaseVersionForTask } from '@/lib/sync-manager';
 import { useTasksStore } from '@/lib/tasks-store';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -56,13 +57,16 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
       const db = await getDB();
       await db.tasks.put(updatedTask);
 
+      // Get fresh baseVersion to avoid false conflicts
+      const baseVersion = await getFreshBaseVersionForTask(updatedTask.id);
+
       // Enqueue sync operation
       await enqueueOp({
         entityType: 'task',
         entityId: updatedTask.id,
         action: 'update',
         payload: updatedTask,
-        baseVersion: task.version ?? 0,
+        baseVersion,
         projectId: updatedTask.projectId || undefined,
       });
 

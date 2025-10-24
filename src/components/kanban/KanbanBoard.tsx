@@ -8,6 +8,7 @@ import { KanbanTask } from './KanbanTask';
 import { EmptyState } from '@/components/ui/empty-state';
 import { getDB } from '@/lib/db.client';
 import { enqueueOp } from '@/lib/ops-helpers';
+import { getFreshBaseVersionForTask } from '@/lib/sync-manager';
 import { useTasksStore } from '@/lib/tasks-store';
 import { Task, TaskStatus } from '@/types/task';
 
@@ -122,13 +123,16 @@ export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoar
       const db = await getDB();
       await db.tasks.put(updatedTask);
 
+      // Get fresh baseVersion to avoid false conflicts
+      const baseVersion = await getFreshBaseVersionForTask(task.id);
+
       // Enqueue sync operation
       await enqueueOp({
         entityType: 'task',
         entityId: task.id,
         action: 'update',
         payload: { status: toCol },
-        baseVersion: task.version || 0,
+        baseVersion,
         projectId: task.projectId || undefined,
       });
     } catch (error) {

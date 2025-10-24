@@ -4,6 +4,7 @@ import { Search, Bell, Menu } from "lucide-react";
 import { GradientButton } from "@/components/ui/gradient-button";
 import SyncIndicator from "@/components/sync/SyncIndicator";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { ConflictReviewButton } from "@/components/sync/ConflictModal";
 
 export function Topbar() {
   const [isMobile, setIsMobile] = useState(false);
@@ -32,6 +33,7 @@ export function Topbar() {
         />
         <div className="flex items-center gap-3">
           <SyncIndicator />
+          <ConflictReviewButton />
           <NotificationBell />
           <GradientButton
             onClick={() => {
