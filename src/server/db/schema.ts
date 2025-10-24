@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, boolean, integer, date, jsonb, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, boolean, integer, date, jsonb, uuid, bigint } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enums
@@ -166,6 +166,46 @@ export const plaudPending = pgTable('plaud_pending', {
 
 export type PlaudPendingItem = typeof plaudPending.$inferSelect;
 export type NewPlaudPendingItem = typeof plaudPending.$inferInsert;
+
+// Support Tickets tables
+export const tickets = pgTable('tickets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  projectName: text('project_name').notNull(),
+  domain: text('domain'),
+  details: text('details').notNull(),
+  dueDateSuggested: date('due_date_suggested'),
+  priority: text('priority', { enum: ['low', 'normal', 'high', 'urgent'] }).notNull().default('normal'),
+  status: text('status', { enum: ['new', 'in_review', 'responded', 'converted', 'closed'] }).notNull().default('new'),
+  requesterEmail: text('requester_email'),
+  aiEta: date('ai_eta'),
+  aiSummary: text('ai_summary'),
+});
+
+export const ticketReplies = pgTable('ticket_replies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ticketId: uuid('ticket_id').notNull().references(() => tickets.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  author: text('author', { enum: ['admin', 'requester'] }).notNull(),
+  message: text('message').notNull(),
+});
+
+export const ticketAttachments = pgTable('ticket_attachments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  ticketId: uuid('ticket_id').notNull().references(() => tickets.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  fileName: text('file_name').notNull(),
+  fileSize: bigint('file_size', { mode: 'number' }),
+  url: text('url'),
+});
+
+export type Ticket = typeof tickets.$inferSelect;
+export type NewTicket = typeof tickets.$inferInsert;
+export type TicketReply = typeof ticketReplies.$inferSelect;
+export type NewTicketReply = typeof ticketReplies.$inferInsert;
+export type TicketAttachment = typeof ticketAttachments.$inferSelect;
+export type NewTicketAttachment = typeof ticketAttachments.$inferInsert;
 
 // Import notification, activity, and chat schemas
 export * from './schema/notifications';
