@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
-import Board from '@/components/kanban/Board';
-import { TaskModal } from '@/components/tasks/TaskModal';
-import { useTaskModal } from '@/components/tasks/useTaskModal';
+import { KanbanBoard } from '@/components/kanban/KanbanBoard';
+import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -16,23 +15,10 @@ export const dynamic = 'force-dynamic';
 export default function BoardPage() {
   const [search, setSearch] = useState('');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const router = useRouter();
-  
-  const taskModal = useTaskModal();
 
   const { data: projects } = trpc.projects.list.useQuery({});
-  const { data: tasks, isLoading } = trpc.tasks.list.useQuery({
-    projectId: projectFilter === 'all' ? undefined : projectFilter,
-  });
-
-  // Group tasks by status for the Kanban board
-  const tasksByStatus = {
-    'not_started': tasks?.filter(task => task.status === 'not_started') || [],
-    'in_progress': tasks?.filter(task => task.status === 'in_progress') || [],
-    'next_steps': tasks?.filter(task => task.status === 'next_steps') || [],
-    'blocked': tasks?.filter(task => task.status === 'blocked') || [],
-    'completed': tasks?.filter(task => task.status === 'completed') || [],
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -41,7 +27,7 @@ export default function BoardPage() {
         <Button 
           onClick={() => {
             if (projects && projects.length > 0) {
-              taskModal.openModal(projects[0].id, {});
+              setCreateModalOpen(true);
             } else {
               // Redirect to create project first
               router.push('/projects/new');
@@ -75,21 +61,16 @@ export default function BoardPage() {
       </div>
 
       {/* Kanban Board */}
-      {isLoading ? (
-        <div className="text-center py-8">Loading tasks...</div>
-      ) : (
-        <Board 
-          initial={tasksByStatus} 
-          onEditTask={taskModal.editTask}
-        />
-      )}
+      <KanbanBoard 
+        projectId={projectFilter === 'all' ? undefined : projectFilter}
+        variant="default"
+      />
 
-      {/* Task Modal */}
-      <TaskModal
-        projectId={taskModal.projectId || ''}
-        defaultValues={taskModal.defaultValues}
-        onClose={taskModal.closeModal}
-        isOpen={taskModal.isOpen}
+      {/* Task Create Modal */}
+      <TaskCreateModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        projectId={projects?.[0]?.id}
       />
     </div>
   );

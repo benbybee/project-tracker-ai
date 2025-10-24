@@ -6,7 +6,7 @@ import { trpc } from '@/lib/trpc';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
 
-const COLUMNS = ['not_started', 'in_progress', 'next_steps', 'blocked', 'completed'] as const;
+const COLUMNS = ['not_started', 'in_progress', 'blocked', 'completed'] as const;
 
 interface BoardProps {
   initial: Record<string, any[]>;

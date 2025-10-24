@@ -1,6 +1,6 @@
 'use client';
 
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors, DragOverEvent } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useState, useEffect, useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
@@ -19,7 +19,7 @@ interface KanbanBoardProps {
   role?: string;
 }
 
-const DEFAULT_COLS: TaskStatus[] = ['not_started', 'in_progress', 'next_steps', 'blocked', 'completed'];
+const DEFAULT_COLS: TaskStatus[] = ['not_started', 'in_progress', 'blocked', 'completed'];
 const WEB_COLS: TaskStatus[] = ['not_started', 'content', 'design', 'dev', 'qa', 'launch', 'completed'];
 
 export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoardProps) {
@@ -161,40 +161,15 @@ export function KanbanBoard({ projectId, variant = 'default', role }: KanbanBoar
       onDragEnd={onDragEnd}
       collisionDetection={closestCorners}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {columns.map((status) => {
           const items = tasksByCol[status] || [];
           return (
-            <SortableContext
+            <KanbanColumn
               key={status}
-              items={items.map(t => t.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div
-                data-col={status}
-                className="rounded-xl bg-white/70 backdrop-blur p-3 border border-gray-200 min-h-[500px]"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-sm capitalize text-gray-700">
-                    {status.replace('_', ' ')}
-                  </h3>
-                  <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full">
-                    {items.length}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-3">
-                  {items.map(task => (
-                    <KanbanTask key={task.id} task={task} />
-                  ))}
-                  {/* Droppable area indicator */}
-                  <div 
-                    data-droppable 
-                    data-col={status}
-                    className="min-h-[50px] rounded-lg border-2 border-dashed border-transparent"
-                  />
-                </div>
-              </div>
-            </SortableContext>
+              status={status}
+              items={items}
+            />
           );
         })}
       </div>

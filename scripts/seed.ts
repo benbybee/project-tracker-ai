@@ -120,7 +120,7 @@ async function seed() {
         roleId: defaultRole.id,
         title: 'Plan next sprint',
         description: 'Plan tasks and priorities for the next development sprint',
-        status: 'next_steps' as const,
+        status: 'in_progress' as const,
         dueDate: '2024-01-22',
         priorityScore: '1' as const,
       },

@@ -20,7 +20,7 @@ const TaskSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().nullable().optional(), // ISO date or null if "Add to Daily"
   priorityScore: z.enum(['1', '2', '3', '4']).default('2'),
-  status: z.enum(['not_started', 'in_progress', 'blocked', 'completed', 'next_steps']),
+  status: z.enum(['not_started', 'in_progress', 'blocked', 'completed', 'content', 'design', 'dev', 'qa', 'launch']),
   isDaily: z.boolean().optional(),
   roleId: z.string().optional(),
   projectId: z.string(),
@@ -234,9 +234,13 @@ export function TaskModal({ projectId, defaultValues, onClose, isOpen }: TaskMod
                 <SelectContent>
                   <SelectItem value="not_started">Not Started</SelectItem>
                   <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="next_steps">Next Steps</SelectItem>
                   <SelectItem value="blocked">Blocked</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="content">Content</SelectItem>
+                  <SelectItem value="design">Design</SelectItem>
+                  <SelectItem value="dev">Development</SelectItem>
+                  <SelectItem value="qa">QA</SelectItem>
+                  <SelectItem value="launch">Launch</SelectItem>
                 </SelectContent>
               </Select>
             </div>

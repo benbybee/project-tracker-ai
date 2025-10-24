@@ -12,7 +12,7 @@ export type Task = {
   title:string;
   description?:string|null;
   dueDate?:string|null;
-  status:"not_started"|"in_progress"|"blocked"|"completed"|"next_steps";
+  status:"not_started"|"in_progress"|"blocked"|"completed"|"content"|"design"|"dev"|"qa"|"launch";
   priorityScore: 1|2|3|4 | "1"|"2"|"3"|"4" | null;
   role?: Role|null;
   subtasks?: Subtask[];
@@ -56,10 +56,11 @@ export function TaskCard({
       layout
       whileHover={{ y:-2, scale: 1.01 }}
       transition={{ type:"spring", stiffness:350, damping:30 }}
+      onClick={() => onOpen?.(task)}
       className={cn(
         "group relative overflow-hidden rounded-[var(--radius-lg)] border shadow-soft",
         "bg-white/60 dark:bg-white/10 border-white/50 backdrop-blur",
-        "hover:shadow-softer",
+        "hover:shadow-softer cursor-pointer",
         className
       )}
     >

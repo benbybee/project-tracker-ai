@@ -3,7 +3,7 @@ import { relations } from 'drizzle-orm';
 
 // Enums
 export const taskStatusEnum = pgTable('task_status_enum', {
-  value: text('value', { enum: ['not_started', 'in_progress', 'blocked', 'completed', 'next_steps'] }).primaryKey(),
+  value: text('value', { enum: ['not_started', 'in_progress', 'blocked', 'completed', 'content', 'design', 'dev', 'qa', 'launch'] }).primaryKey(),
 });
 
 export const projectTypeEnum = pgTable('project_type_enum', {
@@ -60,7 +60,7 @@ export const tasks = pgTable('tasks', {
   roleId: uuid('role_id').references(() => roles.id),
   title: text('title').notNull(),
   description: text('description'),
-  status: text('status', { enum: ['not_started', 'in_progress', 'blocked', 'completed', 'next_steps'] }).notNull().default('not_started'),
+  status: text('status', { enum: ['not_started', 'in_progress', 'blocked', 'completed', 'content', 'design', 'dev', 'qa', 'launch'] }).notNull().default('not_started'),
   weekOf: date('week_of'),
   progress: integer('progress').default(0),
   dueDate: date('due_date'),

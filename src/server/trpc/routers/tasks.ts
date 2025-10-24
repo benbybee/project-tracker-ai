@@ -11,7 +11,11 @@ const StatusEnum = z.enum([
   'in_progress',
   'blocked',
   'completed',
-  'next_steps',
+  'content',
+  'design',
+  'dev',
+  'qa',
+  'launch',
 ]);
 
 const PriorityEnum = z.enum(['1', '2', '3', '4']);
@@ -44,7 +48,7 @@ export const tasksRouter = createTRPCRouter({
     .input(
       z.object({
         projectId: z.string().optional(),
-        status: z.enum(['not_started', 'in_progress', 'blocked', 'completed', 'next_steps']).optional(),
+        status: z.enum(['not_started', 'in_progress', 'blocked', 'completed', 'content', 'design', 'dev', 'qa', 'launch']).optional(),
         roleId: z.string().optional(),
         dueWithinDays: z.number().optional(),
         isDailyOnly: z.boolean().optional(),
@@ -449,7 +453,7 @@ export const tasksRouter = createTRPCRouter({
     .input(z.object({
       taskId: z.string().uuid(),
       projectId: z.string().uuid(),
-      status: z.enum(["not_started","in_progress","blocked","completed","next_steps"]),
+      status: z.enum(["not_started","in_progress","blocked","completed","content","design","dev","qa","launch"]),
       // position: z.number().int().min(0), // Not implemented yet
     }))
     .mutation(async ({ ctx, input }) => {

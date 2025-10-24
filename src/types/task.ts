@@ -6,7 +6,6 @@ export type TaskStatus =
   | 'qa'
   | 'launch'
   | 'in_progress'
-  | 'next_steps'
   | 'blocked'
   | 'completed';
 

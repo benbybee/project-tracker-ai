@@ -149,7 +149,6 @@ export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: Tas
               <SelectContent>
                 <SelectItem value="not_started">Not Started</SelectItem>
                 <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="next_steps">Next Steps</SelectItem>
                 <SelectItem value="blocked">Blocked</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="content">Content</SelectItem>

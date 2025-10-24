@@ -14,24 +14,32 @@ interface KanbanColumnProps {
 const STATUS_LABELS = {
   'not_started': 'Not Started',
   'in_progress': 'In Progress',
-  'next_steps': 'Next Steps',
   'blocked': 'Blocked',
   'completed': 'Completed',
+  'content': 'Content',
+  'design': 'Design',
+  'dev': 'Development',
+  'qa': 'QA',
+  'launch': 'Launch',
 };
 
 const STATUS_COLORS = {
   'not_started': 'bg-gray-100',
   'in_progress': 'bg-blue-100',
-  'next_steps': 'bg-yellow-100',
   'blocked': 'bg-red-100',
   'completed': 'bg-green-100',
+  'content': 'bg-purple-100',
+  'design': 'bg-pink-100',
+  'dev': 'bg-cyan-100',
+  'qa': 'bg-yellow-100',
+  'launch': 'bg-orange-100',
 };
 
 export function KanbanColumn({ status, items, title, onEditTask }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: {
-      column: status,
+      col: status, // This matches what onDragEnd looks for
     },
   });
 
@@ -39,15 +47,20 @@ export function KanbanColumn({ status, items, title, onEditTask }: KanbanColumnP
   const columnColor = STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100';
 
   return (
-    <div className={`rounded-lg p-4 ${columnColor} ${isOver ? 'ring-2 ring-blue-500' : ''}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900">{columnTitle}</h3>
-        <span className="bg-white text-gray-600 text-sm px-2 py-1 rounded-full">
+    <div 
+      ref={setNodeRef}
+      className={`rounded-xl bg-white/70 backdrop-blur p-3 border border-gray-200 min-h-[500px] transition-all ${isOver ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-sm capitalize text-gray-700">
+          {columnTitle.replace('_', ' ')}
+        </h3>
+        <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full">
           {items.length}
         </span>
       </div>
 
-      <div ref={setNodeRef} className="space-y-3 min-h-[200px]">
+      <div className="space-y-3">
         <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
           {items.map((task) => (
             <KanbanTask key={task.id} task={task} />
@@ -56,7 +69,7 @@ export function KanbanColumn({ status, items, title, onEditTask }: KanbanColumnP
         
         {items.length === 0 && (
           <div className="text-center py-8 text-gray-500 text-sm">
-            No tasks in this column
+            Drop tasks here
           </div>
         )}
       </div>

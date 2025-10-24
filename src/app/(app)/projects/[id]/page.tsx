@@ -9,8 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
-import { TaskModal } from '@/components/tasks/TaskModal';
-import { useTaskModal } from '@/components/tasks/useTaskModal';
+import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
 import { TaskCard } from '@/components/tasks/task-card';
 import { ProjectHeader } from '@/components/projects/project-header';
 import { ProjectStats } from '@/components/projects/project-stats';
@@ -36,7 +35,7 @@ export default function ProjectDetailPage() {
   // Add the move mutation at the top level
   const moveTaskMutation = trpc.tasks.move.useMutation();
   
-  const { isOpen, openModal, closeModal, defaultValues } = useTaskModal();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   
   if (projectLoading) {
     return (
@@ -78,7 +77,7 @@ export default function ProjectDetailPage() {
     <div className="w-full">
       <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 py-8">
         {/* Project Header */}
-        <ProjectHeader project={project} role={projectRole} onNewTask={() => openModal(projectId)} />
+        <ProjectHeader project={project} role={projectRole} onNewTask={() => setCreateModalOpen(true)} />
         
         {/* Real-time Status Indicator */}
         {isConnected && (
@@ -119,12 +118,11 @@ export default function ProjectDetailPage() {
           projectId={projectId}
         />
 
-        {/* Task Modal */}
-        <TaskModal
+        {/* Task Create Modal */}
+        <TaskCreateModal
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
           projectId={projectId}
-          defaultValues={defaultValues}
-          isOpen={isOpen}
-          onClose={closeModal}
         />
         
         {/* Real-time Test Panel (only in development) */}
