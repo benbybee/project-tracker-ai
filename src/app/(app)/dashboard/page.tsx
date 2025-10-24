@@ -60,6 +60,34 @@ export default function DashboardPage() {
     }
   };
 
+  const handleConvertToWebsite = async (projectId: string) => {
+    try {
+      // Optimistic update
+      utils.dashboard.get.setData({ roleId: selectedRoleId || undefined }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          projects: old.projects.map(p => 
+            p.id === projectId ? { ...p, type: 'website' as const } : p
+          ),
+        };
+      });
+      
+      await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'website', websiteStatus: 'discovery' }),
+      });
+      
+      // Invalidate to refetch
+      await utils.dashboard.get.invalidate();
+    } catch (error) {
+      console.error('Failed to convert to website:', error);
+      // Revert on error
+      await utils.dashboard.get.invalidate();
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -225,6 +253,7 @@ export default function DashboardPage() {
                       project={project} 
                       index={index} 
                       onTogglePin={handleTogglePin}
+                      onConvertToWebsite={handleConvertToWebsite}
                     />
                   ))}
                 </div>

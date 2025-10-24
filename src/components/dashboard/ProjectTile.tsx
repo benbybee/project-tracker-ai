@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Globe } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/glass-card";
 
@@ -23,16 +24,31 @@ interface ProjectTileProps {
   };
   index?: number;
   onTogglePin?: (projectId: string, pinned: boolean) => void;
+  onConvertToWebsite?: (projectId: string) => void;
 }
 
-export function ProjectTile({ project, index = 0, onTogglePin }: ProjectTileProps) {
+export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsite }: ProjectTileProps) {
   const progress = project.totalTasks > 0 ? (project.completedTasks / project.totalTasks) * 100 : 0;
   const progressRounded = Math.round(progress);
+  const [converting, setConverting] = useState(false);
 
   const handlePinClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onTogglePin?.(project.id, !project.pinned);
+  };
+
+  const handleConvertToWebsite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (converting) return;
+    
+    setConverting(true);
+    try {
+      await onConvertToWebsite?.(project.id);
+    } finally {
+      setConverting(false);
+    }
   };
 
   return (
@@ -59,6 +75,20 @@ export function ProjectTile({ project, index = 0, onTogglePin }: ProjectTileProp
         >
           {project.pinned ? '📌 Pinned' : '📌 Pin'}
         </button>
+
+        {/* Convert to Website button (only for general projects) */}
+        {project.type === 'general' && onConvertToWebsite && (
+          <button
+            onClick={handleConvertToWebsite}
+            disabled={converting}
+            className="absolute top-3 right-3 z-10 flex items-center gap-1 text-xs px-2 py-1 rounded-full border border-blue-300 bg-blue-50 backdrop-blur hover:bg-blue-100 transition-all disabled:opacity-50"
+            aria-label="Convert to website project"
+            title="Convert to Website Project"
+          >
+            <Globe className="h-3 w-3" />
+            {converting ? 'Converting...' : 'Website'}
+          </button>
+        )}
 
         {/* Role color accent */}
         {project.role && (

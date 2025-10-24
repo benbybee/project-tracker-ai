@@ -153,6 +153,20 @@ export type NewSubtask = typeof subtasks.$inferInsert;
 export type Embedding = typeof embeddings.$inferSelect;
 export type NewEmbedding = typeof embeddings.$inferInsert;
 
+// Plaud AI pending items table
+export const plaudPending = pgTable('plaud_pending', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  title: text('title').notNull(),
+  description: text('description'),
+  confidence: integer('confidence'), // 0-100
+  sourceId: text('source_id'), // Drive file id, transcript id, etc.
+  suggestedProjectName: text('suggested_project_name'),
+});
+
+export type PlaudPendingItem = typeof plaudPending.$inferSelect;
+export type NewPlaudPendingItem = typeof plaudPending.$inferInsert;
+
 // Import notification, activity, and chat schemas
 export * from './schema/notifications';
 export * from './schema/activity';
