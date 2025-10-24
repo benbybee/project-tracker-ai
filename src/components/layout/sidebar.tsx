@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useTransition, useMemo } from "react";
 import Image from "next/image";
-import { Home, FolderKanban, Columns3, CalendarDays, Settings, Command, ChevronLeft, ChevronRight, Archive } from "lucide-react";
+import { Home, FolderKanban, Columns3, CalendarDays, Settings, Command, ChevronLeft, ChevronRight, Archive, BarChart3, Globe, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { isActive, triggerCommandPalette } from "@/lib/sidebar-utils";
@@ -13,6 +13,9 @@ const nav = [
   { href: "/projects",  label: "Projects",  icon: FolderKanban },
   { href: "/board",     label: "Board",     icon: Columns3 },
   { href: "/daily",     label: "Daily",     icon: CalendarDays },
+  { href: "/summary",   label: "Summary",   icon: BarChart3 },
+  { href: "/projects/website", label: "Website Boards", icon: Globe },
+  { href: "/plaud",     label: "Plaud AI",  icon: Bot },
   { href: "/completed", label: "Completed", icon: Archive },
   { href: "/settings",  label: "Settings",  icon: Settings },
 ];

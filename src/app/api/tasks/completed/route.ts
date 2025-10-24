@@ -27,12 +27,8 @@ export async function GET(req: NextRequest) {
     const daysAgo = parseInt(dateRange);
     const startDate = new Date(now.getTime() - daysAgo * 86400000);
 
-    // Build conditions
+    // Build conditions - completed OR archived
     const conditions = [
-      or(
-        eq(tasks.status, 'completed'),
-        eq(tasks.archived, true)
-      ),
       gte(tasks.updatedAt, startDate)
     ];
 
@@ -58,20 +54,24 @@ export async function GET(req: NextRequest) {
         createdAt: tasks.createdAt,
         projectId: tasks.projectId,
         roleId: tasks.roleId,
-        project: {
-          id: projects.id,
-          name: projects.name,
-        },
-        role: {
-          id: roles.id,
-          name: roles.name,
-          color: roles.color,
-        },
+        projectName: projects.name,
+        projectIdRef: projects.id,
+        roleName: roles.name,
+        roleColor: roles.color,
+        roleIdRef: roles.id,
       })
       .from(tasks)
       .leftJoin(projects, eq(tasks.projectId, projects.id))
       .leftJoin(roles, eq(tasks.roleId, roles.id))
-      .where(and(...conditions))
+      .where(
+        and(
+          or(
+            eq(tasks.status, 'completed'),
+            eq(tasks.archived, true)
+          ),
+          ...conditions
+        )
+      )
       .orderBy(desc(tasks.updatedAt))
       .limit(limit)
       .offset(offset);
@@ -80,10 +80,35 @@ export async function GET(req: NextRequest) {
     const totalResult = await db
       .select({ count: tasks.id })
       .from(tasks)
-      .where(and(...conditions));
+      .where(
+        and(
+          or(
+            eq(tasks.status, 'completed'),
+            eq(tasks.archived, true)
+          ),
+          ...conditions
+        )
+      );
+
+    // Transform the result to match the expected structure
+    const transformedTasks = completedTasks.map(t => ({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      status: t.status,
+      dueDate: t.dueDate,
+      archived: t.archived,
+      archivedAt: t.archivedAt,
+      updatedAt: t.updatedAt,
+      createdAt: t.createdAt,
+      projectId: t.projectId,
+      roleId: t.roleId,
+      project: t.projectIdRef && t.projectName ? { id: t.projectIdRef, name: t.projectName } : null,
+      role: t.roleIdRef && t.roleName ? { id: t.roleIdRef, name: t.roleName, color: t.roleColor || '#gray' } : null,
+    }));
 
     return NextResponse.json({
-      tasks: completedTasks,
+      tasks: transformedTasks,
       total: totalResult.length,
       page,
       limit,
