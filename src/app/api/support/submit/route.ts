@@ -52,10 +52,19 @@ export async function POST(req: Request) {
       id: ticket.id, 
       aiEta 
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create ticket:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      detail: error?.detail,
+      stack: error?.stack,
+    });
     return NextResponse.json(
-      { error: 'Failed to create ticket' },
+      { 
+        error: 'Failed to create ticket',
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
+      },
       { status: 500 }
     );
   }
