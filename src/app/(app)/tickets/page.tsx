@@ -57,6 +57,18 @@ export default function TicketsPage() {
     }
   }
 
+  async function markTicketAsViewed(ticketId: string) {
+    try {
+      await fetch('/api/support/tickets/mark-viewed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId })
+      });
+    } catch (error) {
+      console.error('Failed to mark ticket as viewed:', error);
+    }
+  }
+
   async function acceptSelected() {
     const selected = proposed.filter(p => p.accepted);
     if (!active || selected.length===0) return;
@@ -79,29 +91,37 @@ export default function TicketsPage() {
   }
 
   return (
-    <div className="px-6 py-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-      {/* Sidebar - Tickets List */}
-      <aside className="rounded-xl border bg-white/80 backdrop-blur p-3">
-        <header className="mb-2 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">🎫 Tickets</h1>
+    <div className="px-6 py-4">
+      {/* Full Width Tickets List */}
+      <div className="rounded-xl border bg-white/80 backdrop-blur p-4">
+        <header className="mb-4 flex items-center justify-between">
+          <h1 className="text-xl font-semibold">🎫 Tickets ({tickets.length})</h1>
           <button 
             onClick={refresh} 
             disabled={loading}
-            className="text-xs rounded border px-2 py-1 hover:bg-gray-50 disabled:opacity-50"
+            className="text-sm rounded-lg border px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
           >
             {loading ? 'Loading...' : 'Refresh'}
           </button>
         </header>
-        <div className="space-y-2 max-h-[70vh] overflow-auto">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {tickets.map(t=>(
             <button 
               key={t.id} 
-              onClick={()=>{ setActive(t); setSummary(''); setProposed([]); }}
-              className={`w-full text-left rounded-lg border px-3 py-2 hover:shadow-sm transition-all ${active?.id===t.id?'bg-blue-50 border-blue-300':''}`}
+              onClick={()=>{ 
+                setActive(t); 
+                setSummary(''); 
+                setProposed([]); 
+                if (t.status === 'new') {
+                  markTicketAsViewed(t.id);
+                }
+              }}
+              className="text-left rounded-lg border p-4 hover:shadow-md transition-all hover:border-blue-300"
             >
-              <div className="flex items-center justify-between mb-1">
-                <div className="font-medium text-sm">{t.projectName}</div>
-                <div className="flex gap-1">
+              <div className="flex items-start justify-between mb-2">
+                <div className="font-medium text-sm truncate">{t.projectName}</div>
+                <div className="flex gap-1 flex-shrink-0 ml-2">
                   <span className={`text-xs rounded-full px-2 py-0.5 ${
                     t.priority === 'urgent' ? 'bg-red-100 text-red-700' :
                     t.priority === 'high' ? 'bg-orange-100 text-orange-700' :
@@ -124,219 +144,44 @@ export default function TicketsPage() {
                   </span>
                 </div>
               </div>
-              <div className="text-xs text-gray-500 mb-1">
-                👤 {t.customerName} · {(t.domain || '—')} {t.aiEta && `· ETA ${t.aiEta}`}
+              <div className="text-xs text-gray-500 mb-2">
+                👤 {t.customerName} · {(t.domain || '—')}
               </div>
-              <div className="text-sm text-gray-700 line-clamp-2">{t.details}</div>
+              <div className="text-sm text-gray-700 line-clamp-3">{t.details}</div>
+              {t.aiEta && (
+                <div className="text-xs text-blue-600 mt-2">ETA: {t.aiEta}</div>
+              )}
             </button>
           ))}
-          {tickets.length===0 && !loading && (
-            <div className="text-sm text-gray-600 text-center py-8">
-              No tickets yet. Share the <a href="/support" className="text-blue-600 underline">/support</a> link with clients.
-            </div>
-          )}
         </div>
-      </aside>
-
-      {/* Main - Ticket Details */}
-      <main className="rounded-xl border bg-white/80 backdrop-blur p-3 lg:col-span-2">
-        {active ? (
-          <div className="space-y-4">
-            <header className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">{active.projectName}</h2>
-                <div className="text-sm text-gray-700 mt-1">
-                  <div>👤 {active.customerName} ({active.customerEmail})</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {(active.domain || '—')} · Priority: <span className="font-medium">{active.priority}</span>
-                    {active.dueDateSuggested && ` · Requested: ${active.dueDateSuggested}`}
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button 
-                  onClick={aiPropose} 
-                  className="rounded-lg bg-black px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors"
-                >
-                  ✨ AI: Summarize & Propose
-                </button>
-              </div>
-            </header>
-
-            <section className="rounded-lg border p-3 bg-gray-50">
-              <div className="text-xs text-gray-600 mb-1 font-medium">Request Details</div>
-              <div className="text-sm whitespace-pre-wrap">{active.details}</div>
-            </section>
-
-            {active.attachments && active.attachments.length > 0 && (
-              <section className="rounded-lg border p-3 bg-blue-50">
-                <div className="text-xs text-blue-700 mb-2 font-medium">📎 Attachments ({active.attachments.length})</div>
-                <div className="space-y-2">
-                  {active.attachments.map((attachment, idx) => (
-                    <div key={idx} className="flex items-center justify-between bg-white rounded-lg p-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">📄</span>
-                        <span className="text-sm font-medium">{attachment.name}</span>
-                        {attachment.size && (
-                          <span className="text-xs text-gray-500">
-                            ({(attachment.size / 1024).toFixed(1)} KB)
-                          </span>
-                        )}
-                      </div>
-                      {attachment.url && (
-                        <a 
-                          href={attachment.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm underline"
-                        >
-                          View →
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {summary && (
-              <section className="rounded-lg border p-3 bg-blue-50">
-                <div className="text-xs text-blue-700 mb-1 font-medium">AI Summary</div>
-                <div className="text-sm whitespace-pre-wrap">{summary}</div>
-              </section>
-            )}
-
-            {/* Associated Tasks Section */}
-            <AssociatedTasksSection ticketId={active.id} />
-
-            {suggestedProject && (
-              <section className="rounded-lg border p-3 bg-blue-50">
-                <div className="text-sm font-semibold mb-2">🤖 AI Project Suggestion</div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">{suggestedProject.name}</div>
-                    <div className="text-xs text-gray-600">{suggestedProject.reason}</div>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      // Apply suggested project to all tasks
-                      const updated = proposed.map(p => ({ ...p, projectId: suggestedProject.id }));
-                      setProposed(updated);
-                    }}
-                    className="rounded-lg bg-blue-600 text-white px-3 py-1 text-xs hover:bg-blue-700"
-                  >
-                    Apply to All Tasks
-                  </button>
-                </div>
-              </section>
-            )}
-
-            {proposed.length>0 && (
-              <section className="rounded-lg border p-3">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-sm font-semibold">Proposed Tasks ({proposed.length})</div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => {
-                        const updated = proposed.map(p => ({ ...p, accepted: true }));
-                        setProposed(updated);
-                      }}
-                      className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors"
-                    >
-                      Select All
-                    </button>
-                    <button 
-                      onClick={() => {
-                        const updated = proposed.map(p => ({ ...p, accepted: false }));
-                        setProposed(updated);
-                      }}
-                      className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors"
-                    >
-                      Clear All
-                    </button>
-                    <button 
-                      onClick={acceptSelected} 
-                      disabled={!proposed.some(p => p.accepted)}
-                      className="rounded-lg bg-green-600 text-white px-3 py-1.5 text-xs hover:bg-green-700 transition-colors disabled:opacity-50"
-                    >
-                      Accept Selected ({proposed.filter(p => p.accepted).length})
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {proposed.map((p, idx)=>(
-                    <div key={p.id} className="grid grid-cols-1 lg:grid-cols-[1fr_200px_100px_80px] gap-3 rounded-lg border p-3 hover:bg-gray-50">
-                      <div>
-                        <div className="font-medium text-sm">{p.title}</div>
-                        {p.description && <div className="text-sm text-gray-600 mt-1">{p.description}</div>}
-                        {p.estimatedHours && (
-                          <div className="text-xs text-blue-600 mt-1">⏱️ ~{p.estimatedHours}h estimated</div>
-                        )}
-                      </div>
-                      <select 
-                        className="border rounded px-2 py-1 text-sm bg-white" 
-                        value={p.projectId ?? ''} 
-                        onChange={(e)=>{ 
-                          const newProposed = [...proposed];
-                          newProposed[idx].projectId = e.target.value || undefined;
-                          setProposed(newProposed);
-                        }}
-                      >
-                        <option value="">Select Project</option>
-                        {availableProjects.map(proj => (
-                          <option key={proj.id} value={proj.id}>{proj.name}</option>
-                        ))}
-                        <option value="__new__">➕ New Project</option>
-                      </select>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            const newProposed = [...proposed];
-                            newProposed[idx].title = prompt('Edit task title:', p.title) || p.title;
-                            setProposed(newProposed);
-                          }}
-                          className="text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            const newProposed = proposed.filter((_, i) => i !== idx);
-                            setProposed(newProposed);
-                          }}
-                          className="text-xs text-red-600 hover:text-red-800"
-                        >
-                          🗑️ Remove
-                        </button>
-                      </div>
-                      <label className="flex items-center gap-2 text-sm justify-center">
-                        <input 
-                          type="checkbox" 
-                          checked={!!p.accepted} 
-                          onChange={(e)=>{ 
-                            const newProposed = [...proposed];
-                            newProposed[idx].accepted = e.target.checked;
-                            setProposed(newProposed);
-                          }} 
-                          className="rounded border-gray-300"
-                        />
-                        Accept
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <TicketReplyBox ticketId={active.id} />
-          </div>
-        ) : (
+        
+        {tickets.length===0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-gray-600 mb-2">Select a ticket to review</p>
-            <p className="text-sm text-gray-500">Tickets will appear in the sidebar as they're submitted</p>
+            <p className="text-gray-600 mb-2">No tickets yet</p>
+            <p className="text-sm text-gray-500">
+              Share the <a href="/support" className="text-blue-600 underline">/support</a> link with clients
+            </p>
           </div>
         )}
-      </main>
+      </div>
+
+      {/* Ticket Details Modal */}
+      {active && (
+        <TicketDetailsModal 
+          ticket={active}
+          onClose={() => setActive(null)}
+          summary={summary}
+          proposed={proposed}
+          suggestedProject={suggestedProject}
+          availableProjects={availableProjects}
+          onSummaryChange={setSummary}
+          onProposedChange={setProposed}
+          onSuggestedProjectChange={setSuggestedProject}
+          onAvailableProjectsChange={setAvailableProjects}
+          onAiPropose={aiPropose}
+          onAcceptSelected={acceptSelected}
+        />
+      )}
     </div>
   );
 }
@@ -386,6 +231,248 @@ function TicketReplyBox({ ticketId }: { ticketId: string }) {
         {success && <span className="text-sm text-green-600">✓ Reply sent!</span>}
       </div>
     </section>
+  );
+}
+
+function TicketDetailsModal({ 
+  ticket, 
+  onClose, 
+  summary, 
+  proposed, 
+  suggestedProject, 
+  availableProjects,
+  onSummaryChange,
+  onProposedChange,
+  onSuggestedProjectChange,
+  onAvailableProjectsChange,
+  onAiPropose,
+  onAcceptSelected
+}: {
+  ticket: Ticket;
+  onClose: () => void;
+  summary: string;
+  proposed: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    projectId?: string;
+    accepted?: boolean;
+    estimatedHours?: number;
+  }>;
+  suggestedProject: { id: string; name: string; reason: string } | null;
+  availableProjects: Array<{ id: string; name: string }>;
+  onSummaryChange: (summary: string) => void;
+  onProposedChange: (proposed: any[]) => void;
+  onSuggestedProjectChange: (project: any) => void;
+  onAvailableProjectsChange: (projects: any[]) => void;
+  onAiPropose: () => void;
+  onAcceptSelected: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="mx-4 w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-xl font-semibold">{ticket.projectName}</h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+        
+        <div className="p-4 max-h-[calc(90vh-80px)] overflow-y-auto">
+          <div className="space-y-4">
+            <header className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm text-gray-700">
+                  <div>👤 {ticket.customerName} ({ticket.customerEmail})</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {(ticket.domain || '—')} · Priority: <span className="font-medium">{ticket.priority}</span>
+                    {ticket.dueDateSuggested && ` · Requested: ${ticket.dueDateSuggested}`}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={onAiPropose} 
+                  className="rounded-lg bg-black px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors"
+                >
+                  ✨ AI: Summarize & Propose
+                </button>
+              </div>
+            </header>
+
+            <section className="rounded-lg border p-3 bg-gray-50">
+              <div className="text-xs text-gray-600 mb-1 font-medium">Request Details</div>
+              <div className="text-sm whitespace-pre-wrap">{ticket.details}</div>
+            </section>
+
+            {ticket.attachments && ticket.attachments.length > 0 && (
+              <section className="rounded-lg border p-3 bg-blue-50">
+                <div className="text-xs text-blue-700 mb-2 font-medium">📎 Attachments ({ticket.attachments.length})</div>
+                <div className="space-y-2">
+                  {ticket.attachments.map((attachment, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-white rounded-lg p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">📄</span>
+                        <span className="text-sm font-medium">{attachment.name}</span>
+                        {attachment.size && (
+                          <span className="text-xs text-gray-500">
+                            ({(attachment.size / 1024).toFixed(1)} KB)
+                          </span>
+                        )}
+                      </div>
+                      {attachment.url && (
+                        <a 
+                          href={attachment.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm underline"
+                        >
+                          View →
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {summary && (
+              <section className="rounded-lg border p-3 bg-blue-50">
+                <div className="text-xs text-blue-700 mb-1 font-medium">AI Summary</div>
+                <div className="text-sm whitespace-pre-wrap">{summary}</div>
+              </section>
+            )}
+
+            {/* Associated Tasks Section */}
+            <AssociatedTasksSection ticketId={ticket.id} />
+
+            {suggestedProject && (
+              <section className="rounded-lg border p-3 bg-blue-50">
+                <div className="text-sm font-semibold mb-2">🤖 AI Project Suggestion</div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{suggestedProject.name}</div>
+                    <div className="text-xs text-gray-600">{suggestedProject.reason}</div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      // Apply suggested project to all tasks
+                      const updated = proposed.map(p => ({ ...p, projectId: suggestedProject.id }));
+                      onProposedChange(updated);
+                    }}
+                    className="rounded-lg bg-blue-600 text-white px-3 py-1 text-xs hover:bg-blue-700"
+                  >
+                    Apply to All Tasks
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {proposed.length>0 && (
+              <section className="rounded-lg border p-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm font-semibold">Proposed Tasks ({proposed.length})</div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        const updated = proposed.map(p => ({ ...p, accepted: true }));
+                        onProposedChange(updated);
+                      }}
+                      className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors"
+                    >
+                      Select All
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const updated = proposed.map(p => ({ ...p, accepted: false }));
+                        onProposedChange(updated);
+                      }}
+                      className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors"
+                    >
+                      Clear All
+                    </button>
+                    <button 
+                      onClick={onAcceptSelected} 
+                      disabled={!proposed.some(p => p.accepted)}
+                      className="rounded-lg bg-green-600 text-white px-3 py-1.5 text-xs hover:bg-green-700 transition-colors disabled:opacity-50"
+                    >
+                      Accept Selected ({proposed.filter(p => p.accepted).length})
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {proposed.map((p, idx)=>(
+                    <div key={p.id} className="grid grid-cols-1 lg:grid-cols-[1fr_200px_100px_80px] gap-3 rounded-lg border p-3 hover:bg-gray-50">
+                      <div>
+                        <div className="font-medium text-sm">{p.title}</div>
+                        {p.description && <div className="text-sm text-gray-600 mt-1">{p.description}</div>}
+                        {p.estimatedHours && (
+                          <div className="text-xs text-blue-600 mt-1">⏱️ ~{p.estimatedHours}h estimated</div>
+                        )}
+                      </div>
+                      <select 
+                        className="border rounded px-2 py-1 text-sm bg-white" 
+                        value={p.projectId ?? ''} 
+                        onChange={(e)=>{ 
+                          const newProposed = [...proposed];
+                          newProposed[idx].projectId = e.target.value || undefined;
+                          onProposedChange(newProposed);
+                        }}
+                      >
+                        <option value="">Select Project</option>
+                        {availableProjects.map(proj => (
+                          <option key={proj.id} value={proj.id}>{proj.name}</option>
+                        ))}
+                        <option value="__new__">➕ New Project</option>
+                      </select>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const newProposed = [...proposed];
+                            newProposed[idx].title = prompt('Edit task title:', p.title) || p.title;
+                            onProposedChange(newProposed);
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            const newProposed = proposed.filter((_, i) => i !== idx);
+                            onProposedChange(newProposed);
+                          }}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          🗑️ Remove
+                        </button>
+                      </div>
+                      <label className="flex items-center gap-2 text-sm justify-center">
+                        <input 
+                          type="checkbox" 
+                          checked={!!p.accepted} 
+                          onChange={(e)=>{ 
+                            const newProposed = [...proposed];
+                            newProposed[idx].accepted = e.target.checked;
+                            onProposedChange(newProposed);
+                          }} 
+                          className="rounded border-gray-300"
+                        />
+                        Accept
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <TicketReplyBox ticketId={ticket.id} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
