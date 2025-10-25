@@ -2,7 +2,11 @@
 
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { CacheFirst, NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import {
+  CacheFirst,
+  NetworkFirst,
+  StaleWhileRevalidate,
+} from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 declare const self: ServiceWorkerGlobalScope;
@@ -15,10 +19,11 @@ cleanupOutdatedCaches();
 
 // Cache static assets with cache-first strategy
 registerRoute(
-  ({ request }) => request.destination === 'style' || 
-                  request.destination === 'script' || 
-                  request.destination === 'image' ||
-                  request.url.includes('/_next/static/'),
+  ({ request }) =>
+    request.destination === 'style' ||
+    request.destination === 'script' ||
+    request.destination === 'image' ||
+    request.url.includes('/_next/static/'),
   new CacheFirst({
     cacheName: 'static-assets',
     plugins: [
@@ -46,7 +51,7 @@ registerRoute(
 
 // Cache main app routes with network-first strategy
 registerRoute(
-  ({ url }) => 
+  ({ url }) =>
     url.pathname === '/' ||
     url.pathname === '/dashboard' ||
     url.pathname === '/projects' ||
@@ -67,7 +72,8 @@ registerRoute(
 
 // Cache public assets
 registerRoute(
-  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/public/'),
+  ({ url }) =>
+    url.origin === self.location.origin && url.pathname.startsWith('/public/'),
   new CacheFirst({
     cacheName: 'public-assets',
     plugins: [
@@ -126,39 +132,39 @@ async function handleBackgroundSync() {
 // Enhanced message handling for sync coordination
 self.addEventListener('message', (event) => {
   const { type, data } = event.data || {};
-  
+
   switch (type) {
     case 'SYNC_REQUEST':
       // Forward sync request to all clients
-      self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
           client.postMessage({
             type: 'SYNC_REQUEST',
-            data: data
+            data: data,
           });
         });
       });
       break;
-      
+
     case 'OFFLINE_DETECTED':
       // Notify clients about offline state
-      self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
           client.postMessage({
             type: 'OFFLINE_DETECTED',
-            data: data
+            data: data,
           });
         });
       });
       break;
-      
+
     case 'ONLINE_DETECTED':
       // Notify clients about online state
-      self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
           client.postMessage({
             type: 'ONLINE_DETECTED',
-            data: data
+            data: data,
           });
         });
       });
@@ -167,20 +173,10 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    Promise.all([
-      self.clients.claim(),
-      cleanupOutdatedCaches(),
-    ])
-  );
+  event.waitUntil(Promise.all([self.clients.claim(), cleanupOutdatedCaches()]));
 });
 
 // Handle install event
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    Promise.all([
-      self.skipWaiting(),
-      self.clients.claim(),
-    ])
-  );
+  event.waitUntil(Promise.all([self.skipWaiting(), self.clients.claim()]));
 });

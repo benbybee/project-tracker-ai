@@ -40,14 +40,21 @@ export default function DailySummaryPage() {
   return (
     <div className="px-6 py-4 space-y-4">
       <h1 className="text-2xl font-semibold text-gray-900">Daily Summary</h1>
-      
+
       {/* KPI Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
         {stats &&
           Object.entries(stats).map(([k, v]) => (
-            <div key={k} className="rounded-xl border border-gray-200 bg-white/80 p-3">
-              <div className="text-xs text-gray-500 capitalize">{k.replace(/([A-Z])/g, ' $1').trim()}</div>
-              <div className="text-xl font-semibold text-gray-900">{String(v)}</div>
+            <div
+              key={k}
+              className="rounded-xl border border-gray-200 bg-white/80 p-3"
+            >
+              <div className="text-xs text-gray-500 capitalize">
+                {k.replace(/([A-Z])/g, ' $1').trim()}
+              </div>
+              <div className="text-xl font-semibold text-gray-900">
+                {String(v)}
+              </div>
             </div>
           ))}
       </div>

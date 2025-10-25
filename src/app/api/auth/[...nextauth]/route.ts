@@ -1,15 +1,15 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { db } from "@/server/db";
-import { users } from "@/server/db/schema";
+import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
+import { db } from '@/server/db';
+import { users } from '@/server/db/schema';
 
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
-  session: { strategy: "jwt" },
+  session: { strategy: 'jwt' },
   providers: [
     Credentials({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: { email: {}, password: {} },
       async authorize(creds) {
         try {
@@ -47,7 +47,7 @@ const handler = NextAuth({
     },
   },
   pages: {
-    signIn: "/sign-in",
+    signIn: '/sign-in',
   },
 });
 export { handler as GET, handler as POST };

@@ -18,9 +18,16 @@ export async function POST(req: Request) {
     }
 
     // Check if user exists
-    const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    const existing = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
     if (existing.length > 0) {
-      return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
+      return NextResponse.json(
+        { error: 'Email already in use' },
+        { status: 409 }
+      );
     }
 
     const passwordHash = await hash(password, 10);

@@ -15,8 +15,12 @@ export default function ActivityPage() {
               <Activity className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Activity Feed</h1>
-              <p className="text-gray-600">Track all project activities and updates</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Activity Feed
+              </h1>
+              <p className="text-gray-600">
+                Track all project activities and updates
+              </p>
             </div>
           </div>
         </div>
@@ -27,7 +31,7 @@ export default function ActivityPage() {
             <Clock className="h-4 w-4 text-gray-500" />
             <h2 className="text-lg font-semibold">Recent Activity</h2>
           </div>
-          
+
           <ActivityFeed />
         </GlassCard>
       </div>

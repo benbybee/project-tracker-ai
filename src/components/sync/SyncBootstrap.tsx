@@ -1,6 +1,9 @@
 'use client';
 import { useEffect } from 'react';
-import { wireServiceWorkerMessages, startFallbackInterval } from '@/lib/sync-manager';
+import {
+  wireServiceWorkerMessages,
+  startFallbackInterval,
+} from '@/lib/sync-manager';
 
 export default function SyncBootstrap() {
   useEffect(() => {

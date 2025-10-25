@@ -8,10 +8,11 @@ export function useActivityFeed(projectId?: string) {
   const [activities, setActivities] = useState<any[]>([]);
   const { onActivity, broadcastActivity } = useRealtime();
 
-  const { data: activitiesData, refetch: refetchActivities } = trpc.activity.getActivityFeed.useQuery({
-    projectId,
-    limit: 20,
-  });
+  const { data: activitiesData, refetch: refetchActivities } =
+    trpc.activity.getActivityFeed.useQuery({
+      projectId,
+      limit: 20,
+    });
 
   const logActivityMutation = trpc.activity.logActivity.useMutation({
     onSuccess: (activity) => {
@@ -31,7 +32,7 @@ export function useActivityFeed(projectId?: string) {
   // Listen for real-time activities
   useEffect(() => {
     const unsubscribe = onActivity((activity) => {
-      setActivities(prev => [activity, ...prev]);
+      setActivities((prev) => [activity, ...prev]);
     });
 
     return unsubscribe;
@@ -40,7 +41,16 @@ export function useActivityFeed(projectId?: string) {
   const logActivity = async (activity: {
     targetType: 'task' | 'project' | 'comment' | 'sync' | 'system';
     targetId?: string;
-    action: 'created' | 'updated' | 'deleted' | 'assigned' | 'completed' | 'commented' | 'mentioned' | 'synced' | 'conflict_resolved';
+    action:
+      | 'created'
+      | 'updated'
+      | 'deleted'
+      | 'assigned'
+      | 'completed'
+      | 'commented'
+      | 'mentioned'
+      | 'synced'
+      | 'conflict_resolved';
     payload?: any;
     projectId?: string;
     taskId?: string;

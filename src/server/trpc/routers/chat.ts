@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { db } from '@/server/db';
-import { threads, messages, messageReactions, threadParticipants } from '@/server/db/schema';
+import {
+  threads,
+  messages,
+  messageReactions,
+  threadParticipants,
+} from '@/server/db/schema';
 import { eq, desc, and, gte, count, sql } from 'drizzle-orm';
 
 export const chatRouter = createTRPCRouter({
@@ -38,7 +43,7 @@ export const chatRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const whereConditions = [eq(messages.threadId, input.threadId)];
-      
+
       if (input.cursor) {
         whereConditions.push(sql`${messages.createdAt} < ${input.cursor}`);
       }
@@ -85,7 +90,7 @@ export const chatRouter = createTRPCRouter({
       // Add other participants
       if (input.participantIds.length > 0) {
         await db.insert(threadParticipants).values(
-          input.participantIds.map(userId => ({
+          input.participantIds.map((userId) => ({
             threadId: thread[0].id,
             userId,
           }))
@@ -101,7 +106,9 @@ export const chatRouter = createTRPCRouter({
       z.object({
         threadId: z.string(),
         content: z.string(),
-        messageType: z.enum(['text', 'system', 'mention', 'reaction']).default('text'),
+        messageType: z
+          .enum(['text', 'system', 'mention', 'reaction'])
+          .default('text'),
         metadata: z.any().optional(),
         replyToId: z.string().optional(),
       })
@@ -203,21 +210,20 @@ export const chatRouter = createTRPCRouter({
     }),
 
   // Get unread message count for user
-  getUnreadCount: protectedProcedure
-    .query(async ({ ctx }) => {
-      const result = await db
-        .select({ count: count() })
-        .from(threadParticipants)
-        .where(
-          and(
-            eq(threadParticipants.userId, ctx.session.user.id),
-            sql`${threadParticipants.lastReadAt} < ${threads.lastMessageAt}`
-          )
+  getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
+    const result = await db
+      .select({ count: count() })
+      .from(threadParticipants)
+      .where(
+        and(
+          eq(threadParticipants.userId, ctx.session.user.id),
+          sql`${threadParticipants.lastReadAt} < ${threads.lastMessageAt}`
         )
-        .leftJoin(threads, eq(threadParticipants.threadId, threads.id));
+      )
+      .leftJoin(threads, eq(threadParticipants.threadId, threads.id));
 
-      return result[0]?.count || 0;
-    }),
+    return result[0]?.count || 0;
+  }),
 
   // Get thread participants
   getThreadParticipants: protectedProcedure

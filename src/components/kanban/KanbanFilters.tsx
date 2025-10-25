@@ -10,11 +10,16 @@ interface KanbanFiltersProps {
   roles: string[];
 }
 
-export default function KanbanFilters({ value, onChange, roles }: KanbanFiltersProps) {
+export default function KanbanFilters({
+  value,
+  onChange,
+  roles,
+}: KanbanFiltersProps) {
   const [role, setRole] = useState<string>(value ?? 'All');
 
   useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    const saved =
+      typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
     if (saved) {
       setRole(saved);
       onChange(saved === 'All' ? undefined : saved);
@@ -30,7 +35,10 @@ export default function KanbanFilters({ value, onChange, roles }: KanbanFiltersP
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="role-filter" className="text-sm font-medium text-gray-700">
+      <label
+        htmlFor="role-filter"
+        className="text-sm font-medium text-gray-700"
+      >
         Role
       </label>
       <select
@@ -39,8 +47,10 @@ export default function KanbanFilters({ value, onChange, roles }: KanbanFiltersP
         value={role}
         onChange={(e) => update(e.target.value)}
       >
-        {roles.map(r => (
-          <option key={r} value={r}>{r}</option>
+        {roles.map((r) => (
+          <option key={r} value={r}>
+            {r}
+          </option>
         ))}
       </select>
     </div>

@@ -17,10 +17,7 @@ export const rolesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const [newRole] = await ctx.db
-        .insert(roles)
-        .values(input)
-        .returning();
+      const [newRole] = await ctx.db.insert(roles).values(input).returning();
 
       return newRole;
     }),

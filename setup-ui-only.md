@@ -20,7 +20,7 @@ SUPABASE_SERVICE_ROLE_KEY=dummy-service-role-key
 ✅ **No Database**: All database calls replaced with mock data  
 ✅ **No Auth**: Authentication bypassed for UI demonstration  
 ✅ **Search Works**: Command palette searches mock data  
-✅ **Glass UI**: Beautiful frosted glass components active  
+✅ **Glass UI**: Beautiful frosted glass components active
 
 ## Ready to Deploy!
 

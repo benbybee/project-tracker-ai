@@ -9,8 +9,8 @@
  * @returns boolean indicating if the route is active
  */
 export function isActive(pathname: string, href: string): boolean {
-  if (href === "/dashboard") {
-    return pathname === "/dashboard" || pathname === "/";
+  if (href === '/dashboard') {
+    return pathname === '/dashboard' || pathname === '/';
   }
   return pathname.startsWith(href);
 }
@@ -19,11 +19,13 @@ export function isActive(pathname: string, href: string): boolean {
  * Trigger the command palette via keyboard event
  */
 export function triggerCommandPalette(): void {
-  document.dispatchEvent(new KeyboardEvent('keydown', { 
-    key: 'k', 
-    ctrlKey: true,
-    bubbles: true 
-  }));
+  document.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: 'k',
+      ctrlKey: true,
+      bubbles: true,
+    })
+  );
 }
 
 /**
@@ -34,7 +36,7 @@ export function triggerCommandPalette(): void {
  */
 export function getSidebarWidth(isCompact: boolean, isMobile: boolean): string {
   if (isMobile) {
-    return "256px"; // Full width on mobile
+    return '256px'; // Full width on mobile
   }
-  return isCompact ? "64px" : "256px";
+  return isCompact ? '64px' : '256px';
 }

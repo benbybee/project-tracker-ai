@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wifi, WifiOff, Clock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import {
+  Wifi,
+  WifiOff,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react';
 import { useSync, useEntitySyncStatus } from '@/hooks/useSync.client';
 
 interface OfflineToastProps {
@@ -19,7 +26,7 @@ export function OfflineToast({ onDismiss }: OfflineToastProps) {
     if (isOnline !== lastOnlineStatus) {
       setShowToast(true);
       setLastOnlineStatus(isOnline);
-      
+
       // Auto-dismiss after 3 seconds
       setTimeout(() => {
         setShowToast(false);
@@ -51,7 +58,7 @@ export function OfflineToast({ onDismiss }: OfflineToastProps) {
       return {
         icon: <WifiOff className="h-5 w-5" />,
         title: 'Offline mode enabled',
-        message: 'Changes will sync when you\'re back online',
+        message: "Changes will sync when you're back online",
         type: 'warning' as const,
       };
     }
@@ -107,9 +114,7 @@ export function OfflineToast({ onDismiss }: OfflineToastProps) {
         className={`fixed bottom-4 right-4 z-50 max-w-sm w-full bg-white dark:bg-gray-800 border rounded-lg shadow-lg p-4 ${getToastStyles()}`}
       >
         <div className="flex items-center">
-          <div className="flex-shrink-0">
-            {content.icon}
-          </div>
+          <div className="flex-shrink-0">{content.icon}</div>
           <div className="ml-3 flex-1">
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
               {content.title}
@@ -178,10 +183,10 @@ export function SyncStatusIndicator() {
 }
 
 // Component for showing sync status on individual items
-export function EntitySyncStatus({ 
-  entityType, 
-  entityId 
-}: { 
+export function EntitySyncStatus({
+  entityType,
+  entityId,
+}: {
   entityType: 'task' | 'project' | 'role';
   entityId: string;
 }) {

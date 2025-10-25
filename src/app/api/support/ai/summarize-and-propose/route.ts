@@ -10,7 +10,7 @@ import { randomUUID } from 'crypto';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -30,32 +30,35 @@ export async function POST(req: Request) {
 
     // TODO: Call your AI model (OpenAI) to analyze ticket.details and generate summary + tasks
     // For now, return stub data based on ticket content
-    const summary = `AI Summary: "${ticket.projectName}" requires ${ticket.priority} priority attention. ` +
+    const summary =
+      `AI Summary: "${ticket.projectName}" requires ${ticket.priority} priority attention. ` +
       `The request involves: ${ticket.details.slice(0, 100)}... ` +
       `Estimated completion: ${ticket.aiEta || 'TBD'}.`;
 
     const tasks = [
-      { 
-        id: randomUUID(), 
-        title: `Initial review: ${ticket.projectName}`, 
-        description: 'Clarify scope, requirements, and success criteria with requester' 
+      {
+        id: randomUUID(),
+        title: `Initial review: ${ticket.projectName}`,
+        description:
+          'Clarify scope, requirements, and success criteria with requester',
       },
-      { 
-        id: randomUUID(), 
-        title: 'Implement core changes', 
-        description: `Development work for: ${ticket.details.slice(0, 60)}...` 
+      {
+        id: randomUUID(),
+        title: 'Implement core changes',
+        description: `Development work for: ${ticket.details.slice(0, 60)}...`,
       },
-      { 
-        id: randomUUID(), 
-        title: 'QA & UAT', 
-        description: 'Validate implementation and gather sign-off from requester' 
+      {
+        id: randomUUID(),
+        title: 'QA & UAT',
+        description:
+          'Validate implementation and gather sign-off from requester',
       },
     ];
 
     // Update ticket with AI summary
     await db
       .update(tickets)
-      .set({ 
+      .set({
         aiSummary: summary,
         status: 'in_review',
         updatedAt: new Date(),
@@ -64,7 +67,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       summary,
-      tasks
+      tasks,
     });
   } catch (error) {
     console.error('Failed to generate AI summary:', error);
@@ -74,4 +77,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

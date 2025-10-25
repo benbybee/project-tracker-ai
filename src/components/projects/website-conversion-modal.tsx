@@ -5,7 +5,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { trpc } from '@/lib/trpc';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -14,7 +20,10 @@ import { GlassCard } from '@/components/ui/glass-card';
 const WebsiteFieldsSchema = z.object({
   domain: z.string().url().optional().or(z.literal('')).nullable(),
   hostingProvider: z.string().optional().nullable(),
-  dnsStatus: z.enum(["pending","propagating","active","failed"]).optional().nullable(),
+  dnsStatus: z
+    .enum(['pending', 'propagating', 'active', 'failed'])
+    .optional()
+    .nullable(),
   goLiveDate: z.string().optional().nullable(),
   repoUrl: z.string().url().optional().or(z.literal('')).nullable(),
   stagingUrl: z.string().url().optional().or(z.literal('')).nullable(),
@@ -29,9 +38,14 @@ interface WebsiteConversionModalProps {
   onSuccess: () => void;
 }
 
-export function WebsiteConversionModal({ isOpen, onClose, projectId, onSuccess }: WebsiteConversionModalProps) {
+export function WebsiteConversionModal({
+  isOpen,
+  onClose,
+  projectId,
+  onSuccess,
+}: WebsiteConversionModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const utils = trpc.useUtils();
   const convertMutation = trpc.projects.convertToWebsite.useMutation({
     onSuccess: () => {
@@ -45,16 +59,21 @@ export function WebsiteConversionModal({ isOpen, onClose, projectId, onSuccess }
     },
     onSettled: () => {
       setIsSubmitting(false);
-    }
+    },
   });
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<WebsiteFields>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<WebsiteFields>({
     resolver: zodResolver(WebsiteFieldsSchema),
   });
 
   const onSubmit = async (data: WebsiteFields) => {
     setIsSubmitting(true);
-    
+
     // Convert empty strings to null
     const cleanedData = {
       domain: data.domain || null,
@@ -67,7 +86,7 @@ export function WebsiteConversionModal({ isOpen, onClose, projectId, onSuccess }
 
     convertMutation.mutate({
       id: projectId,
-      website: cleanedData
+      website: cleanedData,
     });
   };
 
@@ -82,8 +101,9 @@ export function WebsiteConversionModal({ isOpen, onClose, projectId, onSuccess }
         <DialogHeader>
           <DialogTitle>Convert to Website Project</DialogTitle>
           <DialogDescription>
-            Add website-specific information to convert this project to a website project type.
-            All fields are optional and can be added later.
+            Add website-specific information to convert this project to a
+            website project type. All fields are optional and can be added
+            later.
           </DialogDescription>
         </DialogHeader>
 
@@ -100,7 +120,9 @@ export function WebsiteConversionModal({ isOpen, onClose, projectId, onSuccess }
                   className={errors.domain ? 'border-red-500' : ''}
                 />
                 {errors.domain && (
-                  <p className="text-red-500 text-xs mt-1">{errors.domain.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.domain.message}
+                  </p>
                 )}
               </div>
 
@@ -131,10 +153,7 @@ export function WebsiteConversionModal({ isOpen, onClose, projectId, onSuccess }
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Go Live Date
                 </label>
-                <Input
-                  {...register('goLiveDate')}
-                  type="date"
-                />
+                <Input {...register('goLiveDate')} type="date" />
               </div>
 
               <div>
@@ -147,7 +166,9 @@ export function WebsiteConversionModal({ isOpen, onClose, projectId, onSuccess }
                   className={errors.repoUrl ? 'border-red-500' : ''}
                 />
                 {errors.repoUrl && (
-                  <p className="text-red-500 text-xs mt-1">{errors.repoUrl.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.repoUrl.message}
+                  </p>
                 )}
               </div>
 
@@ -161,7 +182,9 @@ export function WebsiteConversionModal({ isOpen, onClose, projectId, onSuccess }
                   className={errors.stagingUrl ? 'border-red-500' : ''}
                 />
                 {errors.stagingUrl && (
-                  <p className="text-red-500 text-xs mt-1">{errors.stagingUrl.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.stagingUrl.message}
+                  </p>
                 )}
               </div>
             </div>

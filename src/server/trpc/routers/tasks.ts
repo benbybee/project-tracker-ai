@@ -2,7 +2,17 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { db } from '@/server/db';
 import { tasks, projects, roles, subtasks } from '@/server/db';
-import { eq, and, or, gte, lte, isNull, isNotNull, asc, desc } from 'drizzle-orm';
+import {
+  eq,
+  and,
+  or,
+  gte,
+  lte,
+  isNull,
+  isNotNull,
+  asc,
+  desc,
+} from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { upsertEmbedding } from '@/server/search/upsertEmbedding';
 
@@ -30,13 +40,15 @@ const TaskCreateSchema = z.object({
   priorityScore: z.enum(['1', '2', '3', '4']).default('2'),
   status: StatusEnum.default('not_started'),
   roleId: z.string().optional(), // inherit from project if missing
-  subtasks: z.array(
-    z.object({
-      title: z.string().min(1),
-      completed: z.boolean().default(false),
-      position: z.number().optional(),
-    })
-  ).optional(),
+  subtasks: z
+    .array(
+      z.object({
+        title: z.string().min(1),
+        completed: z.boolean().default(false),
+        position: z.number().optional(),
+      })
+    )
+    .optional(),
 });
 
 const TaskUpdateSchema = TaskCreateSchema.partial().extend({
@@ -48,7 +60,19 @@ export const tasksRouter = createTRPCRouter({
     .input(
       z.object({
         projectId: z.string().optional(),
-        status: z.enum(['not_started', 'in_progress', 'blocked', 'completed', 'content', 'design', 'dev', 'qa', 'launch']).optional(),
+        status: z
+          .enum([
+            'not_started',
+            'in_progress',
+            'blocked',
+            'completed',
+            'content',
+            'design',
+            'dev',
+            'qa',
+            'launch',
+          ])
+          .optional(),
         roleId: z.string().optional(),
         dueWithinDays: z.number().optional(),
         isDailyOnly: z.boolean().optional(),
@@ -84,7 +108,8 @@ export const tasksRouter = createTRPCRouter({
         conditions.push(eq(tasks.isDaily, true));
       }
 
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
 
       return await ctx.db
         .select({
@@ -182,17 +207,20 @@ export const tasksRouter = createTRPCRouter({
         roleId = proj?.roleId ?? null;
       }
 
-      const [inserted] = await ctx.db.insert(tasks).values({
-        projectId: input.projectId,
-        roleId: roleId,
-        title: input.title,
-        description: input.description ?? '',
-        status: input.status,
-        // dueDate: allow null for "Add to Daily"
-        dueDate: input.dueDate ? input.dueDate : null,
-        isDaily: input.isDaily ?? false,
-        priorityScore: input.priorityScore,
-      }).returning();
+      const [inserted] = await ctx.db
+        .insert(tasks)
+        .values({
+          projectId: input.projectId,
+          roleId: roleId,
+          title: input.title,
+          description: input.description ?? '',
+          status: input.status,
+          // dueDate: allow null for "Add to Daily"
+          dueDate: input.dueDate ? input.dueDate : null,
+          isDaily: input.isDaily ?? false,
+          priorityScore: input.priorityScore,
+        })
+        .returning();
 
       if (input.subtasks?.length) {
         await ctx.db.insert(subtasks).values(
@@ -221,15 +249,22 @@ export const tasksRouter = createTRPCRouter({
       const { id, ...patch } = input;
       const updateData: any = {};
       if (patch.title !== undefined) updateData.title = patch.title;
-      if (patch.description !== undefined) updateData.description = patch.description;
+      if (patch.description !== undefined)
+        updateData.description = patch.description;
       if (patch.status !== undefined) updateData.status = patch.status;
-      if (patch.priorityScore !== undefined) updateData.priorityScore = patch.priorityScore;
+      if (patch.priorityScore !== undefined)
+        updateData.priorityScore = patch.priorityScore;
       if (patch.isDaily !== undefined) updateData.isDaily = patch.isDaily;
-      if ('dueDate' in patch) updateData.dueDate = patch.dueDate ? new Date(patch.dueDate) : null;
+      if ('dueDate' in patch)
+        updateData.dueDate = patch.dueDate ? new Date(patch.dueDate) : null;
       if (patch.roleId !== undefined) updateData.roleId = patch.roleId;
       if (patch.projectId !== undefined) updateData.projectId = patch.projectId;
 
-      const [updated] = await ctx.db.update(tasks).set(updateData).where(eq(tasks.id, id)).returning();
+      const [updated] = await ctx.db
+        .update(tasks)
+        .set(updateData)
+        .where(eq(tasks.id, id))
+        .returning();
 
       if (!updated) {
         throw new TRPCError({
@@ -261,10 +296,12 @@ export const tasksRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const updates = [];
 
-      for (const [status, taskIds] of Object.entries(input.orderedIdsByStatus)) {
+      for (const [status, taskIds] of Object.entries(
+        input.orderedIdsByStatus
+      )) {
         for (let i = 0; i < taskIds.length; i++) {
           let whereClause = eq(tasks.id, taskIds[i]);
-          
+
           // If projectId is provided, only update tasks in that project
           if (input.projectId) {
             whereClause = and(
@@ -275,7 +312,7 @@ export const tasksRouter = createTRPCRouter({
 
           const updateQuery = ctx.db
             .update(tasks)
-            .set({ 
+            .set({
               status: status as any,
               updatedAt: new Date(),
             })
@@ -323,12 +360,15 @@ export const tasksRouter = createTRPCRouter({
   addSubtask: protectedProcedure
     .input(z.object({ taskId: z.string(), title: z.string().min(1) }))
     .mutation(async ({ input, ctx }) => {
-      const [st] = await ctx.db.insert(subtasks).values({
-        taskId: input.taskId,
-        title: input.title,
-        completed: false,
-        position: 999, // will be normalized in reorder
-      }).returning();
+      const [st] = await ctx.db
+        .insert(subtasks)
+        .values({
+          taskId: input.taskId,
+          title: input.title,
+          completed: false,
+          position: 999, // will be normalized in reorder
+        })
+        .returning();
       return st;
     }),
 
@@ -381,58 +421,87 @@ export const tasksRouter = createTRPCRouter({
   moveToToday: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const today = new Date(); 
+      const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const [row] = await ctx.db.update(tasks).set({
-        dueDate: today.toISOString().split('T')[0],
-        isDaily: false,
-      }).where(eq(tasks.id, input.id)).returning();
+      const [row] = await ctx.db
+        .update(tasks)
+        .set({
+          dueDate: today.toISOString().split('T')[0],
+          isDaily: false,
+        })
+        .where(eq(tasks.id, input.id))
+        .returning();
       return row;
     }),
 
   moveToNoDue: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const [row] = await ctx.db.update(tasks).set({
-        dueDate: null,
-        isDaily: true,
-      }).where(eq(tasks.id, input.id)).returning();
+      const [row] = await ctx.db
+        .update(tasks)
+        .set({
+          dueDate: null,
+          isDaily: true,
+        })
+        .where(eq(tasks.id, input.id))
+        .returning();
       return row;
     }),
 
   moveToNextDays: protectedProcedure
-    .input(z.object({ id: z.string(), daysFromToday: z.number().min(1).max(3).default(1) }))
+    .input(
+      z.object({
+        id: z.string(),
+        daysFromToday: z.number().min(1).max(3).default(1),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
-      const target = new Date(); 
+      const target = new Date();
       target.setHours(0, 0, 0, 0);
       target.setDate(target.getDate() + input.daysFromToday);
-      const [row] = await ctx.db.update(tasks).set({
-        dueDate: target.toISOString().split('T')[0],
-        isDaily: false,
-      }).where(eq(tasks.id, input.id)).returning();
+      const [row] = await ctx.db
+        .update(tasks)
+        .set({
+          dueDate: target.toISOString().split('T')[0],
+          isDaily: false,
+        })
+        .where(eq(tasks.id, input.id))
+        .returning();
       return row;
     }),
 
   complete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const [row] = await ctx.db.update(tasks).set({ status: "completed" }).where(eq(tasks.id, input.id)).returning();
+      const [row] = await ctx.db
+        .update(tasks)
+        .set({ status: 'completed' })
+        .where(eq(tasks.id, input.id))
+        .returning();
       return row;
     }),
 
   snoozeDays: protectedProcedure
     .input(z.object({ id: z.string(), days: z.number().min(1).max(7) }))
     .mutation(async ({ input, ctx }) => {
-      const target = new Date(); target.setHours(0,0,0,0);
+      const target = new Date();
+      target.setHours(0, 0, 0, 0);
       target.setDate(target.getDate() + input.days);
-      const [row] = await ctx.db.update(tasks).set({ dueDate: target.toISOString().split('T')[0], isDaily: false }).where(eq(tasks.id, input.id)).returning();
+      const [row] = await ctx.db
+        .update(tasks)
+        .set({ dueDate: target.toISOString().split('T')[0], isDaily: false })
+        .where(eq(tasks.id, input.id))
+        .returning();
       return row;
     }),
 
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const [row] = await ctx.db.delete(tasks).where(eq(tasks.id, input.id)).returning();
+      const [row] = await ctx.db
+        .delete(tasks)
+        .where(eq(tasks.id, input.id))
+        .returning();
       return row;
     }),
 
@@ -441,28 +510,44 @@ export const tasksRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.query.tasks.findMany({
         where: eq(tasks.projectId, input.projectId),
-        orderBy: [asc(tasks.status), asc(tasks.createdAt), desc(tasks.updatedAt)],
-        with: { 
-          subtasks: true, 
-          role: true 
+        orderBy: [
+          asc(tasks.status),
+          asc(tasks.createdAt),
+          desc(tasks.updatedAt),
+        ],
+        with: {
+          subtasks: true,
+          role: true,
         },
       });
     }),
 
   move: protectedProcedure
-    .input(z.object({
-      taskId: z.string().uuid(),
-      projectId: z.string().uuid(),
-      status: z.enum(["not_started","in_progress","blocked","completed","content","design","dev","qa","launch"]),
-      // position: z.number().int().min(0), // Not implemented yet
-    }))
+    .input(
+      z.object({
+        taskId: z.string().uuid(),
+        projectId: z.string().uuid(),
+        status: z.enum([
+          'not_started',
+          'in_progress',
+          'blocked',
+          'completed',
+          'content',
+          'design',
+          'dev',
+          'qa',
+          'launch',
+        ]),
+        // position: z.number().int().min(0), // Not implemented yet
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .update(tasks)
-        .set({ 
-          status: input.status, 
+        .set({
+          status: input.status,
           // position: input.position, // Not implemented yet
-          updatedAt: new Date() 
+          updatedAt: new Date(),
         })
         .where(eq(tasks.id, input.taskId));
       return { ok: true };
@@ -474,16 +559,19 @@ export const tasksRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const results = [];
       for (const taskData of input) {
-        const [inserted] = await ctx.db.insert(tasks).values({
-          projectId: taskData.projectId,
-          roleId: taskData.roleId ?? null,
-          title: taskData.title,
-          description: taskData.description ?? '',
-          status: taskData.status,
-          dueDate: taskData.dueDate ? taskData.dueDate : null,
-          isDaily: taskData.isDaily ?? false,
-          priorityScore: taskData.priorityScore,
-        }).returning();
+        const [inserted] = await ctx.db
+          .insert(tasks)
+          .values({
+            projectId: taskData.projectId,
+            roleId: taskData.roleId ?? null,
+            title: taskData.title,
+            description: taskData.description ?? '',
+            status: taskData.status,
+            dueDate: taskData.dueDate ? taskData.dueDate : null,
+            isDaily: taskData.isDaily ?? false,
+            priorityScore: taskData.priorityScore,
+          })
+          .returning();
         results.push(inserted);
       }
       return results;
@@ -521,30 +609,32 @@ export const tasksRouter = createTRPCRouter({
 
   // Sync operations
   sync: protectedProcedure
-    .input(z.object({
-      lastSyncAt: z.number().optional(),
-      tasks: z.array(z.object({
-        id: z.string(),
-        projectId: z.string(),
-        title: z.string(),
-        description: z.string().optional(),
-        status: StatusEnum,
-        priorityScore: PriorityEnum,
-        position: z.number(),
-        updatedAt: z.string(),
-      })),
-    }))
+    .input(
+      z.object({
+        lastSyncAt: z.number().optional(),
+        tasks: z.array(
+          z.object({
+            id: z.string(),
+            projectId: z.string(),
+            title: z.string(),
+            description: z.string().optional(),
+            status: StatusEnum,
+            priorityScore: PriorityEnum,
+            position: z.number(),
+            updatedAt: z.string(),
+          })
+        ),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const { lastSyncAt, tasks: clientTasks } = input;
-      
+
       // Get server tasks updated since last sync
       const serverTasks = await ctx.db
         .select()
         .from(tasks)
         .where(
-          lastSyncAt 
-            ? gte(tasks.updatedAt, new Date(lastSyncAt))
-            : undefined
+          lastSyncAt ? gte(tasks.updatedAt, new Date(lastSyncAt)) : undefined
         );
 
       // Compare and resolve conflicts
@@ -552,12 +642,12 @@ export const tasksRouter = createTRPCRouter({
       const updates = [];
 
       for (const clientTask of clientTasks) {
-        const serverTask = serverTasks.find(t => t.id === clientTask.id);
-        
+        const serverTask = serverTasks.find((t) => t.id === clientTask.id);
+
         if (serverTask) {
           const clientTime = new Date(clientTask.updatedAt).getTime();
           const serverTime = new Date(serverTask.updatedAt).getTime();
-          
+
           if (clientTime > serverTime) {
             // Client is newer, update server
             updates.push({
@@ -586,10 +676,7 @@ export const tasksRouter = createTRPCRouter({
 
       // Apply updates
       for (const update of updates) {
-        await ctx.db
-          .update(tasks)
-          .set(update)
-          .where(eq(tasks.id, update.id));
+        await ctx.db.update(tasks).set(update).where(eq(tasks.id, update.id));
       }
 
       return {

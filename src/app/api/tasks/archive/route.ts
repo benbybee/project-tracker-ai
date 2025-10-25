@@ -8,7 +8,7 @@ import { and, eq, lt } from 'drizzle-orm';
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -44,10 +44,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Archive failed:', error);
-    return NextResponse.json(
-      { error: 'Archive failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Archive failed' }, { status: 500 });
   }
 }
-

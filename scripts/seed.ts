@@ -49,7 +49,8 @@ async function seed() {
         projectId: sampleProject.id,
         roleId: defaultRole.id,
         title: 'Set up project structure',
-        description: 'Initialize the project with proper folder structure and configuration',
+        description:
+          'Initialize the project with proper folder structure and configuration',
         status: 'completed' as const,
         dueDate: '2024-01-15',
         priorityScore: '1' as const,
@@ -58,7 +59,8 @@ async function seed() {
         projectId: sampleProject.id,
         roleId: defaultRole.id,
         title: 'Design homepage',
-        description: 'Create the main homepage design with hero section and navigation',
+        description:
+          'Create the main homepage design with hero section and navigation',
         status: 'in_progress' as const,
         dueDate: '2024-01-20',
         priorityScore: '2' as const,
@@ -67,7 +69,8 @@ async function seed() {
         projectId: sampleProject.id,
         roleId: defaultRole.id,
         title: 'Implement responsive layout',
-        description: 'Make sure the website works well on mobile and tablet devices',
+        description:
+          'Make sure the website works well on mobile and tablet devices',
         status: 'not_started' as const,
         dueDate: '2024-01-25',
         priorityScore: '3' as const,
@@ -81,7 +84,8 @@ async function seed() {
         dueDate: '2024-01-30',
         priorityScore: '4' as const,
         blockedReason: 'Waiting for analytics account setup',
-        blockedDetails: 'Need to create Google Analytics account and get tracking ID',
+        blockedDetails:
+          'Need to create Google Analytics account and get tracking ID',
       },
     ];
 
@@ -97,7 +101,8 @@ async function seed() {
         type: 'general',
         description: 'A general project for personal tasks and todos',
         roleId: defaultRole.id,
-        notes: 'Use this project for tasks that don\'t fit into specific website projects.',
+        notes:
+          "Use this project for tasks that don't fit into specific website projects.",
       })
       .returning();
 
@@ -109,7 +114,8 @@ async function seed() {
         projectId: generalProject.id,
         roleId: defaultRole.id,
         title: 'Review project documentation',
-        description: 'Go through all project documentation and update as needed',
+        description:
+          'Go through all project documentation and update as needed',
         status: 'not_started' as const,
         dueDate: '2024-01-18',
         priorityScore: '2' as const,
@@ -119,7 +125,8 @@ async function seed() {
         projectId: generalProject.id,
         roleId: defaultRole.id,
         title: 'Plan next sprint',
-        description: 'Plan tasks and priorities for the next development sprint',
+        description:
+          'Plan tasks and priorities for the next development sprint',
         status: 'in_progress' as const,
         dueDate: '2024-01-22',
         priorityScore: '1' as const,

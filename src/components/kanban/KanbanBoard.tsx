@@ -1,7 +1,20 @@
 'use client';
 
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  closestCorners,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { useState, useEffect, useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
@@ -20,17 +33,35 @@ interface KanbanBoardProps {
   variant?: BoardVariant;
 }
 
-const DEFAULT_COLS: TaskStatus[] = ['not_started', 'in_progress', 'blocked', 'completed'];
-const WEB_COLS: TaskStatus[] = ['not_started', 'content', 'design', 'dev', 'qa', 'launch', 'completed'];
+const DEFAULT_COLS: TaskStatus[] = [
+  'not_started',
+  'in_progress',
+  'blocked',
+  'completed',
+];
+const WEB_COLS: TaskStatus[] = [
+  'not_started',
+  'content',
+  'design',
+  'dev',
+  'qa',
+  'launch',
+  'completed',
+];
 
-export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps) {
+export function KanbanBoard({
+  projectId,
+  variant = 'default',
+}: KanbanBoardProps) {
   const columns = variant === 'website' ? WEB_COLS : DEFAULT_COLS;
-  const sensors = useSensors(useSensor(PointerSensor, {
-    activationConstraint: {
-      distance: 8, // Require 8px movement before drag starts
-    }
-  }));
-  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    })
+  );
+
   const { byId, bulkUpsert, upsert } = useTasksStore();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +73,7 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
       try {
         setIsLoading(true);
         const db = await getDB();
-        const tasks = projectId 
+        const tasks = projectId
           ? await db.tasks.where('projectId').equals(projectId).toArray()
           : await db.tasks.toArray();
         bulkUpsert(tasks);
@@ -57,9 +88,10 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
   // Derive unique roles from tasks
   const uniqueRoles = useMemo(() => {
     const roleSet = new Set<string>();
-    Object.values(byId).forEach(task => {
+    Object.values(byId).forEach((task) => {
       if (task.role) {
-        const roleName = typeof task.role === 'string' ? task.role : task.role.name;
+        const roleName =
+          typeof task.role === 'string' ? task.role : task.role.name;
         if (roleName) roleSet.add(roleName);
       }
     });
@@ -69,15 +101,16 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
   // Group tasks by column
   const tasksByCol = useMemo(() => {
     const allTasks = Object.values(byId);
-    
+
     // Apply filters
     const filtered = allTasks
-      .filter(t => !projectId || t.projectId === projectId)
-      .filter(t => {
+      .filter((t) => !projectId || t.projectId === projectId)
+      .filter((t) => {
         if (!roleFilter) return true;
         const taskRole = t.role;
         if (!taskRole) return false;
-        const roleName = typeof taskRole === 'string' ? taskRole : taskRole.name;
+        const roleName =
+          typeof taskRole === 'string' ? taskRole : taskRole.name;
         return roleName === roleFilter;
       });
 
@@ -118,7 +151,7 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
-    
+
     if (!over) return;
 
     const task: Task | undefined = active.data.current?.task;
@@ -128,11 +161,11 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
 
     try {
       const now = new Date().toISOString();
-      const updatedTask: Task = { 
-        ...task, 
-        status: toCol, 
+      const updatedTask: Task = {
+        ...task,
+        status: toCol,
         updatedAt: now,
-        version: (task.version || 0) + 1
+        version: (task.version || 0) + 1,
       };
 
       // Optimistic update
@@ -196,17 +229,11 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
         collisionDetection={closestCorners}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {columns.map((status) => {
-          const items = tasksByCol[status] || [];
-          return (
-            <KanbanColumn
-              key={status}
-              status={status}
-              items={items}
-            />
-          );
-        })}
-      </div>
+          {columns.map((status) => {
+            const items = tasksByCol[status] || [];
+            return <KanbanColumn key={status} status={status} items={items} />;
+          })}
+        </div>
 
         <DragOverlay>
           {activeTask ? (

@@ -1,7 +1,12 @@
 // Client-only sync manager with lazy imports
 import { getDB, SyncQueueItem, SyncStatus } from './db.client';
 
-export type SyncEvent = 'start' | 'progress' | 'complete' | 'error' | 'conflict';
+export type SyncEvent =
+  | 'start'
+  | 'progress'
+  | 'complete'
+  | 'error'
+  | 'conflict';
 
 export interface SyncProgress {
   total: number;
@@ -18,11 +23,11 @@ class SyncManager {
   constructor() {
     // Only run in browser
     if (typeof window === 'undefined') return;
-    
+
     // Listen for online/offline events
     window.addEventListener('online', () => this.handleOnline());
     window.addEventListener('offline', () => this.handleOffline());
-    
+
     // Initialize sync status
     this.updateSyncStatus({ isOnline: navigator.onLine });
   }
@@ -33,14 +38,14 @@ class SyncManager {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)!.add(callback);
-    
+
     return () => {
       this.listeners.get(event)?.delete(callback);
     };
   }
 
   private emit(event: SyncEvent, data?: any): void {
-    this.listeners.get(event)?.forEach(callback => callback(data));
+    this.listeners.get(event)?.forEach((callback) => callback(data));
   }
 
   // Public methods
@@ -60,9 +65,12 @@ class SyncManager {
 
     try {
       await this.updateSyncStatus({ isSyncing: true });
-      
+
       const db = await getDB();
-      const pendingItems = await db.syncQueue.where('retryCount').below(5).toArray();
+      const pendingItems = await db.syncQueue
+        .where('retryCount')
+        .below(5)
+        .toArray();
       const progress: SyncProgress = {
         total: pendingItems.length,
         completed: 0,
@@ -78,29 +86,32 @@ class SyncManager {
 
           await this.syncItem(item);
           await db.syncQueue.delete(item.id);
-          
+
           // Update entity sync status
-          const table = db[item.entityType + 's' as keyof typeof db] as any;
+          const table = db[(item.entityType + 's') as keyof typeof db] as any;
           await table.update(item.entityId, { syncStatus: 'synced' });
-          
+
           progress.completed++;
           this.emit('progress', progress);
         } catch (error) {
-          console.error(`Failed to sync ${item.entityType} ${item.entityId}:`, error);
-          
+          console.error(
+            `Failed to sync ${item.entityType} ${item.entityId}:`,
+            error
+          );
+
           // Increment retry count
           await db.syncQueue.update(item.id, {
             retryCount: item.retryCount + 1,
             lastError: error instanceof Error ? error.message : 'Unknown error',
           });
-          
+
           progress.failed++;
           this.emit('progress', progress);
         }
       }
 
-      await this.updateSyncStatus({ 
-        isSyncing: false, 
+      await this.updateSyncStatus({
+        isSyncing: false,
         lastSyncAt: new Date().toISOString(),
         pendingCount: await db.getPendingCount(),
         failedCount: await db.getFailedCount(),
@@ -134,7 +145,11 @@ class SyncManager {
     }
   }
 
-  private async syncProject(entityId: string, operationType: string, payload: any): Promise<void> {
+  private async syncProject(
+    entityId: string,
+    operationType: string,
+    payload: any
+  ): Promise<void> {
     // TODO: Implement proper tRPC sync with lazy import
     // const { trpc } = await import('./trpc');
     // switch (operationType) {
@@ -148,10 +163,19 @@ class SyncManager {
     //     await trpc.projects.remove.mutate({ id: entityId });
     //     break;
     // }
-    console.log('Sync operation:', { entityType: 'project', entityId, operationType, payload });
+    console.log('Sync operation:', {
+      entityType: 'project',
+      entityId,
+      operationType,
+      payload,
+    });
   }
 
-  private async syncTask(entityId: string, operationType: string, payload: any): Promise<void> {
+  private async syncTask(
+    entityId: string,
+    operationType: string,
+    payload: any
+  ): Promise<void> {
     // TODO: Implement proper tRPC sync with lazy import
     // const { trpc } = await import('./trpc');
     // switch (operationType) {
@@ -168,7 +192,11 @@ class SyncManager {
     console.log('Sync task operation:', { entityId, operationType, payload });
   }
 
-  private async syncRole(entityId: string, operationType: string, payload: any): Promise<void> {
+  private async syncRole(
+    entityId: string,
+    operationType: string,
+    payload: any
+  ): Promise<void> {
     // Roles are typically managed server-side, but we can handle updates
     if (operationType === 'update') {
       // Handle role updates if needed
@@ -212,7 +240,7 @@ class SyncManager {
   // Private methods
   private async handleOnline(): Promise<void> {
     await this.updateSyncStatus({ isOnline: true });
-    
+
     // Auto-sync when coming back online
     if (await this.hasPendingSync()) {
       setTimeout(() => this.startSync(), 1000);
@@ -241,7 +269,7 @@ class SyncManager {
     if (serverTime > localTime) {
       // Server version is newer, use it
       const db = await getDB();
-      const table = db[entityType + 's' as keyof typeof db] as any;
+      const table = db[(entityType + 's') as keyof typeof db] as any;
       await table.put(serverItem);
       return serverItem;
     } else {
@@ -265,7 +293,7 @@ export function wireServiceWorkerMessages() {
 
   navigator.serviceWorker.addEventListener('message', (event) => {
     const { type, data } = event.data || {};
-    
+
     switch (type) {
       case 'SYNC_REQUEST':
         // Handle sync requests from service worker
@@ -291,9 +319,9 @@ export function startFallbackInterval(intervalMs: number = 30000) {
     try {
       const { createSyncManager } = await import('./sync-manager.client');
       const manager = await createSyncManager();
-      
+
       // Only attempt sync if online and has pending items
-      if (navigator.onLine && await manager.hasPendingSync()) {
+      if (navigator.onLine && (await manager.hasPendingSync())) {
         console.log('Fallback sync attempt...');
         await manager.startSync();
       }

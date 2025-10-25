@@ -8,7 +8,7 @@ import { and, eq, lt } from 'drizzle-orm';
 export async function DELETE(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -19,12 +19,7 @@ export async function DELETE(req: NextRequest) {
 
     const result = await db
       .delete(tasks)
-      .where(
-        and(
-          eq(tasks.archived, true),
-          lt(tasks.archivedAt, sixMonthsAgo)
-        )
-      )
+      .where(and(eq(tasks.archived, true), lt(tasks.archivedAt, sixMonthsAgo)))
       .returning();
 
     return NextResponse.json({
@@ -34,10 +29,7 @@ export async function DELETE(req: NextRequest) {
     });
   } catch (error) {
     console.error('Cleanup failed:', error);
-    return NextResponse.json(
-      { error: 'Cleanup failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Cleanup failed' }, { status: 500 });
   }
 }
 
@@ -45,4 +37,3 @@ export async function DELETE(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return DELETE(req);
 }
-

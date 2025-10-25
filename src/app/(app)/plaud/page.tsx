@@ -26,7 +26,9 @@ type TaskAssignment = {
 export default function PlaudIngestPage() {
   const [items, setItems] = useState<ProposedTask[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const [assignments, setAssignments] = useState<Record<string, TaskAssignment>>({});
+  const [assignments, setAssignments] = useState<
+    Record<string, TaskAssignment>
+  >({});
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,37 +61,41 @@ export default function PlaudIngestPage() {
     if (selectedIds.length === 0) return;
 
     // Validate that all selected items have either a projectId or projectNameNew
-    const tasksToAccept = selectedIds.map(id => {
-      const item = items.find(i => i.id === id);
-      const assignment = assignments[id] || {};
-      
-      if (!assignment.projectId && !assignment.projectNameNew) {
-        // Use suggested project name if available
-        if (item?.suggestedProjectName) {
-          assignment.projectNameNew = item.suggestedProjectName;
-        } else {
-          setError('Please assign all selected tasks to a project or create a new project');
-          return null;
-        }
-      }
+    const tasksToAccept = selectedIds
+      .map((id) => {
+        const item = items.find((i) => i.id === id);
+        const assignment = assignments[id] || {};
 
-      return {
-        id,
-        title: item?.title || 'Untitled',
-        description: item?.description || '',
-        projectId: assignment.projectId,
-        projectNameNew: assignment.projectNameNew,
-      };
-    }).filter(Boolean);
+        if (!assignment.projectId && !assignment.projectNameNew) {
+          // Use suggested project name if available
+          if (item?.suggestedProjectName) {
+            assignment.projectNameNew = item.suggestedProjectName;
+          } else {
+            setError(
+              'Please assign all selected tasks to a project or create a new project'
+            );
+            return null;
+          }
+        }
+
+        return {
+          id,
+          title: item?.title || 'Untitled',
+          description: item?.description || '',
+          projectId: assignment.projectId,
+          projectNameNew: assignment.projectNameNew,
+        };
+      })
+      .filter(Boolean);
 
     if (tasksToAccept.length === 0) return;
 
     setProcessing(true);
     setError(null);
-    
+
     try {
       // Optimistically remove from UI
-      setItems(prev => prev.filter(item => !selectedIds.includes(item.id)));
+      setItems((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
       setSelected({});
       setAssignments({});
 
@@ -100,7 +106,7 @@ export default function PlaudIngestPage() {
       });
 
       const data = await res.json();
-      
+
       if (!data.ok) {
         throw new Error(data.error || 'Failed to accept tasks');
       }
@@ -122,10 +128,10 @@ export default function PlaudIngestPage() {
 
     setProcessing(true);
     setError(null);
-    
+
     try {
       // Optimistically remove from UI
-      setItems(prev => prev.filter(item => !selectedIds.includes(item.id)));
+      setItems((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
       setSelected({});
       setAssignments({});
 
@@ -136,7 +142,7 @@ export default function PlaudIngestPage() {
       });
 
       const data = await res.json();
-      
+
       if (!data.ok) {
         throw new Error(data.error || 'Failed to decline tasks');
       }
@@ -156,14 +162,17 @@ export default function PlaudIngestPage() {
   function handleAssignmentChange(itemId: string, value: string) {
     if (value === '__new__') {
       // Prompt for new project name
-      setAssignments(prev => ({
+      setAssignments((prev) => ({
         ...prev,
-        [itemId]: { projectNameNew: items.find(i => i.id === itemId)?.suggestedProjectName || '' }
+        [itemId]: {
+          projectNameNew:
+            items.find((i) => i.id === itemId)?.suggestedProjectName || '',
+        },
       }));
     } else {
-      setAssignments(prev => ({
+      setAssignments((prev) => ({
         ...prev,
-        [itemId]: { projectId: value }
+        [itemId]: { projectId: value },
       }));
     }
   }
@@ -171,9 +180,12 @@ export default function PlaudIngestPage() {
   return (
     <div className="px-6 py-4 space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">🎙️ Plaud AI Ingestion</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">
+          🎙️ Plaud AI Ingestion
+        </h1>
         <p className="text-sm text-gray-600 mt-1">
-          Review and accept tasks extracted from voice notes via Plaud AI webhook
+          Review and accept tasks extracted from voice notes via Plaud AI
+          webhook
         </p>
       </div>
 
@@ -186,7 +198,9 @@ export default function PlaudIngestPage() {
       {/* Bulk Actions Bar */}
       {selectedIds.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white/80 backdrop-blur p-3 flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-700">{selectedIds.length} selected</span>
+          <span className="text-sm font-medium text-gray-700">
+            {selectedIds.length} selected
+          </span>
           <button
             onClick={bulkAccept}
             disabled={processing}
@@ -233,7 +247,9 @@ export default function PlaudIngestPage() {
                 <div className="flex-1 space-y-2">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                      <h3 className="font-semibold text-gray-900">
+                        {item.title}
+                      </h3>
                       {item.confidence && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                           {item.confidence}% confidence
@@ -241,22 +257,35 @@ export default function PlaudIngestPage() {
                       )}
                     </div>
                     {item.description && (
-                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {item.description}
+                      </p>
                     )}
                   </div>
 
                   {/* Project Assignment */}
                   {selected[item.id] && (
                     <div className="flex items-center gap-2 pt-2 border-t">
-                      <label className="text-xs text-gray-600">Assign to:</label>
+                      <label className="text-xs text-gray-600">
+                        Assign to:
+                      </label>
                       <select
-                        value={assignments[item.id]?.projectId || (assignments[item.id]?.projectNameNew ? '__new__' : '')}
-                        onChange={(e) => handleAssignmentChange(item.id, e.target.value)}
+                        value={
+                          assignments[item.id]?.projectId ||
+                          (assignments[item.id]?.projectNameNew
+                            ? '__new__'
+                            : '')
+                        }
+                        onChange={(e) =>
+                          handleAssignmentChange(item.id, e.target.value)
+                        }
                         className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select project...</option>
-                        {projects?.map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
+                        {projects?.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
                         ))}
                         <option value="__new__">➕ Create new project</option>
                       </select>
@@ -266,10 +295,12 @@ export default function PlaudIngestPage() {
                           type="text"
                           placeholder="New project name"
                           value={assignments[item.id]?.projectNameNew || ''}
-                          onChange={(e) => setAssignments(prev => ({
-                            ...prev,
-                            [item.id]: { projectNameNew: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setAssignments((prev) => ({
+                              ...prev,
+                              [item.id]: { projectNameNew: e.target.value },
+                            }))
+                          }
                           className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       )}
@@ -282,12 +313,18 @@ export default function PlaudIngestPage() {
         </div>
       ) : (
         <div className="text-center py-12 rounded-xl border border-gray-200 bg-white/80">
-          <p className="text-lg font-medium text-gray-900 mb-2">No pending items</p>
+          <p className="text-lg font-medium text-gray-900 mb-2">
+            No pending items
+          </p>
           <p className="text-sm text-gray-500 mb-4">
-            Tasks from Plaud AI voice notes will appear here when the webhook is configured
+            Tasks from Plaud AI voice notes will appear here when the webhook is
+            configured
           </p>
           <p className="text-xs text-gray-400">
-            Webhook endpoint: <code className="bg-gray-100 px-2 py-1 rounded">/api/plaud/webhook</code>
+            Webhook endpoint:{' '}
+            <code className="bg-gray-100 px-2 py-1 rounded">
+              /api/plaud/webhook
+            </code>
           </p>
         </div>
       )}

@@ -11,7 +11,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -20,20 +20,20 @@ export async function POST(
 
     await db
       .update(notifications)
-      .set({ 
+      .set({
         read: true,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(
-        and(
-          eq(notifications.id, id),
-          eq(notifications.userId, session.user.id)
-        )
+        and(eq(notifications.id, id), eq(notifications.userId, session.user.id))
       );
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error marking notification as read:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

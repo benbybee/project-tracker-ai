@@ -2,11 +2,16 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { getWebSocketClient, RealtimeConnectionStatus, RealtimeEvent } from '@/lib/ws-client';
+import {
+  getWebSocketClient,
+  RealtimeConnectionStatus,
+  RealtimeEvent,
+} from '@/lib/ws-client';
 
 export function useRealtimeConnection() {
   const { data: session } = useSession();
-  const [status, setStatus] = useState<RealtimeConnectionStatus>('disconnected');
+  const [status, setStatus] =
+    useState<RealtimeConnectionStatus>('disconnected');
   const [wsClient, setWsClient] = useState<any>(null);
 
   useEffect(() => {
@@ -48,7 +53,7 @@ export function useRealtimeConnection() {
     isConnected: status === 'connected',
     connect,
     disconnect,
-    wsClient
+    wsClient,
   };
 }
 
@@ -60,7 +65,7 @@ export function useRealtimeEvents() {
     if (!wsClient) return;
 
     const handleMessage = (event: RealtimeEvent) => {
-      setEvents(prev => [...prev.slice(-99), event]); // Keep last 100 events
+      setEvents((prev) => [...prev.slice(-99), event]); // Keep last 100 events
     };
 
     const unsubscribe = wsClient.on('message', handleMessage);
@@ -74,6 +79,6 @@ export function useRealtimeEvents() {
 
   return {
     events,
-    clearEvents
+    clearEvents,
   };
 }

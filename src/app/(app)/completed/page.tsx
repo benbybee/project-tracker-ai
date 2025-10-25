@@ -30,7 +30,7 @@ export default function CompletedTasksPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  
+
   // Filters
   const [projectFilter, setProjectFilter] = useState<string>('');
   const [roleFilter, setRoleFilter] = useState<string>('');
@@ -41,44 +41,51 @@ export default function CompletedTasksPage() {
   const { data: rolesList = [] } = trpc.roles.list.useQuery();
 
   // Extract unique projects and roles for filters
-  const projects = projectsList.map(p => ({ id: p.id, name: p.name }));
-  const roles = (rolesList || []).map((r: any) => ({ id: r.id, name: r.name, color: r.color }));
+  const projects = projectsList.map((p) => ({ id: p.id, name: p.name }));
+  const roles = (rolesList || []).map((r: any) => ({
+    id: r.id,
+    name: r.name,
+    color: r.color,
+  }));
 
-  const fetchTasks = useCallback(async (resetPage = false) => {
-    setLoading(true);
-    const currentPage = resetPage ? 1 : page;
-    
-    const params = new URLSearchParams({
-      page: String(currentPage),
-      limit: '25',
-      dateRange,
-    });
-    
-    if (projectFilter) params.append('projectId', projectFilter);
-    if (roleFilter) params.append('roleId', roleFilter);
+  const fetchTasks = useCallback(
+    async (resetPage = false) => {
+      setLoading(true);
+      const currentPage = resetPage ? 1 : page;
 
-    try {
-      const res = await fetch(`/api/tasks/completed?${params}`);
-      if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: '25',
+        dateRange,
+      });
+
+      if (projectFilter) params.append('projectId', projectFilter);
+      if (roleFilter) params.append('roleId', roleFilter);
+
+      try {
+        const res = await fetch(`/api/tasks/completed?${params}`);
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`);
+        }
+        const data = await res.json();
+
+        if (resetPage) {
+          setTasks(data.tasks || []);
+          setPage(1);
+        } else {
+          setTasks((prev) => [...prev, ...(data.tasks || [])]);
+        }
+
+        setHasMore(data.hasMore || false);
+      } catch (error) {
+        console.error('Failed to fetch completed tasks:', error);
+        setTasks([]);
+      } finally {
+        setLoading(false);
       }
-      const data = await res.json();
-      
-      if (resetPage) {
-        setTasks(data.tasks || []);
-        setPage(1);
-      } else {
-        setTasks((prev) => [...prev, ...(data.tasks || [])]);
-      }
-      
-      setHasMore(data.hasMore || false);
-    } catch (error) {
-      console.error('Failed to fetch completed tasks:', error);
-      setTasks([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, projectFilter, roleFilter, dateRange]);
+    },
+    [page, projectFilter, roleFilter, dateRange]
+  );
 
   // Fetch tasks on mount and when filters change
   useEffect(() => {
@@ -92,7 +99,15 @@ export default function CompletedTasksPage() {
   };
 
   const exportCSV = () => {
-    const headers = ['Title', 'Description', 'Status', 'Project', 'Role', 'Due Date', 'Completed At'];
+    const headers = [
+      'Title',
+      'Description',
+      'Status',
+      'Project',
+      'Role',
+      'Due Date',
+      'Completed At',
+    ];
     const rows = tasks.map((t) => [
       t.title,
       t.description || '',
@@ -100,12 +115,16 @@ export default function CompletedTasksPage() {
       t.project?.name || '',
       t.role?.name || '',
       t.dueDate || '',
-      t.archivedAt ? format(new Date(t.archivedAt), 'yyyy-MM-dd') : format(new Date(t.updatedAt), 'yyyy-MM-dd'),
+      t.archivedAt
+        ? format(new Date(t.archivedAt), 'yyyy-MM-dd')
+        : format(new Date(t.updatedAt), 'yyyy-MM-dd'),
     ]);
 
     const csv = [
       headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+      ...rows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+      ),
     ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -122,8 +141,12 @@ export default function CompletedTasksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">🗂️ Completed Tasks</h1>
-          <p className="text-sm text-gray-600 mt-1">Archive of completed tasks (last 6 months)</p>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            🗂️ Completed Tasks
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Archive of completed tasks (last 6 months)
+          </p>
         </div>
         <button
           onClick={exportCSV}
@@ -203,8 +226,12 @@ export default function CompletedTasksPage() {
         </div>
       ) : tasks.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-lg font-medium text-gray-900 mb-2">No completed tasks found</p>
-          <p className="text-gray-600 mb-4">Tasks are automatically archived weekly</p>
+          <p className="text-lg font-medium text-gray-900 mb-2">
+            No completed tasks found
+          </p>
+          <p className="text-gray-600 mb-4">
+            Tasks are automatically archived weekly
+          </p>
           <a
             href="/dashboard"
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
@@ -223,11 +250,15 @@ export default function CompletedTasksPage() {
                 transition={{ delay: index * 0.05 }}
                 className="rounded-xl border border-gray-200 bg-white/80 p-4 hover:shadow-md transition-all"
               >
-                <h3 className="font-semibold text-gray-900 mb-2">{task.title}</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  {task.title}
+                </h3>
                 {task.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">{task.description}</p>
+                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                    {task.description}
+                  </p>
                 )}
-                
+
                 <div className="flex flex-wrap gap-2 mb-3">
                   {task.project && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700">
@@ -251,9 +282,10 @@ export default function CompletedTasksPage() {
                     </span>
                   )}
                 </div>
-                
+
                 <p className="text-xs text-gray-500">
-                  Completed {task.archivedAt
+                  Completed{' '}
+                  {task.archivedAt
                     ? format(new Date(task.archivedAt), 'MMM d, yyyy')
                     : format(new Date(task.updatedAt), 'MMM d, yyyy')}
                 </p>

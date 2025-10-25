@@ -13,13 +13,13 @@ type TasksStore = {
 
 export const useTasksStore = create<TasksStore>((set) => ({
   byId: {},
-  
-  upsert: (task: Task) => 
-    set((state) => ({ 
-      byId: { ...state.byId, [task.id]: task } 
+
+  upsert: (task: Task) =>
+    set((state) => ({
+      byId: { ...state.byId, [task.id]: task },
     })),
-  
-  bulkUpsert: (tasks: Task[]) => 
+
+  bulkUpsert: (tasks: Task[]) =>
     set((state) => {
       const byId = { ...state.byId };
       for (const task of tasks) {
@@ -27,14 +27,13 @@ export const useTasksStore = create<TasksStore>((set) => ({
       }
       return { byId };
     }),
-  
-  remove: (id: string) => 
+
+  remove: (id: string) =>
     set((state) => {
       const byId = { ...state.byId };
       delete byId[id];
       return { byId };
     }),
-  
+
   clear: () => set({ byId: {} }),
 }));
-

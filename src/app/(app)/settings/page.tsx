@@ -8,7 +8,6 @@ import { trpc } from '@/lib/trpc';
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
 
-
 export default function SettingsPage() {
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleColor, setNewRoleColor] = useState('#3B82F6');
@@ -44,13 +43,18 @@ export default function SettingsPage() {
 
       {/* Roles Management */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Roles Management</h2>
-        
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          Roles Management
+        </h2>
+
         {/* Create New Role */}
         <form onSubmit={handleCreateRole} className="mb-8">
           <div className="flex gap-4 items-end">
             <div className="flex-1">
-              <label htmlFor="roleName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="roleName"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Role Name
               </label>
               <Input
@@ -61,7 +65,10 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label htmlFor="roleColor" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="roleColor"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Color
               </label>
               <div className="flex items-center gap-2">
@@ -87,7 +94,9 @@ export default function SettingsPage() {
 
         {/* Existing Roles */}
         <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Existing Roles</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Existing Roles
+          </h3>
           {isLoading ? (
             <div className="text-center py-4">Loading roles...</div>
           ) : roles && roles.length > 0 ? (
@@ -103,11 +112,13 @@ export default function SettingsPage() {
                         className="w-4 h-4 rounded-full mr-3"
                         style={{ backgroundColor: role.color }}
                       ></div>
-                      <span className="font-medium text-gray-900">{role.name}</span>
+                      <span className="font-medium text-gray-900">
+                        {role.name}
+                      </span>
                     </div>
                     <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           // TODO: Implement edit role functionality
@@ -116,8 +127,8 @@ export default function SettingsPage() {
                       >
                         Edit
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           // TODO: Implement delete role functionality
@@ -144,7 +155,9 @@ export default function SettingsPage() {
 
       {/* Other Settings */}
       <div className="bg-white rounded-lg shadow p-6 mt-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Other Settings</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          Other Settings
+        </h2>
         <div className="text-center py-8 text-gray-500">
           Additional settings will be available in future updates.
         </div>

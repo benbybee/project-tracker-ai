@@ -8,7 +8,7 @@ import { eq, and, gte, lte, desc, or } from 'drizzle-orm';
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const dateRange = searchParams.get('dateRange') || '30'; // days
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '25');
-    
+
     const offset = (page - 1) * limit;
 
     // Calculate date filter
@@ -28,9 +28,7 @@ export async function GET(req: NextRequest) {
     const startDate = new Date(now.getTime() - daysAgo * 86400000);
 
     // Build conditions - completed OR archived
-    const conditions = [
-      gte(tasks.updatedAt, startDate)
-    ];
+    const conditions = [gte(tasks.updatedAt, startDate)];
 
     if (projectId) {
       conditions.push(eq(tasks.projectId, projectId));
@@ -65,10 +63,7 @@ export async function GET(req: NextRequest) {
       .leftJoin(roles, eq(tasks.roleId, roles.id))
       .where(
         and(
-          or(
-            eq(tasks.status, 'completed'),
-            eq(tasks.archived, true)
-          ),
+          or(eq(tasks.status, 'completed'), eq(tasks.archived, true)),
           ...conditions
         )
       )
@@ -82,16 +77,13 @@ export async function GET(req: NextRequest) {
       .from(tasks)
       .where(
         and(
-          or(
-            eq(tasks.status, 'completed'),
-            eq(tasks.archived, true)
-          ),
+          or(eq(tasks.status, 'completed'), eq(tasks.archived, true)),
           ...conditions
         )
       );
 
     // Transform the result to match the expected structure
-    const transformedTasks = completedTasks.map(t => ({
+    const transformedTasks = completedTasks.map((t) => ({
       id: t.id,
       title: t.title,
       description: t.description,
@@ -103,8 +95,14 @@ export async function GET(req: NextRequest) {
       createdAt: t.createdAt,
       projectId: t.projectId,
       roleId: t.roleId,
-      project: t.projectIdRef && t.projectName ? { id: t.projectIdRef, name: t.projectName } : null,
-      role: t.roleIdRef && t.roleName ? { id: t.roleIdRef, name: t.roleName, color: t.roleColor || '#gray' } : null,
+      project:
+        t.projectIdRef && t.projectName
+          ? { id: t.projectIdRef, name: t.projectName }
+          : null,
+      role:
+        t.roleIdRef && t.roleName
+          ? { id: t.roleIdRef, name: t.roleName, color: t.roleColor || '#gray' }
+          : null,
     }));
 
     return NextResponse.json({
@@ -122,4 +120,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

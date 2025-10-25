@@ -1,9 +1,32 @@
-import { pgTable, serial, text, timestamp, boolean, integer, date, jsonb, uuid, bigint } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  date,
+  jsonb,
+  uuid,
+  bigint,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enums
 export const taskStatusEnum = pgTable('task_status_enum', {
-  value: text('value', { enum: ['not_started', 'in_progress', 'blocked', 'completed', 'content', 'design', 'dev', 'qa', 'launch'] }).primaryKey(),
+  value: text('value', {
+    enum: [
+      'not_started',
+      'in_progress',
+      'blocked',
+      'completed',
+      'content',
+      'design',
+      'dev',
+      'qa',
+      'launch',
+    ],
+  }).primaryKey(),
 });
 
 export const projectTypeEnum = pgTable('project_type_enum', {
@@ -49,7 +72,9 @@ export const projects = pgTable('projects', {
   repoUrl: text('repo_url'),
   stagingUrl: text('staging_url'),
   checklistJson: jsonb('checklist_json'),
-  websiteStatus: text('website_status', { enum: ['discovery', 'development', 'client_review', 'completed', 'blocked'] }),
+  websiteStatus: text('website_status', {
+    enum: ['discovery', 'development', 'client_review', 'completed', 'blocked'],
+  }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -57,16 +82,34 @@ export const projects = pgTable('projects', {
 // Tasks table
 export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
-  projectId: uuid('project_id').notNull().references(() => projects.id),
+  projectId: uuid('project_id')
+    .notNull()
+    .references(() => projects.id),
   roleId: uuid('role_id').references(() => roles.id),
   title: text('title').notNull(),
   description: text('description'),
-  status: text('status', { enum: ['not_started', 'in_progress', 'blocked', 'completed', 'content', 'design', 'dev', 'qa', 'launch'] }).notNull().default('not_started'),
+  status: text('status', {
+    enum: [
+      'not_started',
+      'in_progress',
+      'blocked',
+      'completed',
+      'content',
+      'design',
+      'dev',
+      'qa',
+      'launch',
+    ],
+  })
+    .notNull()
+    .default('not_started'),
   weekOf: date('week_of'),
   progress: integer('progress').default(0),
   dueDate: date('due_date'),
   isDaily: boolean('is_daily').default(false),
-  priorityScore: text('priority_score', { enum: ['1', '2', '3', '4'] }).default('2'),
+  priorityScore: text('priority_score', { enum: ['1', '2', '3', '4'] }).default(
+    '2'
+  ),
   blockedReason: text('blocked_reason'),
   blockedDetails: text('blocked_details'),
   blockedAt: timestamp('blocked_at'),
@@ -79,7 +122,9 @@ export const tasks = pgTable('tasks', {
 // Subtasks table
 export const subtasks = pgTable('subtasks', {
   id: uuid('id').primaryKey().defaultRandom(),
-  taskId: uuid('task_id').notNull().references(() => tasks.id),
+  taskId: uuid('task_id')
+    .notNull()
+    .references(() => tasks.id),
   title: text('title').notNull(),
   completed: boolean('completed').default(false),
   position: integer('position').notNull(),
@@ -176,8 +221,14 @@ export const tickets = pgTable('tickets', {
   domain: text('domain'),
   details: text('details').notNull(),
   dueDateSuggested: date('due_date_suggested'),
-  priority: text('priority', { enum: ['low', 'normal', 'high', 'urgent'] }).notNull().default('normal'),
-  status: text('status', { enum: ['new', 'in_review', 'responded', 'converted', 'closed'] }).notNull().default('new'),
+  priority: text('priority', { enum: ['low', 'normal', 'high', 'urgent'] })
+    .notNull()
+    .default('normal'),
+  status: text('status', {
+    enum: ['new', 'in_review', 'responded', 'converted', 'closed'],
+  })
+    .notNull()
+    .default('new'),
   requesterEmail: text('requester_email'),
   aiEta: date('ai_eta'),
   aiSummary: text('ai_summary'),
@@ -185,7 +236,9 @@ export const tickets = pgTable('tickets', {
 
 export const ticketReplies = pgTable('ticket_replies', {
   id: uuid('id').primaryKey().defaultRandom(),
-  ticketId: uuid('ticket_id').notNull().references(() => tickets.id, { onDelete: 'cascade' }),
+  ticketId: uuid('ticket_id')
+    .notNull()
+    .references(() => tickets.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   author: text('author', { enum: ['admin', 'requester'] }).notNull(),
   message: text('message').notNull(),
@@ -193,7 +246,9 @@ export const ticketReplies = pgTable('ticket_replies', {
 
 export const ticketAttachments = pgTable('ticket_attachments', {
   id: uuid('id').primaryKey().defaultRandom(),
-  ticketId: uuid('ticket_id').notNull().references(() => tickets.id, { onDelete: 'cascade' }),
+  ticketId: uuid('ticket_id')
+    .notNull()
+    .references(() => tickets.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   fileName: text('file_name').notNull(),
   fileSize: bigint('file_size', { mode: 'number' }),

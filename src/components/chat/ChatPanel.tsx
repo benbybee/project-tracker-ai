@@ -23,27 +23,31 @@ export function ChatPanel({ projectId, className = '' }: ChatPanelProps) {
   const [showNewThreadForm, setShowNewThreadForm] = useState(false);
   const [newThreadTitle, setNewThreadTitle] = useState('');
   const [newThreadDescription, setNewThreadDescription] = useState('');
-  const [typingUsers, setTypingUsers] = useState<Array<{ id: string; name: string }>>([]);
-  
+  const [typingUsers, setTypingUsers] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { onChatMessage, onChatTyping, broadcastChatMessage } = useRealtime();
 
   // Fetch threads
-  const { data: threads, refetch: refetchThreads } = trpc.chat.getThreads.useQuery({
-    projectId,
-    limit: 20,
-  });
+  const { data: threads, refetch: refetchThreads } =
+    trpc.chat.getThreads.useQuery({
+      projectId,
+      limit: 20,
+    });
 
   // Fetch messages for selected thread
-  const { data: messages, refetch: refetchMessages } = trpc.chat.getThreadMessages.useQuery(
-    {
-      threadId: selectedThreadId!,
-      limit: 50,
-    },
-    {
-      enabled: !!selectedThreadId,
-    }
-  );
+  const { data: messages, refetch: refetchMessages } =
+    trpc.chat.getThreadMessages.useQuery(
+      {
+        threadId: selectedThreadId!,
+        limit: 50,
+      },
+      {
+        enabled: !!selectedThreadId,
+      }
+    );
 
   // Mutations
   const createThreadMutation = trpc.chat.createThread.useMutation({
@@ -85,9 +89,9 @@ export function ChatPanel({ projectId, className = '' }: ChatPanelProps) {
       if (typing.threadId === selectedThreadId) {
         // In a real app, you'd manage typing users properly
         if (typing.isTyping) {
-          setTypingUsers(prev => [...prev, { id: 'user1', name: 'Someone' }]);
+          setTypingUsers((prev) => [...prev, { id: 'user1', name: 'Someone' }]);
         } else {
-          setTypingUsers(prev => prev.slice(0, -1));
+          setTypingUsers((prev) => prev.slice(0, -1));
         }
       }
     });
@@ -102,12 +106,20 @@ export function ChatPanel({ projectId, className = '' }: ChatPanelProps) {
     setSelectedThreadId(threadId);
   };
 
-  const handleSendMessage = (content: string, messageType?: string, metadata?: any) => {
+  const handleSendMessage = (
+    content: string,
+    messageType?: string,
+    metadata?: any
+  ) => {
     if (selectedThreadId) {
       sendMessageMutation.mutate({
         threadId: selectedThreadId,
         content,
-        messageType: (messageType || 'text') as 'mention' | 'system' | 'text' | 'reaction',
+        messageType: (messageType || 'text') as
+          | 'mention'
+          | 'system'
+          | 'text'
+          | 'reaction',
         metadata,
       });
     }
@@ -130,13 +142,17 @@ export function ChatPanel({ projectId, className = '' }: ChatPanelProps) {
     }
   };
 
-  const filteredThreads = threads?.filter(thread =>
-    thread.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    thread.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredThreads =
+    threads?.filter(
+      (thread) =>
+        thread.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        thread.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
   return (
-    <div className={`flex h-full bg-white border border-gray-200 rounded-lg overflow-hidden ${className}`}>
+    <div
+      className={`flex h-full bg-white border border-gray-200 rounded-lg overflow-hidden ${className}`}
+    >
       {/* Threads Sidebar */}
       <div className="w-80 border-r border-gray-200 flex flex-col">
         {/* Header */}
@@ -188,7 +204,9 @@ export function ChatPanel({ projectId, className = '' }: ChatPanelProps) {
                 <div className="flex space-x-2">
                   <Button
                     onClick={handleCreateThread}
-                    disabled={!newThreadTitle.trim() || createThreadMutation.isPending}
+                    disabled={
+                      !newThreadTitle.trim() || createThreadMutation.isPending
+                    }
                     size="sm"
                     className="flex-1"
                   >
@@ -226,9 +244,13 @@ export function ChatPanel({ projectId, className = '' }: ChatPanelProps) {
               <AnimatePresence>
                 {messages?.map((message, index) => {
                   const prevMessage = index > 0 ? messages[index - 1] : null;
-                  const showAvatar = !prevMessage || prevMessage.userId !== message.userId;
-                  const showTimestamp = !prevMessage || 
-                    (new Date(message.createdAt).getTime() - new Date(prevMessage.createdAt).getTime()) > 300000; // 5 minutes
+                  const showAvatar =
+                    !prevMessage || prevMessage.userId !== message.userId;
+                  const showTimestamp =
+                    !prevMessage ||
+                    new Date(message.createdAt).getTime() -
+                      new Date(prevMessage.createdAt).getTime() >
+                      300000; // 5 minutes
 
                   return (
                     <MessageBubble
@@ -262,8 +284,12 @@ export function ChatPanel({ projectId, className = '' }: ChatPanelProps) {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No thread selected</h3>
-              <p className="text-gray-500">Choose a thread from the sidebar to start chatting</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No thread selected
+              </h3>
+              <p className="text-gray-500">
+                Choose a thread from the sidebar to start chatting
+              </p>
             </div>
           </div>
         )}

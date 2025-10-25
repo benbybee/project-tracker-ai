@@ -21,22 +21,26 @@ import { RealtimeTest } from '@/components/sync/RealtimeTest';
 export default function ProjectDetailPage() {
   const params = useParams();
   const projectId = params.id as string;
-  
-  const { data: project, isLoading: projectLoading } = trpc.projects.get.useQuery({ id: projectId });
-  const { data: tasks, isLoading: tasksLoading } = trpc.tasks.list.useQuery({ projectId });
+
+  const { data: project, isLoading: projectLoading } =
+    trpc.projects.get.useQuery({ id: projectId });
+  const { data: tasks, isLoading: tasksLoading } = trpc.tasks.list.useQuery({
+    projectId,
+  });
   const { data: roles } = trpc.roles.list.useQuery();
   const { isConnected, status, onlineUsers } = useRealtime();
-  
+
   // Add the byProjectId query at the top level
-  const { data: projectTasks, isLoading: projectTasksLoading } = trpc.tasks.byProjectId.useQuery({ 
-    projectId: projectId 
-  });
-  
+  const { data: projectTasks, isLoading: projectTasksLoading } =
+    trpc.tasks.byProjectId.useQuery({
+      projectId: projectId,
+    });
+
   // Add the move mutation at the top level
   const moveTaskMutation = trpc.tasks.move.useMutation();
-  
+
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  
+
   if (projectLoading) {
     return (
       <div className="w-full">
@@ -60,11 +64,14 @@ export default function ProjectDetailPage() {
       <div className="w-full">
         <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h1>
-            <p className="text-gray-600 mb-8">The project you're looking for doesn't exist or you don't have permission to view it.</p>
-            <Button onClick={() => window.history.back()}>
-              Go Back
-            </Button>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Project Not Found
+            </h1>
+            <p className="text-gray-600 mb-8">
+              The project you're looking for doesn't exist or you don't have
+              permission to view it.
+            </p>
+            <Button onClick={() => window.history.back()}>Go Back</Button>
           </div>
         </div>
       </div>
@@ -77,26 +84,34 @@ export default function ProjectDetailPage() {
     <div className="w-full">
       <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 py-8">
         {/* Project Header */}
-        <ProjectHeader project={project} role={projectRole} onNewTask={() => setCreateModalOpen(true)} />
-        
+        <ProjectHeader
+          project={project}
+          role={projectRole}
+          onNewTask={() => setCreateModalOpen(true)}
+        />
+
         {/* Real-time Status Indicator */}
         {isConnected && (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm text-green-700">
-                Real-time collaboration active ({onlineUsers.length} users online)
+                Real-time collaboration active ({onlineUsers.length} users
+                online)
               </span>
             </div>
           </div>
         )}
-        
+
         {/* Project Stats */}
-        <ProjectStats 
+        <ProjectStats
           counts={{
             total: tasks?.length || 0,
-            inProgress: tasks?.filter(task => task.status === 'in_progress').length || 0,
-            completed: tasks?.filter(task => task.status === 'completed').length || 0,
+            inProgress:
+              tasks?.filter((task) => task.status === 'in_progress').length ||
+              0,
+            completed:
+              tasks?.filter((task) => task.status === 'completed').length || 0,
           }}
         />
 
@@ -104,19 +119,16 @@ export default function ProjectDetailPage() {
         <section className="mt-8">
           <header className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Board</h2>
-            <div className="text-sm text-slate-500">Drag tasks between columns.</div>
+            <div className="text-sm text-slate-500">
+              Drag tasks between columns.
+            </div>
           </header>
 
-          <KanbanBoard 
-            projectId={projectId}
-            variant="default"
-          />
+          <KanbanBoard projectId={projectId} variant="default" />
         </section>
 
         {/* Quick Add Task */}
-        <QuickAddTask 
-          projectId={projectId}
-        />
+        <QuickAddTask projectId={projectId} />
 
         {/* Task Create Modal */}
         <TaskCreateModal
@@ -124,7 +136,7 @@ export default function ProjectDetailPage() {
           onClose={() => setCreateModalOpen(false)}
           projectId={projectId}
         />
-        
+
         {/* Real-time Test Panel (only in development) */}
         {process.env.NODE_ENV === 'development' && <RealtimeTest />}
       </div>

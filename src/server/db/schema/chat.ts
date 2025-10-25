@@ -1,10 +1,20 @@
-import { pgTable, uuid, text, timestamp, boolean, jsonb, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  jsonb,
+  integer,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users, projects, tasks } from '../schema';
 
 export const threads = pgTable('threads', {
   id: uuid('id').primaryKey().defaultRandom(),
-  projectId: uuid('project_id').notNull().references(() => projects.id),
+  projectId: uuid('project_id')
+    .notNull()
+    .references(() => projects.id),
   taskId: uuid('task_id').references(() => tasks.id),
   title: text('title').notNull(),
   description: text('description'),
@@ -17,11 +27,15 @@ export const threads = pgTable('threads', {
 
 export const messages = pgTable('messages', {
   id: uuid('id').primaryKey().defaultRandom(),
-  threadId: uuid('thread_id').notNull().references(() => threads.id),
-  userId: uuid('user_id').notNull().references(() => users.id),
+  threadId: uuid('thread_id')
+    .notNull()
+    .references(() => threads.id),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
   content: text('content').notNull(),
-  messageType: text('message_type', { 
-    enum: ['text', 'system', 'mention', 'reaction'] 
+  messageType: text('message_type', {
+    enum: ['text', 'system', 'mention', 'reaction'],
   }).default('text'),
   metadata: jsonb('metadata'),
   replyToId: uuid('reply_to_id'),
@@ -33,16 +47,24 @@ export const messages = pgTable('messages', {
 
 export const messageReactions = pgTable('message_reactions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  messageId: uuid('message_id').notNull().references(() => messages.id),
-  userId: uuid('user_id').notNull().references(() => users.id),
+  messageId: uuid('message_id')
+    .notNull()
+    .references(() => messages.id),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
   emoji: text('emoji').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const threadParticipants = pgTable('thread_participants', {
   id: uuid('id').primaryKey().defaultRandom(),
-  threadId: uuid('thread_id').notNull().references(() => threads.id),
-  userId: uuid('user_id').notNull().references(() => users.id),
+  threadId: uuid('thread_id')
+    .notNull()
+    .references(() => threads.id),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id),
   joinedAt: timestamp('joined_at').notNull().defaultNow(),
   lastReadAt: timestamp('last_read_at'),
   isActive: boolean('is_active').default(true),
@@ -78,27 +100,33 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
   reactions: many(messageReactions),
 }));
 
-export const messageReactionsRelations = relations(messageReactions, ({ one }) => ({
-  message: one(messages, {
-    fields: [messageReactions.messageId],
-    references: [messages.id],
-  }),
-  user: one(users, {
-    fields: [messageReactions.userId],
-    references: [users.id],
-  }),
-}));
+export const messageReactionsRelations = relations(
+  messageReactions,
+  ({ one }) => ({
+    message: one(messages, {
+      fields: [messageReactions.messageId],
+      references: [messages.id],
+    }),
+    user: one(users, {
+      fields: [messageReactions.userId],
+      references: [users.id],
+    }),
+  })
+);
 
-export const threadParticipantsRelations = relations(threadParticipants, ({ one }) => ({
-  thread: one(threads, {
-    fields: [threadParticipants.threadId],
-    references: [threads.id],
-  }),
-  user: one(users, {
-    fields: [threadParticipants.userId],
-    references: [users.id],
-  }),
-}));
+export const threadParticipantsRelations = relations(
+  threadParticipants,
+  ({ one }) => ({
+    thread: one(threads, {
+      fields: [threadParticipants.threadId],
+      references: [threads.id],
+    }),
+    user: one(users, {
+      fields: [threadParticipants.userId],
+      references: [users.id],
+    }),
+  })
+);
 
 // Types
 export type Thread = typeof threads.$inferSelect;

@@ -7,7 +7,11 @@ import { useRealtime } from '@/app/providers';
 
 interface MessageInputProps {
   threadId: string;
-  onSendMessage: (content: string, messageType?: string, metadata?: any) => void;
+  onSendMessage: (
+    content: string,
+    messageType?: string,
+    metadata?: any
+  ) => void;
   onTyping?: (isTyping: boolean) => void;
   placeholder?: string;
   disabled?: boolean;
@@ -17,8 +21,8 @@ export function MessageInput({
   threadId,
   onSendMessage,
   onTyping,
-  placeholder = "Type a message...",
-  disabled = false
+  placeholder = 'Type a message...',
+  disabled = false,
 }: MessageInputProps) {
   const [content, setContent] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -55,16 +59,16 @@ export function MessageInput({
   const handleSend = () => {
     if (content.trim() && !disabled) {
       const messageContent = content.trim();
-      
+
       // Check for mentions
       const mentionRegex = /@(\w+)/g;
       const mentions = messageContent.match(mentionRegex);
       const messageType = mentions ? 'mention' : 'text';
-      
+
       onSendMessage(messageContent, messageType, {
-        mentions: mentions || []
+        mentions: mentions || [],
       });
-      
+
       setContent('');
       setIsTyping(false);
       onTyping?.(false);
@@ -86,7 +90,7 @@ export function MessageInput({
       const end = textarea.selectionEnd;
       const newContent = content.slice(0, start) + emoji + content.slice(end);
       setContent(newContent);
-      
+
       // Focus and set cursor position
       setTimeout(() => {
         textarea.focus();
@@ -101,13 +105,17 @@ export function MessageInput({
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const newContent = content.slice(0, start) + `@${username} ` + content.slice(end);
+      const newContent =
+        content.slice(0, start) + `@${username} ` + content.slice(end);
       setContent(newContent);
-      
+
       // Focus and set cursor position
       setTimeout(() => {
         textarea.focus();
-        textarea.setSelectionRange(start + username.length + 2, start + username.length + 2);
+        textarea.setSelectionRange(
+          start + username.length + 2,
+          start + username.length + 2
+        );
       }, 0);
     }
     setShowMentionPicker(false);
@@ -168,7 +176,7 @@ export function MessageInput({
             <div className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10">
               <div className="text-xs text-gray-500 mb-1">Mention someone:</div>
               <div className="space-y-1">
-                {['john', 'jane', 'mike', 'sarah'].map(username => (
+                {['john', 'jane', 'mike', 'sarah'].map((username) => (
                   <button
                     key={username}
                     onClick={() => handleMentionSelect(username)}
@@ -186,7 +194,7 @@ export function MessageInput({
             <div className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10">
               <div className="text-xs text-gray-500 mb-1">Add emoji:</div>
               <div className="flex space-x-1">
-                {commonEmojis.map(emoji => (
+                {commonEmojis.map((emoji) => (
                   <button
                     key={emoji}
                     onClick={() => handleEmojiSelect(emoji)}

@@ -34,12 +34,7 @@ export async function GET() {
 
     const deleted = await db
       .delete(tasks)
-      .where(
-        and(
-          eq(tasks.archived, true),
-          lt(tasks.archivedAt, sixMonthsAgo)
-        )
-      )
+      .where(and(eq(tasks.archived, true), lt(tasks.archivedAt, sixMonthsAgo)))
       .returning();
 
     return NextResponse.json({

@@ -1,6 +1,12 @@
 'use client';
 
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCorners } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  closestCorners,
+} from '@dnd-kit/core';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { KanbanColumn } from './KanbanColumn';
@@ -17,7 +23,7 @@ interface BoardProps {
 export default function Board({ initial, projectId, onEditTask }: BoardProps) {
   const [columns, setColumns] = useState(initial);
   const [activeTask, setActiveTask] = useState<any>(null);
-  
+
   const reorder = trpc.tasks.reorder.useMutation();
 
   const onDragStart = (event: DragStartEvent) => {
@@ -30,8 +36,10 @@ export default function Board({ initial, projectId, onEditTask }: BoardProps) {
 
   const onDragEnd = (event: DragEndEvent) => {
     const taskId = event.active.id as string;
-    const toColumn = event.over?.data.current?.column as (typeof COLUMNS)[number] | undefined;
-    
+    const toColumn = event.over?.data.current?.column as
+      | (typeof COLUMNS)[number]
+      | undefined;
+
     if (!toColumn) {
       setActiveTask(null);
       return;
@@ -54,23 +62,32 @@ export default function Board({ initial, projectId, onEditTask }: BoardProps) {
     // Update local state immediately
     setColumns((prev) => {
       const newColumns = { ...prev };
-      
+
       // Remove from old column
-      newColumns[fromColumn!] = newColumns[fromColumn!].filter((t: any) => t.id !== taskId);
-      
+      newColumns[fromColumn!] = newColumns[fromColumn!].filter(
+        (t: any) => t.id !== taskId
+      );
+
       // Add to new column
-      const task = Object.values(prev).flat().find((t: any) => t.id === taskId);
+      const task = Object.values(prev)
+        .flat()
+        .find((t: any) => t.id === taskId);
       if (task) {
-        newColumns[toColumn] = [...(newColumns[toColumn] || []), { ...task, status: toColumn }];
+        newColumns[toColumn] = [
+          ...(newColumns[toColumn] || []),
+          { ...task, status: toColumn },
+        ];
       }
-      
+
       return newColumns;
     });
 
     // Persist changes to server
     const orderedIdsByStatus: Record<string, string[]> = {};
     COLUMNS.forEach((status) => {
-      orderedIdsByStatus[status] = (columns[status] || []).map((t: any) => t.id);
+      orderedIdsByStatus[status] = (columns[status] || []).map(
+        (t: any) => t.id
+      );
     });
 
     reorder.mutate({

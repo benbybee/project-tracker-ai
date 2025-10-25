@@ -7,9 +7,10 @@ import { TRPCError } from '@trpc/server';
 import OpenAI from 'openai';
 
 // Initialize OpenAI client only if API key is available
-const client = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'sk-dummy-key' 
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
+const client =
+  process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'sk-dummy-key'
+    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    : null;
 
 export const searchRouter = createTRPCRouter({
   query: protectedProcedure
@@ -45,11 +46,21 @@ export const searchRouter = createTRPCRouter({
         const results = [];
         for (const r of rows as any[]) {
           if (r.entity_type === 'task') {
-            const [t] = await ctx.db.select().from(tasks).where(sql`id = ${r.entity_id}`).limit(1);
-            if (t) results.push({ kind: 'task', item: t, snippet: r.chunk_text });
+            const [t] = await ctx.db
+              .select()
+              .from(tasks)
+              .where(sql`id = ${r.entity_id}`)
+              .limit(1);
+            if (t)
+              results.push({ kind: 'task', item: t, snippet: r.chunk_text });
           } else {
-            const [p] = await ctx.db.select().from(projects).where(sql`id = ${r.entity_id}`).limit(1);
-            if (p) results.push({ kind: 'project', item: p, snippet: r.chunk_text });
+            const [p] = await ctx.db
+              .select()
+              .from(projects)
+              .where(sql`id = ${r.entity_id}`)
+              .limit(1);
+            if (p)
+              results.push({ kind: 'project', item: p, snippet: r.chunk_text });
           }
         }
         return results;

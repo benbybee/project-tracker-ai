@@ -1,5 +1,5 @@
-"use client";
-import { cn } from "@/lib/utils";
+'use client';
+import { cn } from '@/lib/utils';
 
 interface GlassCardProps {
   className?: string;
@@ -8,13 +8,18 @@ interface GlassCardProps {
   'aria-busy'?: boolean;
 }
 
-export function GlassCard({ className, children, onClick, 'aria-busy': ariaBusy }: GlassCardProps) {
+export function GlassCard({
+  className,
+  children,
+  onClick,
+  'aria-busy': ariaBusy,
+}: GlassCardProps) {
   return (
     <div
       className={cn(
-        "rounded-[var(--radius-lg)] border shadow-soft p-5",
-        "backdrop-blur-xl",
-        "bg-[color:rgb(var(--glass-bg))] border-[color:rgb(var(--glass-border))]",
+        'rounded-[var(--radius-lg)] border shadow-soft p-5',
+        'backdrop-blur-xl',
+        'bg-[color:rgb(var(--glass-bg))] border-[color:rgb(var(--glass-border))]',
         className
       )}
       onClick={onClick}

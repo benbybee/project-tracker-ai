@@ -19,7 +19,7 @@ const requiredFiles = [
 ];
 
 console.log('📁 Checking required files...');
-requiredFiles.forEach(file => {
+requiredFiles.forEach((file) => {
   const filePath = path.join(__dirname, '..', file);
   if (fs.existsSync(filePath)) {
     console.log(`✅ ${file}`);
@@ -34,8 +34,8 @@ const packageJsonPath = path.join(__dirname, '..', 'package.json');
 if (fs.existsSync(packageJsonPath)) {
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
   const requiredDeps = ['dexie', 'workbox-window', 'react-use'];
-  
-  requiredDeps.forEach(dep => {
+
+  requiredDeps.forEach((dep) => {
     if (packageJson.dependencies[dep]) {
       console.log(`✅ ${dep} - ${packageJson.dependencies[dep]}`);
     } else {
@@ -51,18 +51,29 @@ console.log('\n🗄️ Checking Dexie schema...');
 const dbPath = path.join(__dirname, '..', 'src/lib/db.ts');
 if (fs.existsSync(dbPath)) {
   const dbContent = fs.readFileSync(dbPath, 'utf8');
-  
-  const requiredTables = ['projects', 'tasks', 'roles', 'syncQueue', 'syncStatus'];
-  requiredTables.forEach(table => {
+
+  const requiredTables = [
+    'projects',
+    'tasks',
+    'roles',
+    'syncQueue',
+    'syncStatus',
+  ];
+  requiredTables.forEach((table) => {
     if (dbContent.includes(`${table}!`)) {
       console.log(`✅ ${table} table defined`);
     } else {
       console.log(`❌ ${table} table missing`);
     }
   });
-  
-  const requiredMethods = ['getPendingSyncItems', 'addToSyncQueue', 'removeFromSyncQueue', 'updateSyncStatus'];
-  requiredMethods.forEach(method => {
+
+  const requiredMethods = [
+    'getPendingSyncItems',
+    'addToSyncQueue',
+    'removeFromSyncQueue',
+    'updateSyncStatus',
+  ];
+  requiredMethods.forEach((method) => {
     if (dbContent.includes(method)) {
       console.log(`✅ ${method} method defined`);
     } else {
@@ -78,18 +89,23 @@ console.log('\n🔄 Checking SyncManager...');
 const syncManagerPath = path.join(__dirname, '..', 'src/lib/sync-manager.ts');
 if (fs.existsSync(syncManagerPath)) {
   const syncManagerContent = fs.readFileSync(syncManagerPath, 'utf8');
-  
-  const requiredMethods = ['startSync', 'syncItem', 'addToSyncQueue', 'getSyncStatus'];
-  requiredMethods.forEach(method => {
+
+  const requiredMethods = [
+    'startSync',
+    'syncItem',
+    'addToSyncQueue',
+    'getSyncStatus',
+  ];
+  requiredMethods.forEach((method) => {
     if (syncManagerContent.includes(method)) {
       console.log(`✅ ${method} method defined`);
     } else {
       console.log(`❌ ${method} method missing`);
     }
   });
-  
+
   const requiredEvents = ['start', 'progress', 'complete', 'error'];
-  requiredEvents.forEach(event => {
+  requiredEvents.forEach((event) => {
     if (syncManagerContent.includes(`'${event}'`)) {
       console.log(`✅ ${event} event handled`);
     } else {
@@ -105,9 +121,13 @@ console.log('\n🎣 Checking offline hooks...');
 const useSyncPath = path.join(__dirname, '..', 'src/hooks/useSync.ts');
 if (fs.existsSync(useSyncPath)) {
   const useSyncContent = fs.readFileSync(useSyncPath, 'utf8');
-  
-  const requiredHooks = ['useSync', 'useEntitySyncStatus', 'useOfflineOperations'];
-  requiredHooks.forEach(hook => {
+
+  const requiredHooks = [
+    'useSync',
+    'useEntitySyncStatus',
+    'useOfflineOperations',
+  ];
+  requiredHooks.forEach((hook) => {
     if (useSyncContent.includes(`export function ${hook}`)) {
       console.log(`✅ ${hook} hook defined`);
     } else {
@@ -125,7 +145,7 @@ const uiComponents = [
   'src/components/ui/sync-status-indicator.tsx',
 ];
 
-uiComponents.forEach(component => {
+uiComponents.forEach((component) => {
   const componentPath = path.join(__dirname, '..', component);
   if (fs.existsSync(componentPath)) {
     console.log(`✅ ${component}`);
@@ -136,12 +156,16 @@ uiComponents.forEach(component => {
 
 // Check for tRPC sync operations
 console.log('\n🔌 Checking tRPC sync operations...');
-const tasksRouterPath = path.join(__dirname, '..', 'src/server/trpc/routers/tasks.ts');
+const tasksRouterPath = path.join(
+  __dirname,
+  '..',
+  'src/server/trpc/routers/tasks.ts'
+);
 if (fs.existsSync(tasksRouterPath)) {
   const tasksRouterContent = fs.readFileSync(tasksRouterPath, 'utf8');
-  
+
   const requiredOperations = ['bulkCreate', 'bulkUpdate', 'bulkDelete', 'sync'];
-  requiredOperations.forEach(operation => {
+  requiredOperations.forEach((operation) => {
     if (tasksRouterContent.includes(operation)) {
       console.log(`✅ ${operation} operation defined`);
     } else {
@@ -155,7 +179,9 @@ if (fs.existsSync(tasksRouterPath)) {
 console.log('\n🎯 Offline DB Layer + Sync Queue Setup Complete!');
 console.log('\nNext steps:');
 console.log('1. Run "npm run dev" to start the development server');
-console.log('2. Open Chrome DevTools > Application > IndexedDB to verify Dexie database');
+console.log(
+  '2. Open Chrome DevTools > Application > IndexedDB to verify Dexie database'
+);
 console.log('3. Test offline functionality:');
 console.log('   - Go offline in DevTools');
 console.log('   - Create/edit tasks');

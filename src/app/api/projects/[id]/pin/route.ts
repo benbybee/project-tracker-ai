@@ -11,7 +11,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -22,16 +22,16 @@ export async function POST(
     // Update project pinned status
     await db
       .update(projects)
-      .set({ 
+      .set({
         pinned: !!pinned,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(projects.id, projectId));
 
-    return NextResponse.json({ 
-      ok: true, 
-      id: projectId, 
-      pinned: !!pinned 
+    return NextResponse.json({
+      ok: true,
+      id: projectId,
+      pinned: !!pinned,
     });
   } catch (error) {
     console.error('Error toggling pin:', error);
@@ -41,4 +41,3 @@ export async function POST(
     );
   }
 }
-

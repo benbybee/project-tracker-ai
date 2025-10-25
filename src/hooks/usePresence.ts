@@ -24,7 +24,7 @@ export function usePresence() {
 
     // Simulate presence tracking
     setIsOnline(true);
-    
+
     // Mock online users for demonstration
     setOnlineUsers([
       {
@@ -35,8 +35,8 @@ export function usePresence() {
         lastActiveAt: Date.now(),
         currentProject: undefined,
         currentTask: undefined,
-        isEditing: false
-      }
+        isEditing: false,
+      },
     ]);
 
     // Cleanup on unmount
@@ -45,32 +45,41 @@ export function usePresence() {
     };
   }, [session]);
 
-  const updatePresence = useCallback((data: Partial<PresenceData>) => {
-    if (!session?.user) return;
-    
-    console.log('Updating presence:', data);
-    // In a real implementation, this would send to the WebSocket
-  }, [session]);
+  const updatePresence = useCallback(
+    (data: Partial<PresenceData>) => {
+      if (!session?.user) return;
 
-  const startTyping = useCallback((entityType: 'task' | 'project', entityId: string) => {
-    if (!session?.user) return;
-    
-    console.log('Starting typing:', entityType, entityId);
-    // In a real implementation, this would send to the WebSocket
-  }, [session]);
+      console.log('Updating presence:', data);
+      // In a real implementation, this would send to the WebSocket
+    },
+    [session]
+  );
 
-  const stopTyping = useCallback((entityType: 'task' | 'project', entityId: string) => {
-    if (!session?.user) return;
-    
-    console.log('Stopping typing:', entityType, entityId);
-    // In a real implementation, this would send to the WebSocket
-  }, [session]);
+  const startTyping = useCallback(
+    (entityType: 'task' | 'project', entityId: string) => {
+      if (!session?.user) return;
+
+      console.log('Starting typing:', entityType, entityId);
+      // In a real implementation, this would send to the WebSocket
+    },
+    [session]
+  );
+
+  const stopTyping = useCallback(
+    (entityType: 'task' | 'project', entityId: string) => {
+      if (!session?.user) return;
+
+      console.log('Stopping typing:', entityType, entityId);
+      // In a real implementation, this would send to the WebSocket
+    },
+    [session]
+  );
 
   return {
     onlineUsers,
     isOnline,
     updatePresence,
     startTyping,
-    stopTyping
+    stopTyping,
   };
 }
