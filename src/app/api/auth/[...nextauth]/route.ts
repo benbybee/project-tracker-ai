@@ -4,6 +4,15 @@ import bcrypt from 'bcryptjs';
 import { db } from '@/server/db';
 import { users } from '@/server/db/schema';
 
+// Validate required environment variables
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET environment variable is required');
+}
+
+if (!process.env.NEXTAUTH_URL) {
+  throw new Error('NEXTAUTH_URL environment variable is required');
+}
+
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   session: { strategy: 'jwt' },
@@ -14,6 +23,13 @@ const handler = NextAuth({
       async authorize(creds) {
         try {
           if (!creds?.email || !creds?.password) return null;
+          
+          // Check if database is available
+          if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('dummy')) {
+            console.error('Database not configured. Please set DATABASE_URL environment variable.');
+            return null;
+          }
+          
           const user = await db.query.users.findFirst({
             where: (u, { eq }) => eq(u.email, creds.email),
           });
