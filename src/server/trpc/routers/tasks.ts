@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { db } from '@/server/db';
-import { tasks, projects, roles, subtasks } from '@/server/db';
+import { tasks, projects, roles, subtasks, tickets } from '@/server/db';
 import { eq, and, or, gte, lte, isNull, isNotNull, asc, desc } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { upsertEmbedding } from '@/server/search/upsertEmbedding';
@@ -103,6 +103,7 @@ export const tasksRouter = createTRPCRouter({
           blockedAt: tasks.blockedAt,
           createdAt: tasks.createdAt,
           updatedAt: tasks.updatedAt,
+          ticketId: tasks.ticketId,
           project: {
             id: projects.id,
             name: projects.name,
@@ -113,10 +114,15 @@ export const tasksRouter = createTRPCRouter({
             name: roles.name,
             color: roles.color,
           },
+          ticket: {
+            id: tickets.id,
+            status: tickets.status,
+          },
         })
         .from(tasks)
         .leftJoin(projects, eq(tasks.projectId, projects.id))
         .leftJoin(roles, eq(tasks.roleId, roles.id))
+        .leftJoin(tickets, eq(tasks.ticketId, tickets.id))
         .where(whereClause || eq(tasks.id, tasks.id))
         .orderBy(tasks.createdAt);
     }),

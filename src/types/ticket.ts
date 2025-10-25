@@ -1,5 +1,5 @@
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
-export type TicketStatus = 'new' | 'in_review' | 'responded' | 'converted' | 'closed';
+export type TicketStatus = 'new' | 'viewed' | 'pending_tasks' | 'complete' | 'in_review' | 'responded' | 'converted' | 'closed';
 
 export type Ticket = {
   id: string;

@@ -37,21 +37,32 @@ export async function POST(req: Request) {
 
       // Create the task
       if (projectId) {
+        // Get project's default role
+        const [project] = await db
+          .select({ roleId: projects.roleId })
+          .from(projects)
+          .where(eq(projects.id, projectId))
+          .limit(1);
+
         const [newTask] = await db.insert(tasks).values({
           title: task.title,
           description: task.description || '',
           projectId,
+          roleId: project?.roleId || null,
+          ticketId,
           status: 'not_started',
+          priorityScore: '2', // Default priority
+          isDaily: false,
         }).returning();
         createdTasks.push(newTask);
       }
     }
 
-    // Update ticket status to 'converted'
+    // Update ticket status to 'pending_tasks'
     await db
       .update(tickets)
       .set({ 
-        status: 'converted',
+        status: 'pending_tasks',
         updatedAt: new Date(),
       })
       .where(eq(tickets.id, ticketId));

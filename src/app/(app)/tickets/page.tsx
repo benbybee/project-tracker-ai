@@ -112,12 +112,15 @@ export default function TicketsPage() {
                   </span>
                   <span className={`text-xs rounded-full px-2 py-0.5 ${
                     t.status === 'new' ? 'bg-green-100 text-green-700' :
+                    t.status === 'viewed' ? 'bg-blue-100 text-blue-700' :
+                    t.status === 'pending_tasks' ? 'bg-orange-100 text-orange-700' :
+                    t.status === 'complete' ? 'bg-emerald-100 text-emerald-700' :
                     t.status === 'in_review' ? 'bg-yellow-100 text-yellow-700' :
                     t.status === 'responded' ? 'bg-purple-100 text-purple-700' :
                     t.status === 'converted' ? 'bg-indigo-100 text-indigo-700' :
                     'bg-gray-100 text-gray-700'
                   }`}>
-                    {t.status}
+                    {t.status.replace('_', ' ')}
                   </span>
                 </div>
               </div>
@@ -202,6 +205,9 @@ export default function TicketsPage() {
                 <div className="text-sm whitespace-pre-wrap">{summary}</div>
               </section>
             )}
+
+            {/* Associated Tasks Section */}
+            <AssociatedTasksSection ticketId={active.id} />
 
             {suggestedProject && (
               <section className="rounded-lg border p-3 bg-blue-50">
@@ -378,6 +384,103 @@ function TicketReplyBox({ ticketId }: { ticketId: string }) {
           {saving ? 'Sending...' : 'Send Reply'}
         </button>
         {success && <span className="text-sm text-green-600">✓ Reply sent!</span>}
+      </div>
+    </section>
+  );
+}
+
+function AssociatedTasksSection({ ticketId }: { ticketId: string }) {
+  const [tasks, setTasks] = useState<Array<{
+    id: string;
+    title: string;
+    description?: string;
+    status: string;
+    projectName?: string;
+    createdAt: string;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [ticketId]);
+
+  async function fetchTasks() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/tasks`);
+      if (res.ok) {
+        const data = await res.json();
+        setTasks(data.tasks || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <section className="rounded-lg border p-3 bg-gray-50">
+        <div className="text-sm font-semibold mb-2">📋 Associated Tasks</div>
+        <div className="text-sm text-gray-500">Loading tasks...</div>
+      </section>
+    );
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <section className="rounded-lg border p-3 bg-gray-50">
+        <div className="text-sm font-semibold mb-2">📋 Associated Tasks</div>
+        <div className="text-sm text-gray-500">No tasks created from this ticket yet.</div>
+      </section>
+    );
+  }
+
+  const completedCount = tasks.filter(t => t.status === 'completed').length;
+  const totalCount = tasks.length;
+
+  return (
+    <section className="rounded-lg border p-3 bg-green-50">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-sm font-semibold">📋 Associated Tasks ({totalCount})</div>
+        <div className="text-xs text-gray-600">
+          {completedCount}/{totalCount} completed
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        {tasks.map(task => (
+          <div key={task.id} className="flex items-center justify-between bg-white rounded-lg p-3 border">
+            <div className="flex-1">
+              <div className="font-medium text-sm">{task.title}</div>
+              {task.description && (
+                <div className="text-xs text-gray-600 mt-1">{task.description}</div>
+              )}
+              <div className="text-xs text-gray-500 mt-1">
+                {task.projectName && `Project: ${task.projectName}`}
+                <span className="mx-2">•</span>
+                Created: {new Date(task.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs rounded-full px-2 py-1 ${
+                task.status === 'completed' ? 'bg-green-100 text-green-700' :
+                task.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                task.status === 'blocked' ? 'bg-red-100 text-red-700' :
+                'bg-gray-100 text-gray-700'
+              }`}>
+                {task.status.replace('_', ' ')}
+              </span>
+              <a 
+                href={`/projects/${task.projectId}`}
+                className="text-blue-600 hover:text-blue-800 text-xs underline"
+              >
+                View →
+              </a>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

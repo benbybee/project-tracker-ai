@@ -19,6 +19,9 @@ export type Task = {
   isDaily?: boolean;
   updatedAt?: string;
   projectName?: string;
+  ticketId?: string;
+  ticketStatus?: string;
+  ticketTaskCount?: number;
 };
 
 export function TaskCard({
@@ -83,6 +86,25 @@ export function TaskCard({
               </div>
             </div>
             {task.projectName && <div className="text-xs text-gray-500">{task.projectName}</div>}
+            {task.ticketId && (
+              <div className="text-xs text-blue-600 mt-1">
+                🎫 Ticket #{task.ticketId.slice(-8)} 
+                {task.ticketStatus && (
+                  <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] ${
+                    task.ticketStatus === 'new' ? 'bg-green-100 text-green-700' :
+                    task.ticketStatus === 'viewed' ? 'bg-blue-100 text-blue-700' :
+                    task.ticketStatus === 'pending_tasks' ? 'bg-orange-100 text-orange-700' :
+                    task.ticketStatus === 'complete' ? 'bg-emerald-100 text-emerald-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {task.ticketStatus.replace('_', ' ')}
+                  </span>
+                )}
+                {task.ticketTaskCount && task.ticketTaskCount > 1 && (
+                  <span className="ml-1 text-gray-500">({task.ticketTaskCount} tasks)</span>
+                )}
+              </div>
+            )}
             {task.description && (
               <p className="text-sm text-gray-700 line-clamp-2 mt-1">{task.description}</p>
             )}
