@@ -396,6 +396,7 @@ function AssociatedTasksSection({ ticketId }: { ticketId: string }) {
     description?: string;
     status: string;
     projectName?: string;
+    projectId?: string;
     createdAt: string;
   }>>([]);
   const [loading, setLoading] = useState(true);
@@ -472,12 +473,14 @@ function AssociatedTasksSection({ ticketId }: { ticketId: string }) {
               }`}>
                 {task.status.replace('_', ' ')}
               </span>
-              <a 
-                href={`/projects/${task.projectId}`}
-                className="text-blue-600 hover:text-blue-800 text-xs underline"
-              >
-                View →
-              </a>
+              {task.projectId && (
+                <a 
+                  href={`/projects/${task.projectId}`}
+                  className="text-blue-600 hover:text-blue-800 text-xs underline"
+                >
+                  View →
+                </a>
+              )}
             </div>
           </div>
         ))}
