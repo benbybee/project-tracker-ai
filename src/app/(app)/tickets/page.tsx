@@ -165,6 +165,37 @@ export default function TicketsPage() {
               <div className="text-sm whitespace-pre-wrap">{active.details}</div>
             </section>
 
+            {active.attachments && active.attachments.length > 0 && (
+              <section className="rounded-lg border p-3 bg-blue-50">
+                <div className="text-xs text-blue-700 mb-2 font-medium">📎 Attachments ({active.attachments.length})</div>
+                <div className="space-y-2">
+                  {active.attachments.map((attachment, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-white rounded-lg p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">📄</span>
+                        <span className="text-sm font-medium">{attachment.name}</span>
+                        {attachment.size && (
+                          <span className="text-xs text-gray-500">
+                            ({(attachment.size / 1024).toFixed(1)} KB)
+                          </span>
+                        )}
+                      </div>
+                      {attachment.url && (
+                        <a 
+                          href={attachment.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm underline"
+                        >
+                          View →
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {summary && (
               <section className="rounded-lg border p-3 bg-blue-50">
                 <div className="text-xs text-blue-700 mb-1 font-medium">AI Summary</div>

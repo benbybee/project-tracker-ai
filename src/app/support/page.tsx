@@ -94,7 +94,7 @@ export default function SupportRequestPage() {
           <div>
             <label className="text-sm font-medium">Attachments</label>
             <input name="files" type="file" multiple className="mt-1 w-full rounded-lg border px-3 py-2" />
-            <p className="text-xs text-gray-500 mt-1">Screenshots, docs, etc. (storage stubbed; wire Blob/S3 later)</p>
+            <p className="text-xs text-gray-500 mt-1">Screenshots, docs, etc. (Files will be stored securely and accessible to your team)</p>
           </div>
           <div className="pt-2">
             <button disabled={submitting} className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50">

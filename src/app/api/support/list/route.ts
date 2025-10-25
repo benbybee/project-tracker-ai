@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import { db } from '@/server/db';
-import { tickets } from '@/server/db/schema';
-import { desc } from 'drizzle-orm';
+import { tickets, ticketAttachments } from '@/server/db/schema';
+import { desc, eq } from 'drizzle-orm';
 
 // GET -> { tickets: Ticket[] }
 export async function GET() {
@@ -20,23 +20,41 @@ export async function GET() {
       .orderBy(desc(tickets.createdAt))
       .limit(100); // Paginate later
 
+    // Get attachments for each ticket
+    const ticketsWithAttachments = await Promise.all(
+      allTickets.map(async (ticket) => {
+        const attachments = await db
+          .select()
+          .from(ticketAttachments)
+          .where(eq(ticketAttachments.ticketId, ticket.id));
+
+        return {
+          id: ticket.id,
+          createdAt: ticket.createdAt.toISOString(),
+          updatedAt: ticket.updatedAt.toISOString(),
+          customerName: ticket.customerName,
+          customerEmail: ticket.customerEmail,
+          projectName: ticket.projectName,
+          domain: ticket.domain,
+          details: ticket.details,
+          dueDateSuggested: ticket.dueDateSuggested || null,
+          priority: ticket.priority,
+          status: ticket.status,
+          aiEta: ticket.aiEta || null,
+          aiSummary: ticket.aiSummary,
+          suggestedProjectId: ticket.suggestedProjectId || null,
+          attachments: attachments.map(a => ({
+            id: a.id,
+            name: a.fileName,
+            size: a.fileSize,
+            url: a.url,
+          })),
+        };
+      })
+    );
+
     return NextResponse.json({ 
-      tickets: allTickets.map(t => ({
-        id: t.id,
-        createdAt: t.createdAt.toISOString(),
-        updatedAt: t.updatedAt.toISOString(),
-        customerName: t.customerName,
-        customerEmail: t.customerEmail,
-        projectName: t.projectName,
-        domain: t.domain,
-        details: t.details,
-        dueDateSuggested: t.dueDateSuggested || null,
-        priority: t.priority,
-        status: t.status,
-        aiEta: t.aiEta || null,
-        aiSummary: t.aiSummary,
-        suggestedProjectId: t.suggestedProjectId || null,
-      }))
+      tickets: ticketsWithAttachments
     });
   } catch (error) {
     console.error('Failed to fetch tickets:', error);

@@ -5,6 +5,7 @@ import { db } from '@/server/db';
 import { tickets, projects } from '@/server/db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import OpenAI from 'openai';
 
 // POST { ticketId } -> { summary, tasks: [{id,title,description,projectId?}], suggestedProject: {id,name} }
 export async function POST(req: Request) {
@@ -88,91 +89,125 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate AI summary and tasks
-    const summary = `AI Analysis for ${ticket.customerName} (${ticket.customerEmail}):\n\n` +
-      `Project: ${ticket.projectName}\n` +
-      `Priority: ${ticket.priority}\n` +
-      `Domain: ${ticket.domain || 'Not specified'}\n\n` +
-      `Request Summary: ${ticket.details.slice(0, 200)}${ticket.details.length > 200 ? '...' : ''}\n\n` +
-      `Suggested Project: ${suggestedProject ? suggestedProject.name : 'No suggestion - manual assignment required'}\n` +
-      `Reason: ${suggestedProject ? suggestedProject.reason : 'No historical data or domain match found'}`;
-
-    // Generate contextual tasks based on ticket content
-    const tasks = [];
+    // Generate AI summary and tasks using OpenAI
+    let aiSummary = '';
+    let aiTasks = [];
     
-    // Always include initial review task
-    tasks.push({
-      id: randomUUID(),
-      title: `Initial Review: ${ticket.projectName}`,
-      description: `Review requirements with ${ticket.customerName} and clarify scope`,
-      projectId: suggestedProject?.id,
-      estimatedHours: 2
-    });
+    try {
+      // Initialize OpenAI client inside the function
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
 
-    // Add domain-specific tasks based on keywords
-    const details = ticket.details.toLowerCase();
-    if (details.includes('contact') || details.includes('form')) {
-      tasks.push({
-        id: randomUUID(),
-        title: 'Contact Form Implementation',
-        description: 'Add contact form functionality and validation',
-        projectId: suggestedProject?.id,
-        estimatedHours: 4
-      });
+      const prompt = `You are an AI assistant helping to analyze support tickets and generate actionable tasks.
+
+TICKET DETAILS:
+- Customer: ${ticket.customerName} (${ticket.customerEmail})
+- Project: ${ticket.projectName}
+- Domain: ${ticket.domain || 'Not specified'}
+- Priority: ${ticket.priority}
+- Request: ${ticket.details}
+
+AVAILABLE PROJECTS:
+${allProjects.map(p => `- ${p.name} (ID: ${p.id})`).join('\n')}
+
+HISTORICAL CONTEXT:
+${historicalProjects.length > 0 ? 
+  `This customer has previously worked on: ${historicalProjects.map(h => h.projectName).join(', ')}` : 
+  'No previous project history for this customer'}
+
+SUGGESTED PROJECT: ${suggestedProject ? `${suggestedProject.name} (${suggestedProject.reason})` : 'None - manual assignment needed'}
+
+Please provide:
+1. A concise summary of the ticket and recommended approach
+2. 3-5 specific, actionable tasks with realistic time estimates
+3. For each task, suggest which project it should be assigned to (use project names from the available list)
+
+Format your response as JSON:
+{
+  "summary": "Brief analysis and approach...",
+  "tasks": [
+    {
+      "title": "Task title",
+      "description": "Detailed description",
+      "estimatedHours": 4,
+      "suggestedProject": "Project Name"
     }
-    if (details.includes('hero') || details.includes('homepage')) {
-      tasks.push({
-        id: randomUUID(),
-        title: 'Homepage Hero Section Update',
-        description: 'Update hero section design and content',
-        projectId: suggestedProject?.id,
-        estimatedHours: 3
+  ]
+}`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert project manager and technical consultant. Analyze support tickets and break them down into actionable development tasks with realistic time estimates."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 1500
       });
-    }
-    if (details.includes('mobile') || details.includes('responsive')) {
-      tasks.push({
-        id: randomUUID(),
-        title: 'Mobile Responsiveness',
-        description: 'Ensure mobile-friendly design and functionality',
-        projectId: suggestedProject?.id,
-        estimatedHours: 6
-      });
-    }
-    if (details.includes('seo') || details.includes('search')) {
-      tasks.push({
-        id: randomUUID(),
-        title: 'SEO Optimization',
-        description: 'Improve search engine optimization',
-        projectId: suggestedProject?.id,
-        estimatedHours: 4
-      });
+
+      const aiResponse = JSON.parse(completion.choices[0].message.content || '{}');
+      aiSummary = aiResponse.summary || '';
+      aiTasks = aiResponse.tasks || [];
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      // Fallback to rule-based approach
+      aiSummary = `AI Analysis for ${ticket.customerName} (${ticket.customerEmail}):\n\n` +
+        `Project: ${ticket.projectName}\n` +
+        `Priority: ${ticket.priority}\n` +
+        `Domain: ${ticket.domain || 'Not specified'}\n\n` +
+        `Request Summary: ${ticket.details.slice(0, 200)}${ticket.details.length > 200 ? '...' : ''}\n\n` +
+        `Suggested Project: ${suggestedProject ? suggestedProject.name : 'No suggestion - manual assignment required'}\n` +
+        `Reason: ${suggestedProject ? suggestedProject.reason : 'No historical data or domain match found'}`;
+      
+      aiTasks = [
+        {
+          title: `Initial Review: ${ticket.projectName}`,
+          description: `Review requirements with ${ticket.customerName} and clarify scope`,
+          estimatedHours: 2,
+          suggestedProject: suggestedProject?.name
+        },
+        {
+          title: 'Development Work',
+          description: `Implement requested changes: ${ticket.details.slice(0, 100)}...`,
+          estimatedHours: 8,
+          suggestedProject: suggestedProject?.name
+        },
+        {
+          title: 'QA & Client Review',
+          description: `Test implementation and gather feedback from ${ticket.customerName}`,
+          estimatedHours: 2,
+          suggestedProject: suggestedProject?.name
+        }
+      ];
     }
 
-    // Add QA task if no specific tasks were generated
-    if (tasks.length === 1) {
-      tasks.push({
+    // Map AI tasks to our format and assign project IDs
+    const tasks = aiTasks.map((task: any) => {
+      const projectId = task.suggestedProject ? 
+        allProjects.find(p => p.name === task.suggestedProject)?.id || suggestedProject?.id :
+        suggestedProject?.id;
+        
+      return {
         id: randomUUID(),
-        title: 'Development Work',
-        description: `Implement requested changes: ${ticket.details.slice(0, 100)}...`,
-        projectId: suggestedProject?.id,
-        estimatedHours: 8
-      });
-    }
-
-    // Always add QA task
-    tasks.push({
-      id: randomUUID(),
-      title: 'QA & Client Review',
-      description: `Test implementation and gather feedback from ${ticket.customerName}`,
-      projectId: suggestedProject?.id,
-      estimatedHours: 2
+        title: task.title,
+        description: task.description,
+        projectId,
+        estimatedHours: task.estimatedHours || 4
+      };
     });
 
     // Update ticket with AI summary and suggested project
     await db
       .update(tickets)
       .set({ 
-        aiSummary: summary,
+        aiSummary: aiSummary,
         suggestedProjectId: suggestedProject?.id,
         status: 'in_review',
         updatedAt: new Date(),
@@ -180,7 +215,7 @@ export async function POST(req: Request) {
       .where(eq(tickets.id, ticketId));
 
     return NextResponse.json({
-      summary,
+      summary: aiSummary,
       tasks,
       suggestedProject,
       availableProjects: allProjects

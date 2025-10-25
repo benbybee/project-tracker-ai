@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { tickets, ticketAttachments } from '@/server/db/schema';
+import { put } from '@vercel/blob';
 
 export async function POST(req: Request) {
   try {
@@ -36,17 +37,34 @@ export async function POST(req: Request) {
       aiEta,
     }).returning();
 
-    // Handle file attachments (stubbed - store file metadata only)
+    // Handle file attachments with Vercel Blob storage
     const files = form.getAll('files') as File[];
     const attachmentPromises = files
       .filter(f => f.size > 0)
       .map(async (file) => {
-        return db.insert(ticketAttachments).values({
-          ticketId: ticket.id,
-          fileName: file.name,
-          fileSize: file.size,
-          url: null, // TODO: upload to Vercel Blob/S3 and store URL
-        });
+        try {
+          // Upload file to Vercel Blob
+          const blob = await put(`tickets/${ticket.id}/${file.name}`, file, {
+            access: 'public',
+          });
+
+          // Store attachment metadata in database
+          return db.insert(ticketAttachments).values({
+            ticketId: ticket.id,
+            fileName: file.name,
+            fileSize: file.size,
+            url: blob.url,
+          });
+        } catch (error) {
+          console.error('Failed to upload file:', file.name, error);
+          // Store without URL if upload fails
+          return db.insert(ticketAttachments).values({
+            ticketId: ticket.id,
+            fileName: file.name,
+            fileSize: file.size,
+            url: null,
+          });
+        }
       });
 
     await Promise.all(attachmentPromises);
