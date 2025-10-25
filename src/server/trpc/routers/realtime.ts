@@ -14,8 +14,8 @@ export const realtimeRouter = createTRPCRouter({
         lastActiveAt: Date.now(),
         currentProject: undefined,
         currentTask: undefined,
-        isEditing: false
-      }
+        isEditing: false,
+      },
     ];
   }),
 
@@ -41,7 +41,13 @@ export const realtimeRouter = createTRPCRouter({
   logEvent: protectedProcedure
     .input(
       z.object({
-        type: z.enum(['task_updated', 'project_updated', 'user_presence', 'user_typing', 'conflict_detected']),
+        type: z.enum([
+          'task_updated',
+          'project_updated',
+          'user_presence',
+          'user_typing',
+          'conflict_detected',
+        ]),
         entity: z.enum(['task', 'project', 'user']),
         action: z.enum(['create', 'update', 'delete', 'presence', 'typing']),
         entityId: z.string().optional(),

@@ -5,7 +5,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { trpc } from '@/lib/trpc';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -33,12 +39,17 @@ interface EditProjectModalProps {
   onSuccess: () => void;
 }
 
-export function EditProjectModal({ isOpen, onClose, project, onSuccess }: EditProjectModalProps) {
+export function EditProjectModal({
+  isOpen,
+  onClose,
+  project,
+  onSuccess,
+}: EditProjectModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const utils = trpc.useUtils();
   const { data: roles = [] } = trpc.roles.list.useQuery();
-  
+
   const updateMutation = trpc.projects.update.useMutation({
     onSuccess: () => {
       utils.projects.get.invalidate({ id: project.id });
@@ -51,17 +62,23 @@ export function EditProjectModal({ isOpen, onClose, project, onSuccess }: EditPr
     },
     onSettled: () => {
       setIsSubmitting(false);
-    }
+    },
   });
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<EditProjectFields>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+  } = useForm<EditProjectFields>({
     resolver: zodResolver(EditProjectSchema),
     defaultValues: {
       name: project.name,
       description: project.description || '',
       type: project.type,
       roleId: project.roleId || '',
-    }
+    },
   });
 
   // Reset form when project changes
@@ -76,7 +93,7 @@ export function EditProjectModal({ isOpen, onClose, project, onSuccess }: EditPr
 
   const onSubmit = async (data: EditProjectFields) => {
     setIsSubmitting(true);
-    
+
     updateMutation.mutate({
       id: project.id,
       name: data.name,
@@ -114,7 +131,9 @@ export function EditProjectModal({ isOpen, onClose, project, onSuccess }: EditPr
                   className={errors.name ? 'border-red-500' : ''}
                 />
                 {errors.name && (
-                  <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
 

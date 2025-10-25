@@ -9,7 +9,7 @@ import { inArray } from 'drizzle-orm';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -17,7 +17,10 @@ export async function POST(req: Request) {
     const { ids } = await req.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json({ ok: false, error: 'No IDs provided' }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: 'No IDs provided' },
+        { status: 400 }
+      );
     }
 
     // Delete from plaud_pending (or mark as discarded if you prefer soft deletes)
@@ -26,9 +29,9 @@ export async function POST(req: Request) {
       .where(inArray(plaudPending.id, ids))
       .returning();
 
-    return NextResponse.json({ 
-      ok: true, 
-      deleted: deleted.length 
+    return NextResponse.json({
+      ok: true,
+      deleted: deleted.length,
     });
   } catch (error) {
     console.error('Failed to decline Plaud items:', error);
@@ -38,4 +41,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

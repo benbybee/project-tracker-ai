@@ -11,7 +11,10 @@ interface TypingIndicatorProps {
   className?: string;
 }
 
-export function TypingIndicator({ users, className = '' }: TypingIndicatorProps) {
+export function TypingIndicator({
+  users,
+  className = '',
+}: TypingIndicatorProps) {
   if (users.length === 0) return null;
 
   const getTypingText = () => {
@@ -95,9 +98,7 @@ export function TypingIndicator({ users, className = '' }: TypingIndicatorProps)
       </div>
 
       {/* Typing Text */}
-      <span className="text-sm text-gray-500">
-        {getTypingText()}
-      </span>
+      <span className="text-sm text-gray-500">{getTypingText()}</span>
     </motion.div>
   );
 }

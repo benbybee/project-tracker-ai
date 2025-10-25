@@ -9,7 +9,7 @@ import { desc } from 'drizzle-orm';
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -20,8 +20,8 @@ export async function GET() {
       .orderBy(desc(tickets.createdAt))
       .limit(100); // Paginate later
 
-    return NextResponse.json({ 
-      tickets: allTickets.map(t => ({
+    return NextResponse.json({
+      tickets: allTickets.map((t) => ({
         id: t.id,
         createdAt: t.createdAt.toISOString(),
         updatedAt: t.updatedAt.toISOString(),
@@ -34,7 +34,7 @@ export async function GET() {
         requesterEmail: t.requesterEmail,
         aiEta: t.aiEta || null,
         aiSummary: t.aiSummary,
-      }))
+      })),
     });
   } catch (error) {
     console.error('Failed to fetch tickets:', error);
@@ -44,4 +44,3 @@ export async function GET() {
     );
   }
 }
-

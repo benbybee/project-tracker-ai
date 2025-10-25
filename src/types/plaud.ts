@@ -15,4 +15,3 @@ export type PlaudAcceptTask = {
   projectId?: string;
   projectNameNew?: string;
 };
-

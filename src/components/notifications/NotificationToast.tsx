@@ -16,10 +16,10 @@ interface NotificationToastProps {
   duration?: number;
 }
 
-export function NotificationToast({ 
-  notification, 
-  onClose, 
-  duration = 5000 
+export function NotificationToast({
+  notification,
+  onClose,
+  duration = 5000,
 }: NotificationToastProps) {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -74,10 +74,8 @@ export function NotificationToast({
           className={`fixed bottom-4 right-4 w-80 p-4 rounded-lg shadow-lg border ${getBackgroundColor()} z-50`}
         >
           <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              {getIcon()}
-            </div>
-            
+            <div className="flex-shrink-0">{getIcon()}</div>
+
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold text-gray-900">
                 {notification.title}
@@ -86,7 +84,7 @@ export function NotificationToast({
                 {notification.message}
               </p>
             </div>
-            
+
             <button
               onClick={handleClose}
               className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 transition-colors"
@@ -94,7 +92,7 @@ export function NotificationToast({
               <X className="h-4 w-4" />
             </button>
           </div>
-          
+
           {notification.link && (
             <div className="mt-3">
               <button

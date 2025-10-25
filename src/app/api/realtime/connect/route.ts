@@ -5,7 +5,7 @@ import { authOptions } from '@/server/auth';
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return new Response('Unauthorized', { status: 401 });
     }
@@ -13,17 +13,20 @@ export async function GET(req: NextRequest) {
     // This is a placeholder for WebSocket upgrade
     // In a real implementation, you'd handle WebSocket upgrade here
     // For now, we'll return a simple response indicating the endpoint is ready
-    
-    return new Response(JSON.stringify({
-      status: 'ready',
-      userId: session.user.id,
-      message: 'WebSocket endpoint ready for connection'
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+
+    return new Response(
+      JSON.stringify({
+        status: 'ready',
+        userId: session.user.id,
+        message: 'WebSocket endpoint ready for connection',
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error) {
     console.error('WebSocket connection error:', error);
     return new Response('Internal Server Error', { status: 500 });
@@ -33,7 +36,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return new Response('Unauthorized', { status: 401 });
     }

@@ -1,15 +1,18 @@
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 interface SkeletonGlassProps {
   className?: string;
   children?: React.ReactNode;
 }
 
-export function SkeletonGlass({ className = "", children }: SkeletonGlassProps) {
+export function SkeletonGlass({
+  className = '',
+  children,
+}: SkeletonGlassProps) {
   return (
-    <div 
+    <div
       className={cn(
-        "rounded-[var(--radius-lg)] border border-white/40 bg-white/40 backdrop-blur animate-pulse",
+        'rounded-[var(--radius-lg)] border border-white/40 bg-white/40 backdrop-blur animate-pulse',
         className
       )}
     >
@@ -17,4 +20,3 @@ export function SkeletonGlass({ className = "", children }: SkeletonGlassProps) 
     </div>
   );
 }
-

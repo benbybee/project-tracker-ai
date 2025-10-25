@@ -15,9 +15,7 @@ export const notificationsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const whereConditions = [
-        eq(notifications.userId, ctx.session.user.id)
-      ];
+      const whereConditions = [eq(notifications.userId, ctx.session.user.id)];
 
       if (input.unreadOnly) {
         whereConditions.push(eq(notifications.read, false));
@@ -40,9 +38,9 @@ export const notificationsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await db
         .update(notifications)
-        .set({ 
+        .set({
           read: true,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(
           and(
@@ -55,46 +53,53 @@ export const notificationsRouter = createTRPCRouter({
     }),
 
   // Mark all notifications as read
-  markAllAsRead: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      await db
-        .update(notifications)
-        .set({ 
-          read: true,
-          updatedAt: new Date()
-        })
-        .where(
-          and(
-            eq(notifications.userId, ctx.session.user.id),
-            eq(notifications.read, false)
-          )
-        );
+  markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
+    await db
+      .update(notifications)
+      .set({
+        read: true,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(notifications.userId, ctx.session.user.id),
+          eq(notifications.read, false)
+        )
+      );
 
-      return { success: true };
-    }),
+    return { success: true };
+  }),
 
   // Get unread count
-  getUnreadCount: protectedProcedure
-    .query(async ({ ctx }) => {
-      const result = await db
-        .select({ count: notifications.id })
-        .from(notifications)
-        .where(
-          and(
-            eq(notifications.userId, ctx.session.user.id),
-            eq(notifications.read, false)
-          )
-        );
+  getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
+    const result = await db
+      .select({ count: notifications.id })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, ctx.session.user.id),
+          eq(notifications.read, false)
+        )
+      );
 
-      return result.length;
-    }),
+    return result.length;
+  }),
 
   // Create notification (internal use)
   createNotification: protectedProcedure
     .input(
       z.object({
         userId: z.string(),
-        type: z.enum(['task_assigned', 'task_updated', 'task_completed', 'project_updated', 'comment_added', 'mention', 'sync_conflict', 'collaboration']),
+        type: z.enum([
+          'task_assigned',
+          'task_updated',
+          'task_completed',
+          'project_updated',
+          'comment_added',
+          'mention',
+          'sync_conflict',
+          'collaboration',
+        ]),
         title: z.string(),
         message: z.string(),
         link: z.string().optional(),

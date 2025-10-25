@@ -45,12 +45,11 @@ async function seedUser() {
 
     console.log('👤 Creating test user...');
     const [user] = await db.insert(users).values(testUser).returning();
-    
+
     console.log('✅ Seed completed successfully!');
     console.log(`📧 Test user: ${user.email}`);
     console.log('🔑 Password: password123');
     console.log('🔗 Login at: http://localhost:3000/sign-in');
-
   } catch (error) {
     console.error('❌ Seed failed:', error);
     process.exit(1);

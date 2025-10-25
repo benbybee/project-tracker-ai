@@ -49,14 +49,16 @@ export function MessageBubble({
   onReaction,
   onReply,
   onEdit,
-  onDelete
+  onDelete,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
 
   const getTimeAgo = () => {
     try {
-      return formatDistanceToNow(new Date(message.createdAt), { addSuffix: true });
+      return formatDistanceToNow(new Date(message.createdAt), {
+        addSuffix: true,
+      });
     } catch {
       return 'Recently';
     }
@@ -65,18 +67,24 @@ export function MessageBubble({
   const getEditedTime = () => {
     if (!message.isEdited || !message.editedAt) return null;
     try {
-      return formatDistanceToNow(new Date(message.editedAt), { addSuffix: true });
+      return formatDistanceToNow(new Date(message.editedAt), {
+        addSuffix: true,
+      });
     } catch {
       return 'Recently';
     }
   };
 
   const getReactionCount = (emoji: string) => {
-    return message.reactions?.filter(r => r.emoji === emoji).length || 0;
+    return message.reactions?.filter((r) => r.emoji === emoji).length || 0;
   };
 
   const getReactionUsers = (emoji: string) => {
-    return message.reactions?.filter(r => r.emoji === emoji).map(r => r.user.name) || [];
+    return (
+      message.reactions
+        ?.filter((r) => r.emoji === emoji)
+        .map((r) => r.user.name) || []
+    );
   };
 
   const handleReaction = (emoji: string) => {
@@ -106,13 +114,13 @@ export function MessageBubble({
       )}
 
       {/* Message Content */}
-      <div className={`flex-1 max-w-xs lg:max-w-md ${isOwn ? 'text-right' : 'text-left'}`}>
+      <div
+        className={`flex-1 max-w-xs lg:max-w-md ${isOwn ? 'text-right' : 'text-left'}`}
+      >
         {/* Message Bubble */}
         <div
           className={`inline-block px-4 py-2 rounded-2xl ${
-            isOwn
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-900'
+            isOwn ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900'
           } ${message.messageType === 'system' ? 'bg-yellow-100 text-yellow-800' : ''}`}
         >
           {/* Reply indicator */}
@@ -123,20 +131,23 @@ export function MessageBubble({
           )}
 
           {/* Message content */}
-          {message.messageType === 'text' || message.messageType === 'mention' ? (
+          {message.messageType === 'text' ||
+          message.messageType === 'mention' ? (
             <div className="prose prose-sm max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-              components={{
-                p: ({ children }) => <span>{children}</span>,
-                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                em: ({ children }) => <em className="italic">{children}</em>,
-                code: ({ children }) => (
-                  <code className="bg-black/10 px-1 py-0.5 rounded text-xs font-mono">
-                    {children}
-                  </code>
-                ),
-              }}
+                components={{
+                  p: ({ children }) => <span>{children}</span>,
+                  strong: ({ children }) => (
+                    <strong className="font-semibold">{children}</strong>
+                  ),
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  code: ({ children }) => (
+                    <code className="bg-black/10 px-1 py-0.5 rounded text-xs font-mono">
+                      {children}
+                    </code>
+                  ),
+                }}
               >
                 {message.content}
               </ReactMarkdown>
@@ -156,23 +167,27 @@ export function MessageBubble({
         {/* Reactions */}
         {message.reactions && message.reactions.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
-            {Array.from(new Set(message.reactions.map(r => r.emoji))).map(emoji => (
-              <button
-                key={emoji}
-                onClick={() => handleReaction(emoji)}
-                className="flex items-center space-x-1 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-xs transition-colors"
-                title={getReactionUsers(emoji).join(', ')}
-              >
-                <span>{emoji}</span>
-                <span>{getReactionCount(emoji)}</span>
-              </button>
-            ))}
+            {Array.from(new Set(message.reactions.map((r) => r.emoji))).map(
+              (emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => handleReaction(emoji)}
+                  className="flex items-center space-x-1 px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-xs transition-colors"
+                  title={getReactionUsers(emoji).join(', ')}
+                >
+                  <span>{emoji}</span>
+                  <span>{getReactionCount(emoji)}</span>
+                </button>
+              )
+            )}
           </div>
         )}
 
         {/* Timestamp */}
         {showTimestamp && (
-          <div className={`text-xs text-gray-500 mt-1 ${isOwn ? 'text-right' : 'text-left'}`}>
+          <div
+            className={`text-xs text-gray-500 mt-1 ${isOwn ? 'text-right' : 'text-left'}`}
+          >
             {getTimeAgo()}
           </div>
         )}
@@ -193,7 +208,7 @@ export function MessageBubble({
           >
             <Smile className="h-4 w-4" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -213,7 +228,7 @@ export function MessageBubble({
               >
                 <Edit className="h-4 w-4" />
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -234,7 +249,7 @@ export function MessageBubble({
           animate={{ opacity: 1, y: 0 }}
           className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 flex space-x-1 z-10"
         >
-          {commonEmojis.map(emoji => (
+          {commonEmojis.map((emoji) => (
             <button
               key={emoji}
               onClick={() => handleReaction(emoji)}

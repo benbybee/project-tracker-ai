@@ -40,7 +40,7 @@ class NotificationManagerClass {
 
   private notifyListeners() {
     const notifications = this.getNotifications();
-    this.listeners.forEach(listener => listener(notifications));
+    this.listeners.forEach((listener) => listener(notifications));
   }
 
   clear() {

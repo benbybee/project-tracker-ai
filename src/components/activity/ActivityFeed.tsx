@@ -4,7 +4,13 @@ import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { ActivityItem } from './ActivityItem';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { RefreshCw, Filter } from 'lucide-react';
 
 interface ActivityFeedProps {
@@ -17,13 +23,17 @@ export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
   const [limit, setLimit] = useState(20);
   const [hasNewUpdates, setHasNewUpdates] = useState(false);
 
-  const { data: activities, isLoading, refetch } = trpc.activity.getActivityFeed.useQuery({
+  const {
+    data: activities,
+    isLoading,
+    refetch,
+  } = trpc.activity.getActivityFeed.useQuery({
     projectId: filter === 'project' ? projectId : undefined,
     limit,
   });
 
   const handleLoadMore = () => {
-    setLimit(prev => prev + 20);
+    setLimit((prev) => prev + 20);
   };
 
   const handleRefresh = () => {
@@ -54,7 +64,10 @@ export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Filter className="h-4 w-4 text-gray-500" />
-          <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+          <Select
+            value={filter}
+            onValueChange={(value: any) => setFilter(value)}
+          >
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -65,7 +78,7 @@ export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
             </SelectContent>
           </Select>
         </div>
-        
+
         <Button
           variant="outline"
           size="sm"
@@ -83,7 +96,9 @@ export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              <span className="text-sm text-blue-700">New updates available</span>
+              <span className="text-sm text-blue-700">
+                New updates available
+              </span>
             </div>
             <button
               onClick={handleRefresh}
@@ -116,11 +131,7 @@ export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
       {/* Load more button */}
       {activities && activities.length >= limit && (
         <div className="text-center pt-4">
-          <Button
-            variant="outline"
-            onClick={handleLoadMore}
-            className="w-full"
-          >
+          <Button variant="outline" onClick={handleLoadMore} className="w-full">
             Load More
           </Button>
         </div>

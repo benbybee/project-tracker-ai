@@ -1,7 +1,12 @@
 'use client';
 
 export type RealtimeEvent = {
-  type: 'task_updated' | 'project_updated' | 'user_presence' | 'user_typing' | 'conflict_detected';
+  type:
+    | 'task_updated'
+    | 'project_updated'
+    | 'user_presence'
+    | 'user_typing'
+    | 'conflict_detected';
   entity: 'task' | 'project' | 'user';
   action: 'create' | 'update' | 'delete' | 'presence' | 'typing';
   data: any;
@@ -21,7 +26,12 @@ export type PresenceData = {
   isEditing?: boolean;
 };
 
-export type RealtimeConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
+export type RealtimeConnectionStatus =
+  | 'disconnected'
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting'
+  | 'error';
 
 class WebSocketClient {
   private ws: WebSocket | null = null;
@@ -47,7 +57,7 @@ class WebSocketClient {
     if (this.ws?.readyState === WebSocket.OPEN) return;
 
     this.setStatus('connecting');
-    
+
     try {
       const wsUrl = this.getWebSocketUrl();
       this.ws = new WebSocket(wsUrl);
@@ -74,7 +84,7 @@ class WebSocketClient {
         this.setStatus('disconnected');
         this.stopHeartbeat();
         this.emit('disconnected', { code: event.code, reason: event.reason });
-        
+
         if (event.code !== 1000) {
           this.scheduleReconnect();
         }
@@ -85,7 +95,6 @@ class WebSocketClient {
         this.setStatus('error');
         this.emit('error', error);
       };
-
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
       this.setStatus('error');
@@ -110,21 +119,26 @@ class WebSocketClient {
 
     this.setStatus('reconnecting');
     this.reconnectAttempts++;
-    
-    setTimeout(() => {
-      console.log(`Reconnecting... attempt ${this.reconnectAttempts}`);
-      this.connect();
-    }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1));
+
+    setTimeout(
+      () => {
+        console.log(`Reconnecting... attempt ${this.reconnectAttempts}`);
+        this.connect();
+      },
+      this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
+    );
   }
 
   private startHeartbeat(): void {
-    const interval = parseInt(process.env.NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL || '15000');
+    const interval = parseInt(
+      process.env.NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL || '15000'
+    );
     this.heartbeatInterval = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.send({
           type: 'heartbeat',
           timestamp: Date.now(),
-          userId: this.session?.user?.id
+          userId: this.session?.user?.id,
         });
       }
     }, interval);
@@ -155,14 +169,14 @@ class WebSocketClient {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)!.add(callback);
-    
+
     return () => {
       this.listeners.get(event)?.delete(callback);
     };
   }
 
   private emit(event: string, data?: any): void {
-    this.listeners.get(event)?.forEach(callback => callback(data));
+    this.listeners.get(event)?.forEach((callback) => callback(data));
   }
 
   private setStatus(status: RealtimeConnectionStatus): void {
@@ -188,11 +202,11 @@ class WebSocketClient {
         userName: this.session?.user?.name,
         userEmail: this.session?.user?.email,
         timestamp: Date.now(),
-        ...data
+        ...data,
       },
       version: 1,
       userId: this.session?.user?.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -204,11 +218,11 @@ class WebSocketClient {
       data: {
         entityId,
         isTyping: true,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       version: 1,
       userId: this.session?.user?.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -220,15 +234,19 @@ class WebSocketClient {
       data: {
         entityId,
         isTyping: false,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       version: 1,
       userId: this.session?.user?.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
-  broadcastUpdate(entityType: 'task' | 'project', entityId: string, data: any): void {
+  broadcastUpdate(
+    entityType: 'task' | 'project',
+    entityId: string,
+    data: any
+  ): void {
     this.send({
       type: `${entityType}_updated`,
       entity: entityType,
@@ -236,11 +254,11 @@ class WebSocketClient {
       data: {
         id: entityId,
         ...data,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       version: 1,
       userId: this.session?.user?.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 }

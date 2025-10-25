@@ -32,7 +32,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       e.preventDefault();
       // Stash the event so it can be triggered later
       deferredPrompt = e;
-      
+
       // No toast - silent handling
     };
 
@@ -47,18 +47,23 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     const registerSW = async () => {
       if ('serviceWorker' in navigator) {
         try {
-          const registration = await navigator.serviceWorker.register('/service-worker-simple.js');
-          
+          const registration = await navigator.serviceWorker.register(
+            '/service-worker-simple.js'
+          );
+
           console.log('SW registered: ', registration);
-          
+
           // No toast - silent handling
-          
+
           // Handle updates
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (
+                  newWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller
+                ) {
                   // New content is available, reload the page
                   window.location.reload();
                 }
@@ -74,20 +79,19 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     // Register event listeners
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
-    
+
     // Register service worker
     registerSW();
 
     // Cleanup
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt
+      );
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

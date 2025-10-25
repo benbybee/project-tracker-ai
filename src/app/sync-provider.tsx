@@ -15,7 +15,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         // Initialize the database lazily
         const db = await getDB();
         console.log('Dexie database initialized');
-        
+
         // Initialize sync status
         await db.syncStatus.put({
           isOnline: navigator.onLine,
@@ -27,20 +27,20 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         // Initialize SyncManager lazily
         const { createSyncManager } = await import('@/lib/sync-manager.client');
         const syncManager = await createSyncManager();
-        
+
         // Start sync manager
         syncManager.on('start', () => {
           console.log('Sync started');
         });
-        
+
         syncManager.on('complete', (progress) => {
           console.log('Sync completed:', progress);
         });
-        
+
         syncManager.on('error', (error) => {
           console.error('Sync error:', error);
         });
-        
+
         console.log('SyncManager initialized');
       } catch (error) {
         console.error('Failed to initialize database:', error);
@@ -50,9 +50,5 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     initializeDB();
   }, []);
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

@@ -4,12 +4,12 @@
 
 /* Pending navigation shimmer effect */
 @layer components {
-  [data-pending="true"] {
+  [data-pending='true'] {
     position: relative;
     overflow: hidden;
   }
-  
-  [data-pending="true"]::before {
+
+  [data-pending='true']::before {
     content: '';
     position: absolute;
     top: 0;
@@ -24,7 +24,7 @@
     );
     animation: shimmer 1.5s infinite;
   }
-  
+
   @keyframes shimmer {
     0% {
       left: -100%;
@@ -71,14 +71,14 @@
     --glass-border: 255 255 255 / 0.35;
     --bg-surface: 248 250 252; /* slate-50-ish */
 
-    --shadow-soft: 0 10px 30px rgba(0,0,0,0.10);
-    --grad-primary: linear-gradient(135deg,#8B5CF6 0%,#6366F1 100%);
-    --grad-accent: linear-gradient(135deg,#60A5FA 0%,#34D399 100%);
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --grad-primary: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    --grad-accent: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
 
-    --hero-grad-general: linear-gradient(135deg,#EEF2FF 0%,#E9D5FF 100%);
-    --hero-grad-website: linear-gradient(135deg,#ECFEFF 0%,#E0F2FE 100%);
-    --chip-general: #6D28D9;   /* deep purple */
-    --chip-website: #0EA5E9;   /* cyan-blue */
+    --hero-grad-general: linear-gradient(135deg, #eef2ff 0%, #e9d5ff 100%);
+    --hero-grad-website: linear-gradient(135deg, #ecfeff 0%, #e0f2fe 100%);
+    --chip-general: #6d28d9; /* deep purple */
+    --chip-website: #0ea5e9; /* cyan-blue */
   }
 
   .dark {
@@ -110,12 +110,12 @@
     --glass-bg: 15 15 20 / 0.45;
     --glass-border: 255 255 255 / 0.18;
     --bg-surface: 11 12 14;
-    --shadow-soft: 0 10px 30px rgba(0,0,0,0.40);
-    --grad-primary: linear-gradient(135deg,#8B5CF6 0%,#6366F1 100%);
-    --grad-accent: linear-gradient(135deg,#60A5FA 0%,#34D399 100%);
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --grad-primary: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    --grad-accent: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
 
-    --hero-grad-general: linear-gradient(135deg,#1E1B4B 0%,#3B0764 100%);
-    --hero-grad-website: linear-gradient(135deg,#042F2E 0%,#0C4A6E 100%);
+    --hero-grad-general: linear-gradient(135deg, #1e1b4b 0%, #3b0764 100%);
+    --hero-grad-website: linear-gradient(135deg, #042f2e 0%, #0c4a6e 100%);
   }
 }
 
@@ -123,8 +123,9 @@
   * {
     @apply border-border;
   }
-  html, body { 
-    background: rgb(var(--bg-surface)); 
+  html,
+  body {
+    background: rgb(var(--bg-surface));
   }
   body {
     @apply text-foreground;
@@ -135,12 +136,17 @@
 *:focus-visible {
   outline: 0;
   box-shadow:
-    0 0 0 2px rgba(255,255,255,.9),
-    0 0 0 4px rgba(99,102,241,.55);
-  border-radius: .75rem; /* looks nice with glass */
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 0 4px rgba(99, 102, 241, 0.55);
+  border-radius: 0.75rem; /* looks nice with glass */
 }
 
 /* Larger touch targets for small controls */
 @media (pointer: coarse) {
-  button, a, [role="button"] { min-height: 44px; min-width: 44px; }
+  button,
+  a,
+  [role='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

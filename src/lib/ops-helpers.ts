@@ -1,17 +1,17 @@
 import { getDB, LocalOp } from './db.client';
 
-export async function enqueueOp(op: Omit<LocalOp,'id'|'ts'>) {
+export async function enqueueOp(op: Omit<LocalOp, 'id' | 'ts'>) {
   const db = await getDB();
   const id = `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  await db.opsQueue.add({ 
-    id, 
-    ts: Date.now(), 
-    ...op 
+  await db.opsQueue.add({
+    id,
+    ts: Date.now(),
+    ...op,
   });
-  
+
   // Optionally, nudge SW to sync
   navigator.serviceWorker?.controller?.postMessage({ type: 'REQUEST_SYNC' });
-  
+
   return id;
 }
 
@@ -23,18 +23,23 @@ export async function enqueueTaskCreate(task: any, projectId: string) {
     action: 'create',
     payload: task,
     projectId,
-    baseVersion: 0
+    baseVersion: 0,
   });
 }
 
-export async function enqueueTaskUpdate(taskId: string, updates: any, projectId: string, baseVersion: number) {
+export async function enqueueTaskUpdate(
+  taskId: string,
+  updates: any,
+  projectId: string,
+  baseVersion: number
+) {
   return enqueueOp({
     entityType: 'task',
     entityId: taskId,
     action: 'update',
     payload: updates,
     projectId,
-    baseVersion
+    baseVersion,
   });
 }
 
@@ -44,7 +49,7 @@ export async function enqueueTaskDelete(taskId: string, projectId: string) {
     entityId: taskId,
     action: 'delete',
     payload: {},
-    projectId
+    projectId,
   });
 }
 
@@ -54,17 +59,21 @@ export async function enqueueProjectCreate(project: any) {
     entityId: project.id,
     action: 'create',
     payload: project,
-    baseVersion: 0
+    baseVersion: 0,
   });
 }
 
-export async function enqueueProjectUpdate(projectId: string, updates: any, baseVersion: number) {
+export async function enqueueProjectUpdate(
+  projectId: string,
+  updates: any,
+  baseVersion: number
+) {
   return enqueueOp({
     entityType: 'project',
     entityId: projectId,
     action: 'update',
     payload: updates,
-    baseVersion
+    baseVersion,
   });
 }
 
@@ -73,6 +82,6 @@ export async function enqueueProjectDelete(projectId: string) {
     entityType: 'project',
     entityId: projectId,
     action: 'delete',
-    payload: {}
+    payload: {},
   });
 }

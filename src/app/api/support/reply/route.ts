@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -17,7 +17,10 @@ export async function POST(req: Request) {
     const { ticketId, message } = await req.json();
 
     if (!ticketId || !message) {
-      return NextResponse.json({ error: 'Ticket ID and message are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Ticket ID and message are required' },
+        { status: 400 }
+      );
     }
 
     // Insert reply
@@ -30,7 +33,7 @@ export async function POST(req: Request) {
     // Update ticket status to 'responded'
     await db
       .update(tickets)
-      .set({ 
+      .set({
         status: 'responded',
         updatedAt: new Date(),
       })
@@ -47,4 +50,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

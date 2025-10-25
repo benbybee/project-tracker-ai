@@ -1,10 +1,10 @@
-"use client";
-import { useState, useEffect } from "react";
-import { Search, Bell, Menu } from "lucide-react";
-import { GradientButton } from "@/components/ui/gradient-button";
-import SyncIndicator from "@/components/sync/SyncIndicator";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
-import { ConflictReviewButton } from "@/components/sync/ConflictModal";
+'use client';
+import { useState, useEffect } from 'react';
+import { Search, Bell, Menu } from 'lucide-react';
+import { GradientButton } from '@/components/ui/gradient-button';
+import SyncIndicator from '@/components/sync/SyncIndicator';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { ConflictReviewButton } from '@/components/sync/ConflictModal';
 
 export function Topbar() {
   const [isMobile, setIsMobile] = useState(false);
@@ -13,7 +13,7 @@ export function Topbar() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);

@@ -10,15 +10,21 @@ export async function GET(req: Request) {
 
     // Fetch all tasks and projects updated since the given timestamp
     const [taskChanges, projectChanges] = await Promise.all([
-      db.select().from(tasks).where(gt(tasks.updatedAt, new Date(since))),
-      db.select().from(projects).where(gt(projects.updatedAt, new Date(since)))
+      db
+        .select()
+        .from(tasks)
+        .where(gt(tasks.updatedAt, new Date(since))),
+      db
+        .select()
+        .from(projects)
+        .where(gt(projects.updatedAt, new Date(since))),
     ]);
 
-    const changes = { 
-      tasks: taskChanges, 
-      projects: projectChanges 
+    const changes = {
+      tasks: taskChanges,
+      projects: projectChanges,
     };
-    
+
     const serverVersion = Date.now();
 
     return NextResponse.json({ changes, serverVersion });

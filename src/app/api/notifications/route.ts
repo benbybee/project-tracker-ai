@@ -8,7 +8,7 @@ import { eq, and, desc } from 'drizzle-orm';
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -18,9 +18,7 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const unreadOnly = url.searchParams.get('unreadOnly') === 'true';
 
-    const whereConditions = [
-      eq(notifications.userId, session.user.id)
-    ];
+    const whereConditions = [eq(notifications.userId, session.user.id)];
 
     if (unreadOnly) {
       whereConditions.push(eq(notifications.read, false));
@@ -37,14 +35,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ notifications: userNotifications });
   } catch (error) {
     console.error('Error fetching notifications:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -67,6 +68,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ notification: notification[0] });
   } catch (error) {
     console.error('Error creating notification:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

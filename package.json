@@ -20,7 +20,8 @@
     "db:seed": "tsx scripts/seed.ts",
     "vercel:sim": "node scripts/vercel-sim-build.mjs",
     "repo:doctor": "node scripts/repo-doctor.mjs --root .",
-    "repo:doctor:fix": "node scripts/repo-doctor.mjs --root . --fix"
+    "repo:doctor:fix": "node scripts/repo-doctor.mjs --root . --fix",
+    "check:env": "node scripts/check-env.mjs"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^0.7.0",

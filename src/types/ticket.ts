@@ -1,5 +1,10 @@
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
-export type TicketStatus = 'new' | 'in_review' | 'responded' | 'converted' | 'closed';
+export type TicketStatus =
+  | 'new'
+  | 'in_review'
+  | 'responded'
+  | 'converted'
+  | 'closed';
 
 export type Ticket = {
   id: string;
@@ -12,9 +17,14 @@ export type Ticket = {
   priority: TicketPriority;
   status: TicketStatus;
   requesterEmail?: string | null;
-  aiEta?: string | null;     // ISO date
+  aiEta?: string | null; // ISO date
   aiSummary?: string | null;
-  attachments?: Array<{ id: string; name: string; url?: string; size?: number }> | null;
+  attachments?: Array<{
+    id: string;
+    name: string;
+    url?: string;
+    size?: number;
+  }> | null;
 };
 
 export type TicketReply = {
@@ -33,4 +43,3 @@ export type TicketAttachment = {
   fileSize?: number | null;
   url?: string | null;
 };
-

@@ -4,8 +4,22 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { trpc } from '@/lib/trpc';
-import { DndContext, PointerSensor, useSensor, useSensors, DragEndEvent, useDroppable, useDraggable } from '@dnd-kit/core';
-import { MoreVertical, ExternalLink, ArrowDownCircle, FolderOpen, Copy } from 'lucide-react';
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  useDroppable,
+  useDraggable,
+} from '@dnd-kit/core';
+import {
+  MoreVertical,
+  ExternalLink,
+  ArrowDownCircle,
+  FolderOpen,
+  Copy,
+} from 'lucide-react';
 import WebsiteBoardMetrics from '@/components/projects/WebsiteBoardMetrics';
 
 // Use auto dynamic rendering
@@ -23,7 +37,12 @@ type Project = {
   updatedAt?: Date;
 };
 
-type WebsiteStatus = 'discovery' | 'development' | 'client_review' | 'completed' | 'blocked';
+type WebsiteStatus =
+  | 'discovery'
+  | 'development'
+  | 'client_review'
+  | 'completed'
+  | 'blocked';
 
 const COLUMNS: { id: WebsiteStatus; label: string }[] = [
   { id: 'discovery', label: 'Discovery' },
@@ -33,7 +52,13 @@ const COLUMNS: { id: WebsiteStatus; label: string }[] = [
   { id: 'blocked', label: 'Blocked' },
 ];
 
-function ProjectCard({ project, onConvertToGeneral }: { project: Project; onConvertToGeneral: (id: string) => void }) {
+function ProjectCard({
+  project,
+  onConvertToGeneral,
+}: {
+  project: Project;
+  onConvertToGeneral: (id: string) => void;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: project.id,
@@ -55,19 +80,31 @@ function ProjectCard({ project, onConvertToGeneral }: { project: Project; onConv
       className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-all relative group"
     >
       {/* Drag handle area */}
-      <div {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing">
+      <div
+        {...listeners}
+        {...attributes}
+        className="cursor-grab active:cursor-grabbing"
+      >
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h4 className="font-semibold text-gray-900 leading-snug">{project.name}</h4>
+          <h4 className="font-semibold text-gray-900 leading-snug">
+            {project.name}
+          </h4>
         </div>
         {project.description && (
-          <p className="text-sm text-gray-600 line-clamp-2 mb-2">{project.description}</p>
+          <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+            {project.description}
+          </p>
         )}
         <div className="flex flex-col gap-1 text-xs text-gray-500 mb-2">
           {project.domain && (
-            <a 
-              href={project.domain.startsWith('http') ? project.domain : `https://${project.domain}`} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href={
+                project.domain.startsWith('http')
+                  ? project.domain
+                  : `https://${project.domain}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-1 hover:text-blue-600"
               onClick={(e) => e.stopPropagation()}
             >
@@ -75,10 +112,10 @@ function ProjectCard({ project, onConvertToGeneral }: { project: Project; onConv
             </a>
           )}
           {project.stagingUrl && (
-            <a 
-              href={project.stagingUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href={project.stagingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-1 hover:text-blue-600"
               onClick={(e) => e.stopPropagation()}
             >
@@ -137,20 +174,33 @@ function ProjectCard({ project, onConvertToGeneral }: { project: Project; onConv
   );
 }
 
-function Column({ status, projects, totalProjects, onConvertToGeneral }: { status: WebsiteStatus; projects: Project[]; totalProjects: number; onConvertToGeneral: (id: string) => void }) {
+function Column({
+  status,
+  projects,
+  totalProjects,
+  onConvertToGeneral,
+}: {
+  status: WebsiteStatus;
+  projects: Project[];
+  totalProjects: number;
+  onConvertToGeneral: (id: string) => void;
+}) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: { status },
   });
 
   const column = COLUMNS.find((c) => c.id === status);
-  const percentage = totalProjects > 0 ? Math.round((projects.length / totalProjects) * 100) : 0;
+  const percentage =
+    totalProjects > 0 ? Math.round((projects.length / totalProjects) * 100) : 0;
 
   return (
     <div
       ref={setNodeRef}
       className={`rounded-xl bg-white/80 backdrop-blur-sm p-4 border min-h-[500px] transition-all ${
-        isOver ? 'ring-2 ring-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 shadow-sm'
+        isOver
+          ? 'ring-2 ring-blue-500 bg-blue-50 shadow-md'
+          : 'border-gray-200 shadow-sm'
       }`}
     >
       <div className="flex items-center justify-between mb-4">
@@ -166,7 +216,11 @@ function Column({ status, projects, totalProjects, onConvertToGeneral }: { statu
       </div>
       <div className="space-y-3">
         {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} onConvertToGeneral={onConvertToGeneral} />
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onConvertToGeneral={onConvertToGeneral}
+          />
         ))}
       </div>
     </div>
@@ -176,7 +230,7 @@ function Column({ status, projects, totalProjects, onConvertToGeneral }: { statu
 export default function WebsiteWorkflowBoard() {
   const { data: allProjects, isLoading } = trpc.projects.list.useQuery({});
   const utils = trpc.useUtils();
-  
+
   const sensors = useSensors(useSensor(PointerSensor));
 
   const websiteProjects = useMemo(() => {
@@ -219,7 +273,7 @@ export default function WebsiteWorkflowBoard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'general', websiteStatus: null }),
       });
-      
+
       // Revalidate
       await utils.projects.list.invalidate();
     } catch (error) {
@@ -261,7 +315,7 @@ export default function WebsiteWorkflowBoard() {
           body: JSON.stringify({ websiteStatus: newStatus }),
         });
       }
-      
+
       // Revalidate
       await utils.projects.list.invalidate();
     } catch (error) {
@@ -274,9 +328,12 @@ export default function WebsiteWorkflowBoard() {
   return (
     <div className="px-6 py-4 space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">🌐 Website Project Workflow</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">
+          🌐 Website Project Workflow
+        </h1>
         <p className="text-sm text-gray-600 mt-1">
-          Drag projects between stages. Projects marked as <b>Completed</b> automatically convert back to general projects.
+          Drag projects between stages. Projects marked as <b>Completed</b>{' '}
+          automatically convert back to general projects.
         </p>
       </div>
 
@@ -306,7 +363,9 @@ export default function WebsiteWorkflowBoard() {
         </>
       ) : (
         <div className="text-center py-12 rounded-xl border border-gray-200 bg-white/80">
-          <p className="text-lg font-medium text-gray-900 mb-2">No website projects in the workflow</p>
+          <p className="text-lg font-medium text-gray-900 mb-2">
+            No website projects in the workflow
+          </p>
           <p className="text-sm text-gray-500 mb-4">
             Convert a project to "website" type to add it to this board.
           </p>
@@ -321,4 +380,3 @@ export default function WebsiteWorkflowBoard() {
     </div>
   );
 }
-

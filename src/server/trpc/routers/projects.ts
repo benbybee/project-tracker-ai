@@ -48,7 +48,8 @@ export const projectsRouter = createTRPCRouter({
         conditions.push(eq(projects.roleId, input.roleId));
       }
 
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
 
       return await ctx.db
         .select({
@@ -126,26 +127,34 @@ export const projectsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(ProjectCreate)
     .mutation(async ({ input, ctx }) => {
-      const [row] = await ctx.db.insert(projects).values({
-        name: input.name,
-        type: input.type,
-        description: input.description ?? '',
-        roleId: input.roleId ?? null,
-        domain: input.domain ?? null,
-        hostingProvider: input.hostingProvider ?? null,
-        dnsStatus: input.dnsStatus ?? null,
-        goLiveDate: input.goLiveDate ? input.goLiveDate : null,
-        repoUrl: input.repoUrl ?? null,
-        stagingUrl: input.stagingUrl ?? null,
-        // Set initial websiteStatus for website projects
-        websiteStatus: input.type === 'website' ? 'discovery' : null,
-      }).returning();
+      const [row] = await ctx.db
+        .insert(projects)
+        .values({
+          name: input.name,
+          type: input.type,
+          description: input.description ?? '',
+          roleId: input.roleId ?? null,
+          domain: input.domain ?? null,
+          hostingProvider: input.hostingProvider ?? null,
+          dnsStatus: input.dnsStatus ?? null,
+          goLiveDate: input.goLiveDate ? input.goLiveDate : null,
+          repoUrl: input.repoUrl ?? null,
+          stagingUrl: input.stagingUrl ?? null,
+          // Set initial websiteStatus for website projects
+          websiteStatus: input.type === 'website' ? 'discovery' : null,
+        })
+        .returning();
 
       // Create embedding for search
       await upsertEmbedding({
         entityType: 'project',
         entityId: row.id,
-        text: [row.name, row.description ?? '', row.domain ?? '', row.repoUrl ?? ''].join('\n'),
+        text: [
+          row.name,
+          row.description ?? '',
+          row.domain ?? '',
+          row.repoUrl ?? '',
+        ].join('\n'),
       });
 
       return row;
@@ -168,7 +177,15 @@ export const projectsRouter = createTRPCRouter({
         repoUrl: z.string().optional(),
         stagingUrl: z.string().optional(),
         checklistJson: z.record(z.any()).optional(),
-        websiteStatus: z.enum(['discovery', 'development', 'client_review', 'completed', 'blocked']).optional(),
+        websiteStatus: z
+          .enum([
+            'discovery',
+            'development',
+            'client_review',
+            'completed',
+            'blocked',
+          ])
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -212,41 +229,54 @@ export const projectsRouter = createTRPCRouter({
     }),
 
   convertToWebsite: protectedProcedure
-    .input(z.object({ 
-      id: z.string().uuid(),
-      website: z.object({
-        domain: z.string().url().optional().nullable(),
-        hostingProvider: z.string().optional().nullable(),
-        dnsStatus: z.enum(["pending","propagating","active","failed"]).optional().nullable(),
-        goLiveDate: z.string().datetime().optional().nullable(),
-        repoUrl: z.string().url().optional().nullable(),
-        stagingUrl: z.string().url().optional().nullable(),
-      }).partial()
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        website: z
+          .object({
+            domain: z.string().url().optional().nullable(),
+            hostingProvider: z.string().optional().nullable(),
+            dnsStatus: z
+              .enum(['pending', 'propagating', 'active', 'failed'])
+              .optional()
+              .nullable(),
+            goLiveDate: z.string().datetime().optional().nullable(),
+            repoUrl: z.string().url().optional().nullable(),
+            stagingUrl: z.string().url().optional().nullable(),
+          })
+          .partial(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.update(projects).set({
-        type: "website",
-        websiteStatus: "discovery",
-        ...input.website,
-        updatedAt: new Date(),
-      }).where(eq(projects.id, input.id));
+      await ctx.db
+        .update(projects)
+        .set({
+          type: 'website',
+          websiteStatus: 'discovery',
+          ...input.website,
+          updatedAt: new Date(),
+        })
+        .where(eq(projects.id, input.id));
       return { ok: true };
     }),
 
   convertToGeneral: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.update(projects).set({
-        type: "general",
-        domain: null,
-        hostingProvider: null,
-        dnsStatus: null,
-        goLiveDate: null,
-        repoUrl: null,
-        stagingUrl: null,
-        websiteStatus: null,
-        updatedAt: new Date(),
-      }).where(eq(projects.id, input.id));
+      await ctx.db
+        .update(projects)
+        .set({
+          type: 'general',
+          domain: null,
+          hostingProvider: null,
+          dnsStatus: null,
+          goLiveDate: null,
+          repoUrl: null,
+          stagingUrl: null,
+          websiteStatus: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(projects.id, input.id));
       return { ok: true };
     }),
 });

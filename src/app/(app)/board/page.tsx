@@ -11,7 +11,6 @@ import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
 
-
 export default function BoardPage() {
   const [search, setSearch] = useState('');
   const [projectFilter, setProjectFilter] = useState<string>('all');
@@ -24,7 +23,7 @@ export default function BoardPage() {
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Kanban Board</h1>
-        <Button 
+        <Button
           onClick={() => {
             if (projects && projects.length > 0) {
               setCreateModalOpen(true);
@@ -61,7 +60,7 @@ export default function BoardPage() {
       </div>
 
       {/* Kanban Board */}
-      <KanbanBoard 
+      <KanbanBoard
         projectId={projectFilter === 'all' ? undefined : projectFilter}
         variant="default"
       />

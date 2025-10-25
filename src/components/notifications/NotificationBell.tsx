@@ -13,7 +13,8 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
-  const { data: unreadCount, refetch } = trpc.notifications.getUnreadCount.useQuery();
+  const { data: unreadCount, refetch } =
+    trpc.notifications.getUnreadCount.useQuery();
   const { data: notifications } = trpc.notifications.getNotifications.useQuery({
     limit: 10,
     unreadOnly: false,
@@ -36,7 +37,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
   const handleNotificationClick = async (notificationId: string) => {
     // Optimistic update - immediately update UI
     setHasNewNotifications(false);
-    
+
     // Mark as read
     // TODO: Implement markAsRead mutation
     console.log('Mark as read:', notificationId);
@@ -55,7 +56,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
         ) : (
           <Bell className="h-5 w-5" />
         )}
-        
+
         {unreadCount && unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -65,7 +66,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
 
       {isOpen && (
         <NotificationDropdown
-          notifications={notifications as any || []}
+          notifications={(notifications as any) || []}
           onNotificationClick={handleNotificationClick}
           onClose={() => setIsOpen(false)}
         />

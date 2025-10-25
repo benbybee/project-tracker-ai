@@ -10,20 +10,24 @@ import { togglePin } from '@/lib/projects-client';
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
 
-
 export default function ProjectsPage() {
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'general' | 'website'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'general' | 'website'>(
+    'all'
+  );
   const router = useRouter();
 
   const { data: projects, isLoading } = trpc.projects.list.useQuery({
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
   });
-  
+
   const utils = trpc.useUtils();
 
-  const handleTogglePin = async (projectId: string, currentlyPinned: boolean) => {
+  const handleTogglePin = async (
+    projectId: string,
+    currentlyPinned: boolean
+  ) => {
     try {
       await togglePin(projectId, !currentlyPinned);
       await utils.projects.list.invalidate();
@@ -65,7 +69,9 @@ export default function ProjectsPage() {
         <div className="text-center py-8">Loading projects...</div>
       ) : projects && projects.length > 0 ? (
         <>
-          <p className="text-xs text-gray-500 mb-4">💡 Pinned projects appear first</p>
+          <p className="text-xs text-gray-500 mb-4">
+            💡 Pinned projects appear first
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {projects.map((project) => (
               <div
@@ -74,55 +80,65 @@ export default function ProjectsPage() {
                 onClick={() => router.push(`/projects/${project.id}`)}
               >
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {project.name}
+                  </h3>
                   <div className="flex items-center gap-2">
                     <button
                       className="text-xs rounded-full border border-gray-300 px-2 py-1 hover:bg-gray-50 transition-colors"
-                      onClick={(e)=>{ e.stopPropagation(); handleTogglePin(project.id, project.pinned ?? false); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTogglePin(project.id, project.pinned ?? false);
+                      }}
                     >
                       {project.pinned ? '📌 Pinned' : '📌 Pin'}
                     </button>
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      project.type === 'website'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {project.type}
-                  </span>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        project.type === 'website'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {project.type}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              
-              {project.description && (
-                <p className="text-gray-600 text-sm mb-3">{project.description}</p>
-              )}
-              
-              {project.role && (
-                <div className="flex items-center mb-3">
-                  <div
-                    className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: project.role.color }}
-                  ></div>
-                  <span className="text-sm text-gray-600">{project.role.name}</span>
-                </div>
-              )}
 
-              <div className="text-xs text-gray-500">
-                Created {new Date(project.createdAt).toLocaleDateString()}
+                {project.description && (
+                  <p className="text-gray-600 text-sm mb-3">
+                    {project.description}
+                  </p>
+                )}
+
+                {project.role && (
+                  <div className="flex items-center mb-3">
+                    <div
+                      className="w-3 h-3 rounded-full mr-2"
+                      style={{ backgroundColor: project.role.color }}
+                    ></div>
+                    <span className="text-sm text-gray-600">
+                      {project.role.name}
+                    </span>
+                  </div>
+                )}
+
+                <div className="text-xs text-gray-500">
+                  Created {new Date(project.createdAt).toLocaleDateString()}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
           </div>
         </>
       ) : (
         <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No projects found
+          </h3>
           <p className="text-gray-600 mb-4">
-            {search || typeFilter !== 'all' 
+            {search || typeFilter !== 'all'
               ? 'Try adjusting your search or filters.'
-              : 'Get started by creating your first project.'
-            }
+              : 'Get started by creating your first project.'}
           </p>
           <Button onClick={() => router.push('/projects/new')}>
             Create Project

@@ -8,7 +8,11 @@ interface PresenceIndicatorProps {
   className?: string;
 }
 
-export function PresenceIndicator({ projectId, taskId, className = '' }: PresenceIndicatorProps) {
+export function PresenceIndicator({
+  projectId,
+  taskId,
+  className = '',
+}: PresenceIndicatorProps) {
   const { onlineUsers, isConnected } = useRealtime();
 
   if (!isConnected || onlineUsers.length === 0) {
@@ -16,9 +20,10 @@ export function PresenceIndicator({ projectId, taskId, className = '' }: Presenc
   }
 
   // Filter users by current context
-  const relevantUsers = onlineUsers.filter(user => 
-    (!projectId || user.currentProject === projectId) &&
-    (!taskId || user.currentTask === taskId)
+  const relevantUsers = onlineUsers.filter(
+    (user) =>
+      (!projectId || user.currentProject === projectId) &&
+      (!taskId || user.currentTask === taskId)
   );
 
   if (relevantUsers.length === 0) {
@@ -47,7 +52,8 @@ export function PresenceIndicator({ projectId, taskId, className = '' }: Presenc
         )}
       </div>
       <span className="text-sm text-gray-600">
-        {relevantUsers.length} {relevantUsers.length === 1 ? 'person' : 'people'} online
+        {relevantUsers.length}{' '}
+        {relevantUsers.length === 1 ? 'person' : 'people'} online
       </span>
     </div>
   );

@@ -13,7 +13,11 @@ export const metadata: Metadata = {
 // Force dynamic rendering to avoid tRPC issues during build
 export const dynamic = 'force-dynamic';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>

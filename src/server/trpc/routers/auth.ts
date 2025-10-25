@@ -71,7 +71,10 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const isValidPassword = await bcrypt.compare(password, user[0].passwordHash);
+      const isValidPassword = await bcrypt.compare(
+        password,
+        user[0].passwordHash
+      );
 
       if (!isValidPassword) {
         throw new TRPCError({

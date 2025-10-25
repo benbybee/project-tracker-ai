@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import DailyTaskRow from '@/components/daily/DailyTaskRow';
@@ -9,7 +9,6 @@ import type { Task } from '@/types/task';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
-
 
 export default function DailyPlannerPage() {
   const { byId, bulkUpsert } = useTasksStore();
@@ -27,7 +26,11 @@ export default function DailyPlannerPage() {
   }, [bulkUpsert]);
 
   const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const start = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
   const end = new Date(start.getTime() + 86400000);
 
   const todayTasks = useMemo(
@@ -117,19 +120,31 @@ export default function DailyPlannerPage() {
               />
             ))
           ) : (
-            <p className="text-sm text-gray-500 py-4">No tasks in next 3 days</p>
+            <p className="text-sm text-gray-500 py-4">
+              No tasks in next 3 days
+            </p>
           )}
         </div>
       </Section>
 
       {editing && (
-        <TaskEditModal task={editing} open={!!editing} onClose={() => setEditing(null)} />
+        <TaskEditModal
+          task={editing}
+          open={!!editing}
+          onClose={() => setEditing(null)}
+        />
       )}
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section>
       <h2 className="mb-3 font-semibold text-gray-800">{title}</h2>
@@ -155,7 +170,9 @@ function BulkBar({ ids, clear }: { ids: string[]; clear: () => void }) {
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white/80 p-3 flex items-center gap-2 flex-wrap shadow-sm">
-      <span className="text-sm font-medium text-gray-700">{ids.length} selected</span>
+      <span className="text-sm font-medium text-gray-700">
+        {ids.length} selected
+      </span>
       <button
         onClick={() => post('/api/tasks/bulk/defer', { ids, days: 1 })}
         className="rounded border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50 transition-colors"

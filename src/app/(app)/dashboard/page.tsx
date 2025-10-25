@@ -1,22 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { CalendarDays, Clock, Search, ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { trpc } from "@/lib/trpc";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { CalendarDays, Clock, Search, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { trpc } from '@/lib/trpc';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
-import { GlassCard } from "@/components/ui/glass-card";
-import { SkeletonGlass } from "@/components/ui/skeleton-glass";
-import { ProjectTile } from "@/components/dashboard/ProjectTile";
-import { RoleFilter } from "@/components/dashboard/RoleFilter";
-import { EmptyProjects } from "@/components/dashboard/EmptyProjects";
-import { TaskCard } from "@/components/tasks/task-card";
-import { useRouter } from "next/navigation";
-import { togglePin } from "@/lib/projects-client";
-
+import { GlassCard } from '@/components/ui/glass-card';
+import { SkeletonGlass } from '@/components/ui/skeleton-glass';
+import { ProjectTile } from '@/components/dashboard/ProjectTile';
+import { RoleFilter } from '@/components/dashboard/RoleFilter';
+import { EmptyProjects } from '@/components/dashboard/EmptyProjects';
+import { TaskCard } from '@/components/tasks/task-card';
+import { useRouter } from 'next/navigation';
+import { togglePin } from '@/lib/projects-client';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -29,28 +28,31 @@ export default function DashboardPage() {
   const { data: dashboardData, isLoading } = trpc.dashboard.get.useQuery({
     roleId: selectedRoleId || undefined,
   });
-  
+
   const utils = trpc.useUtils();
 
   const handleRoleChange = (roleId: string | null) => {
     setSelectedRoleId(roleId);
   };
-  
+
   const handleTogglePin = async (projectId: string, pinned: boolean) => {
     try {
       // Optimistic update
-      utils.dashboard.get.setData({ roleId: selectedRoleId || undefined }, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          projects: old.projects.map(p => 
-            p.id === projectId ? { ...p, pinned } : p
-          ),
-        };
-      });
-      
+      utils.dashboard.get.setData(
+        { roleId: selectedRoleId || undefined },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            projects: old.projects.map((p) =>
+              p.id === projectId ? { ...p, pinned } : p
+            ),
+          };
+        }
+      );
+
       await togglePin(projectId, pinned);
-      
+
       // Invalidate to refetch with proper sorting
       await utils.dashboard.get.invalidate();
     } catch (error) {
@@ -63,22 +65,25 @@ export default function DashboardPage() {
   const handleConvertToWebsite = async (projectId: string) => {
     try {
       // Optimistic update
-      utils.dashboard.get.setData({ roleId: selectedRoleId || undefined }, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          projects: old.projects.map(p => 
-            p.id === projectId ? { ...p, type: 'website' as const } : p
-          ),
-        };
-      });
-      
+      utils.dashboard.get.setData(
+        { roleId: selectedRoleId || undefined },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            projects: old.projects.map((p) =>
+              p.id === projectId ? { ...p, type: 'website' as const } : p
+            ),
+          };
+        }
+      );
+
       await fetch(`/api/projects/${projectId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'website', websiteStatus: 'discovery' }),
       });
-      
+
       // Invalidate to refetch
       await utils.dashboard.get.invalidate();
     } catch (error) {
@@ -118,7 +123,11 @@ export default function DashboardPage() {
               Dashboard Overview
             </h1>
             <button
-              onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { ctrlKey: true, key: "k" }))}
+              onClick={() =>
+                document.dispatchEvent(
+                  new KeyboardEvent('keydown', { ctrlKey: true, key: 'k' })
+                )
+              }
               className="text-xs rounded-full px-3 py-1 border border-white/40 bg-white/50 backdrop-blur hover:bg-white/70 transition-colors"
             >
               Search tasks & projects (⌘K)
@@ -147,10 +156,10 @@ export default function DashboardPage() {
           {/* Today's Tasks */}
           <motion.div
             whileHover={{ y: -2, scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >
-            <GlassCard 
-              className="cursor-pointer group" 
+            <GlassCard
+              className="cursor-pointer group"
               onClick={() => router.push('/daily')}
               aria-busy={isLoading}
             >
@@ -163,7 +172,7 @@ export default function DashboardPage() {
                     </h3>
                   </div>
                   <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                    {isLoading ? "..." : dashboardData?.today || 0}
+                    {isLoading ? '...' : dashboardData?.today || 0}
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     Due today
@@ -182,10 +191,10 @@ export default function DashboardPage() {
           {/* Overdue Tasks */}
           <motion.div
             whileHover={{ y: -2, scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >
-            <GlassCard 
-              className="cursor-pointer group" 
+            <GlassCard
+              className="cursor-pointer group"
               onClick={() => router.push('/board?filter=overdue')}
               aria-busy={isLoading}
             >
@@ -198,7 +207,7 @@ export default function DashboardPage() {
                     </h3>
                   </div>
                   <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
-                    {isLoading ? "..." : dashboardData?.overdue || 0}
+                    {isLoading ? '...' : dashboardData?.overdue || 0}
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     Need attention
@@ -221,8 +230,8 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
               Project Progress
             </h2>
-            <Link 
-              href="/projects" 
+            <Link
+              href="/projects"
               prefetch
               className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
             >
@@ -248,10 +257,10 @@ export default function DashboardPage() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {dashboardData.projects.map((project, index) => (
-                    <ProjectTile 
-                      key={project.id} 
-                      project={project} 
-                      index={index} 
+                    <ProjectTile
+                      key={project.id}
+                      project={project}
+                      index={index}
                       onTogglePin={handleTogglePin}
                       onConvertToWebsite={handleConvertToWebsite}
                     />
@@ -270,8 +279,8 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
               Upcoming Tasks
             </h2>
-            <Link 
-              href="/board" 
+            <Link
+              href="/board"
               prefetch
               className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
             >
@@ -305,8 +314,8 @@ export default function DashboardPage() {
                   />
                 ))}
                 <div className="mt-4 text-right">
-                  <Link 
-                    href="/board" 
+                  <Link
+                    href="/board"
                     prefetch
                     className="text-xs underline underline-offset-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                   >
@@ -323,7 +332,9 @@ export default function DashboardPage() {
                   No upcoming tasks
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-500">
-                  {selectedRoleId ? "No tasks for this role in the next 7 days" : "All caught up! 🎉"}
+                  {selectedRoleId
+                    ? 'No tasks for this role in the next 7 days'
+                    : 'All caught up! 🎉'}
                 </p>
               </GlassCard>
             )}
@@ -331,16 +342,15 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Search Affordance */}
-        <motion.div
-          variants={itemVariants}
-          className="fixed bottom-6 right-6"
-        >
+        <motion.div variants={itemVariants} className="fixed bottom-6 right-6">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
               // Trigger the command palette
-              document.dispatchEvent(new KeyboardEvent("keydown", { ctrlKey: true, key: "k" }));
+              document.dispatchEvent(
+                new KeyboardEvent('keydown', { ctrlKey: true, key: 'k' })
+              );
             }}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/50 shadow-lg hover:shadow-xl transition-all"
           >

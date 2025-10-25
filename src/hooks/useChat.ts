@@ -17,7 +17,7 @@ export function useChat(threadId: string) {
   const sendMessageMutation = trpc.chat.sendMessage.useMutation({
     onSuccess: async (message) => {
       broadcastChatMessage(message);
-      
+
       // Log activity
       await logActivity({
         targetType: 'comment',
@@ -27,7 +27,10 @@ export function useChat(threadId: string) {
       });
 
       // Create notification for mentions
-      if (message.messageType === 'mention' && (message.metadata as any)?.mentions) {
+      if (
+        message.messageType === 'mention' &&
+        (message.metadata as any)?.mentions
+      ) {
         for (const mention of (message.metadata as any).mentions) {
           await createNotification({
             userId: mention, // In a real app, resolve username to userId
@@ -97,7 +100,9 @@ export function useChat(threadId: string) {
     try {
       const db = await getDB();
       const messages = await db.getOfflineMessages();
-      const threadMessages = messages.filter((msg: any) => msg.threadId === threadId);
+      const threadMessages = messages.filter(
+        (msg: any) => msg.threadId === threadId
+      );
       setOfflineMessages(threadMessages);
     } catch (error) {
       console.error('Failed to load offline messages:', error);
@@ -108,7 +113,7 @@ export function useChat(threadId: string) {
     try {
       const db = await getDB();
       const messages = await db.getOfflineMessages();
-      
+
       for (const message of messages) {
         try {
           await sendMessageMutation.mutateAsync({
@@ -117,7 +122,7 @@ export function useChat(threadId: string) {
             messageType: message.messageType,
             metadata: message.metadata,
           });
-          
+
           // Remove from offline storage on success
           await db.removeOfflineMessage(message.id);
         } catch (error) {
@@ -126,7 +131,7 @@ export function useChat(threadId: string) {
           await db.incrementRetryCount(message.id);
         }
       }
-      
+
       // Reload offline messages
       await loadOfflineMessages();
     } catch (error) {
@@ -134,12 +139,20 @@ export function useChat(threadId: string) {
     }
   };
 
-  const sendMessage = async (content: string, messageType?: string, metadata?: any) => {
+  const sendMessage = async (
+    content: string,
+    messageType?: string,
+    metadata?: any
+  ) => {
     if (isOnline) {
       await sendMessageMutation.mutateAsync({
         threadId,
         content,
-        messageType: (messageType || 'text') as 'mention' | 'system' | 'text' | 'reaction',
+        messageType: (messageType || 'text') as
+          | 'mention'
+          | 'system'
+          | 'text'
+          | 'reaction',
         metadata,
       });
     } else {
@@ -148,7 +161,11 @@ export function useChat(threadId: string) {
       await db.storeOfflineMessage({
         threadId,
         content,
-        messageType: (messageType || 'text') as 'mention' | 'system' | 'text' | 'reaction',
+        messageType: (messageType || 'text') as
+          | 'mention'
+          | 'system'
+          | 'text'
+          | 'reaction',
         metadata,
       });
       await loadOfflineMessages();

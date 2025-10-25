@@ -66,7 +66,17 @@ export const activityRouter = createTRPCRouter({
       z.object({
         targetType: z.enum(['task', 'project', 'comment', 'sync', 'system']),
         targetId: z.string().optional(),
-        action: z.enum(['created', 'updated', 'deleted', 'assigned', 'completed', 'commented', 'mentioned', 'synced', 'conflict_resolved']),
+        action: z.enum([
+          'created',
+          'updated',
+          'deleted',
+          'assigned',
+          'completed',
+          'commented',
+          'mentioned',
+          'synced',
+          'conflict_resolved',
+        ]),
         payload: z.any().optional(),
         projectId: z.string().optional(),
         taskId: z.string().optional(),
