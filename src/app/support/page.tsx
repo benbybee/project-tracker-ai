@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function SupportRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [ok, setOk] = useState<null|{ id: string; eta?: string }>(null);
   const [err, setErr] = useState<string|null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -13,10 +14,15 @@ export default function SupportRequestPage() {
     const form = new FormData(e.currentTarget);
     try {
       const res = await fetch('/api/support/submit', { method: 'POST', body: form });
-      if (!res.ok) throw new Error('Submission failed');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Submission failed');
+      }
       const data = await res.json();
       setOk({ id: data.id, eta: data.aiEta });
-      e.currentTarget.reset();
+      if (formRef.current) {
+        formRef.current.reset();
+      }
     } catch (e:any) {
       setErr(e?.message || 'Submission failed');
     } finally {
@@ -39,9 +45,11 @@ export default function SupportRequestPage() {
         )}
         {err && <div className="mb-4 rounded-xl border bg-red-50 p-3 text-red-700">{err}</div>}
 
-        <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border bg-white/80 p-5">
+        <form ref={formRef} onSubmit={onSubmit} className="space-y-4 rounded-2xl border bg-white/80 p-5">
           <div>
-            <label className="text-sm font-medium">Project Name</label>
+            <label className="text-sm font-medium">
+              Project Name <span className="text-red-500">*</span>
+            </label>
             <input required name="projectName" className="mt-1 w-full rounded-lg border px-3 py-2" />
           </div>
           <div>
@@ -49,7 +57,9 @@ export default function SupportRequestPage() {
             <input name="domain" placeholder="example.com" className="mt-1 w-full rounded-lg border px-3 py-2" />
           </div>
           <div>
-            <label className="text-sm font-medium">Request Details</label>
+            <label className="text-sm font-medium">
+              Request Details <span className="text-red-500">*</span>
+            </label>
             <textarea required name="details" rows={6} className="mt-1 w-full rounded-lg border px-3 py-2" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
