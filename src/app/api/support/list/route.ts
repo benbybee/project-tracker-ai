@@ -25,15 +25,17 @@ export async function GET() {
         id: t.id,
         createdAt: t.createdAt.toISOString(),
         updatedAt: t.updatedAt.toISOString(),
+        customerName: t.customerName,
+        customerEmail: t.customerEmail,
         projectName: t.projectName,
         domain: t.domain,
         details: t.details,
         dueDateSuggested: t.dueDateSuggested || null,
         priority: t.priority,
         status: t.status,
-        requesterEmail: t.requesterEmail,
         aiEta: t.aiEta || null,
         aiSummary: t.aiSummary,
+        suggestedProjectId: t.suggestedProjectId || null,
       }))
     });
   } catch (error) {

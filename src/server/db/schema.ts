@@ -172,15 +172,17 @@ export const tickets = pgTable('tickets', {
   id: uuid('id').primaryKey().defaultRandom(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  customerName: text('customer_name').notNull(),
+  customerEmail: text('customer_email').notNull(),
   projectName: text('project_name').notNull(),
   domain: text('domain'),
   details: text('details').notNull(),
   dueDateSuggested: date('due_date_suggested'),
   priority: text('priority', { enum: ['low', 'normal', 'high', 'urgent'] }).notNull().default('normal'),
   status: text('status', { enum: ['new', 'in_review', 'responded', 'converted', 'closed'] }).notNull().default('new'),
-  requesterEmail: text('requester_email'),
   aiEta: date('ai_eta'),
   aiSummary: text('ai_summary'),
+  suggestedProjectId: uuid('suggested_project_id').references(() => projects.id),
 });
 
 export const ticketReplies = pgTable('ticket_replies', {

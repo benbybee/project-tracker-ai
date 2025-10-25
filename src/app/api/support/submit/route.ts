@@ -5,14 +5,16 @@ import { tickets, ticketAttachments } from '@/server/db/schema';
 export async function POST(req: Request) {
   try {
     const form = await req.formData();
+    const customerName = String(form.get('customerName') || '');
+    const customerEmail = String(form.get('customerEmail') || '');
     const projectName = String(form.get('projectName') || '');
     const domain = form.get('domain')?.toString() || null;
     const details = String(form.get('details') || '');
     const dueDateSuggested = form.get('dueDateSuggested')?.toString() || null;
     const priority = (form.get('priority')?.toString() || 'normal') as 'low'|'normal'|'high'|'urgent';
 
-    if (!projectName || !details) {
-      return NextResponse.json({ error: 'Project name and details are required' }, { status: 400 });
+    if (!customerName || !customerEmail || !projectName || !details) {
+      return NextResponse.json({ error: 'Customer name, email, project name and details are required' }, { status: 400 });
     }
 
     // Simple ETA heuristic stub: urgent +3 days, else +5 days
@@ -23,6 +25,8 @@ export async function POST(req: Request) {
 
     // Insert ticket into database
     const [ticket] = await db.insert(tickets).values({
+      customerName,
+      customerEmail,
       projectName,
       domain,
       details,

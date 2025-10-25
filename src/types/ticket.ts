@@ -5,15 +5,17 @@ export type Ticket = {
   id: string;
   createdAt: string;
   updatedAt: string;
+  customerName: string;
+  customerEmail: string;
   projectName: string;
   domain?: string | null;
   details: string;
   dueDateSuggested?: string | null;
   priority: TicketPriority;
   status: TicketStatus;
-  requesterEmail?: string | null;
   aiEta?: string | null;     // ISO date
   aiSummary?: string | null;
+  suggestedProjectId?: string | null;
   attachments?: Array<{ id: string; name: string; url?: string; size?: number }> | null;
 };
 

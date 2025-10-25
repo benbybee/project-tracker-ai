@@ -46,6 +46,20 @@ export default function SupportRequestPage() {
         {err && <div className="mb-4 rounded-xl border bg-red-50 p-3 text-red-700">{err}</div>}
 
         <form ref={formRef} onSubmit={onSubmit} className="space-y-4 rounded-2xl border bg-white/80 p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">
+                Your Name <span className="text-red-500">*</span>
+              </label>
+              <input required name="customerName" className="mt-1 w-full rounded-lg border px-3 py-2" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input required type="email" name="customerEmail" className="mt-1 w-full rounded-lg border px-3 py-2" />
+            </div>
+          </div>
           <div>
             <label className="text-sm font-medium">
               Project Name <span className="text-red-500">*</span>

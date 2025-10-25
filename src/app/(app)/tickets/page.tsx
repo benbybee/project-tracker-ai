@@ -10,7 +10,16 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [active, setActive] = useState<Ticket|null>(null);
   const [summary, setSummary] = useState('');
-  const [proposed, setProposed] = useState<Array<{id:string; title:string; description?:string; projectId?:string; accepted?:boolean}>>([]);
+  const [proposed, setProposed] = useState<Array<{
+    id:string; 
+    title:string; 
+    description?:string; 
+    projectId?:string; 
+    accepted?:boolean;
+    estimatedHours?: number;
+  }>>([]);
+  const [suggestedProject, setSuggestedProject] = useState<{id:string; name:string; reason:string} | null>(null);
+  const [availableProjects, setAvailableProjects] = useState<Array<{id:string; name:string}>>([]);
   const [loading, setLoading] = useState(true);
 
   const { data: projects } = trpc.projects.list.useQuery({});
@@ -41,6 +50,8 @@ export default function TicketsPage() {
       const data = await res.json();
       setSummary(data.summary || '');
       setProposed((data.tasks || []).map((t:any)=>({ ...t, accepted:false })));
+      setSuggestedProject(data.suggestedProject || null);
+      setAvailableProjects(data.availableProjects || []);
     } catch (error) {
       console.error('Failed to generate AI proposal:', error);
     }
@@ -111,7 +122,7 @@ export default function TicketsPage() {
                 </div>
               </div>
               <div className="text-xs text-gray-500 mb-1">
-                {(t.domain || '—')} {t.aiEta && `· ETA ${t.aiEta}`}
+                👤 {t.customerName} · {(t.domain || '—')} {t.aiEta && `· ETA ${t.aiEta}`}
               </div>
               <div className="text-sm text-gray-700 line-clamp-2">{t.details}</div>
             </button>
@@ -131,9 +142,12 @@ export default function TicketsPage() {
             <header className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold">{active.projectName}</h2>
-                <div className="text-xs text-gray-500 mt-1">
-                  {(active.domain || '—')} · Priority: <span className="font-medium">{active.priority}</span>
-                  {active.dueDateSuggested && ` · Requested: ${active.dueDateSuggested}`}
+                <div className="text-sm text-gray-700 mt-1">
+                  <div>👤 {active.customerName} ({active.customerEmail})</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {(active.domain || '—')} · Priority: <span className="font-medium">{active.priority}</span>
+                    {active.dueDateSuggested && ` · Requested: ${active.dueDateSuggested}`}
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -158,24 +172,69 @@ export default function TicketsPage() {
               </section>
             )}
 
+            {suggestedProject && (
+              <section className="rounded-lg border p-3 bg-blue-50">
+                <div className="text-sm font-semibold mb-2">🤖 AI Project Suggestion</div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{suggestedProject.name}</div>
+                    <div className="text-xs text-gray-600">{suggestedProject.reason}</div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      // Apply suggested project to all tasks
+                      const updated = proposed.map(p => ({ ...p, projectId: suggestedProject.id }));
+                      setProposed(updated);
+                    }}
+                    className="rounded-lg bg-blue-600 text-white px-3 py-1 text-xs hover:bg-blue-700"
+                  >
+                    Apply to All Tasks
+                  </button>
+                </div>
+              </section>
+            )}
+
             {proposed.length>0 && (
               <section className="rounded-lg border p-3">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-sm font-semibold">Proposed Tasks</div>
-                  <button 
-                    onClick={acceptSelected} 
-                    disabled={!proposed.some(p => p.accepted)}
-                    className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    Accept Selected ({proposed.filter(p => p.accepted).length})
-                  </button>
+                  <div className="text-sm font-semibold">Proposed Tasks ({proposed.length})</div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        const updated = proposed.map(p => ({ ...p, accepted: true }));
+                        setProposed(updated);
+                      }}
+                      className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors"
+                    >
+                      Select All
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const updated = proposed.map(p => ({ ...p, accepted: false }));
+                        setProposed(updated);
+                      }}
+                      className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors"
+                    >
+                      Clear All
+                    </button>
+                    <button 
+                      onClick={acceptSelected} 
+                      disabled={!proposed.some(p => p.accepted)}
+                      className="rounded-lg bg-green-600 text-white px-3 py-1.5 text-xs hover:bg-green-700 transition-colors disabled:opacity-50"
+                    >
+                      Accept Selected ({proposed.filter(p => p.accepted).length})
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {proposed.map((p, idx)=>(
-                    <div key={p.id} className="grid grid-cols-1 md:grid-cols-[1fr_200px_80px] gap-2 rounded-lg border p-3 hover:bg-gray-50">
+                    <div key={p.id} className="grid grid-cols-1 lg:grid-cols-[1fr_200px_100px_80px] gap-3 rounded-lg border p-3 hover:bg-gray-50">
                       <div>
                         <div className="font-medium text-sm">{p.title}</div>
                         {p.description && <div className="text-sm text-gray-600 mt-1">{p.description}</div>}
+                        {p.estimatedHours && (
+                          <div className="text-xs text-blue-600 mt-1">⏱️ ~{p.estimatedHours}h estimated</div>
+                        )}
                       </div>
                       <select 
                         className="border rounded px-2 py-1 text-sm bg-white" 
@@ -187,11 +246,32 @@ export default function TicketsPage() {
                         }}
                       >
                         <option value="">Select Project</option>
-                        {projects?.map(proj => (
+                        {availableProjects.map(proj => (
                           <option key={proj.id} value={proj.id}>{proj.name}</option>
                         ))}
                         <option value="__new__">➕ New Project</option>
                       </select>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const newProposed = [...proposed];
+                            newProposed[idx].title = prompt('Edit task title:', p.title) || p.title;
+                            setProposed(newProposed);
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            const newProposed = proposed.filter((_, i) => i !== idx);
+                            setProposed(newProposed);
+                          }}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          🗑️ Remove
+                        </button>
+                      </div>
                       <label className="flex items-center gap-2 text-sm justify-center">
                         <input 
                           type="checkbox" 
