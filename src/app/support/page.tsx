@@ -4,13 +4,14 @@ import { useState, useRef } from 'react';
 
 export default function SupportRequestPage() {
   const [submitting, setSubmitting] = useState(false);
-  const [ok, setOk] = useState<null|{ id: string; eta?: string }>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successData, setSuccessData] = useState<{ id: string; eta?: string } | null>(null);
   const [err, setErr] = useState<string|null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitting(true); setErr(null); setOk(null);
+    setSubmitting(true); setErr(null); setSuccessData(null);
     const form = new FormData(e.currentTarget);
     try {
       const res = await fetch('/api/support/submit', { method: 'POST', body: form });
@@ -19,7 +20,8 @@ export default function SupportRequestPage() {
         throw new Error(errorData.error || 'Submission failed');
       }
       const data = await res.json();
-      setOk({ id: data.id, eta: data.aiEta });
+      setSuccessData({ id: data.id, eta: data.aiEta });
+      setShowSuccessModal(true);
       if (formRef.current) {
         formRef.current.reset();
       }
@@ -38,11 +40,6 @@ export default function SupportRequestPage() {
           Submit your project request. You can attach files. <b>Suggested due date is not guaranteed.</b>
         </p>
 
-        {ok && (
-          <div className="mb-4 rounded-xl border bg-green-50 p-3 text-green-800">
-            Thanks! Ticket ID: <b>{ok.id}</b>{ok.eta ? <> · Estimated completion: <b>{ok.eta}</b></> : null}
-          </div>
-        )}
         {err && <div className="mb-4 rounded-xl border bg-red-50 p-3 text-red-700">{err}</div>}
 
         <form ref={formRef} onSubmit={onSubmit} className="space-y-4 rounded-2xl border bg-white/80 p-5">
@@ -103,6 +100,48 @@ export default function SupportRequestPage() {
           </div>
         </form>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && successData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Request Submitted Successfully!</h3>
+              <p className="text-gray-600 mb-4">
+                Your support request has been received and will be reviewed by our team.
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <div className="text-sm text-gray-600 mb-2">Ticket Information:</div>
+                <div className="text-lg font-mono font-semibold text-gray-900 mb-2">
+                  #{successData.id}
+                </div>
+                {successData.eta && (
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">Estimated completion:</span> {successData.eta}
+                  </div>
+                )}
+              </div>
+
+              <div className="text-xs text-gray-500 mb-4">
+                Please save this ticket number for your records. You'll receive updates via email.
+              </div>
+
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full rounded-lg bg-black px-4 py-2 text-white hover:bg-gray-800 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
