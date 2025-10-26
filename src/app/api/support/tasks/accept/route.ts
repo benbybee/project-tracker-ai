@@ -76,10 +76,20 @@ export async function POST(req: Request) {
       ok: true, 
       created: createdTasks.length 
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to accept tasks:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
     return NextResponse.json(
-      { error: 'Failed to accept tasks' },
+      { 
+        error: 'Failed to accept tasks',
+        details: error.message,
+        code: error.code
+      },
       { status: 500 }
     );
   }
