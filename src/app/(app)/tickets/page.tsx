@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Ticket } from '@/types/ticket';
 import { trpc } from '@/lib/trpc';
 import { Eye, Trash2, CheckCircle } from 'lucide-react';
+import { useRealtime } from '@/app/providers';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,10 +25,25 @@ export default function TicketsPage() {
   const [loading, setLoading] = useState(true);
 
   const { data: projects } = trpc.projects.list.useQuery({});
+  const realtime = useRealtime();
 
   useEffect(() => {
     refresh();
   }, []);
+
+  // Listen for real-time updates
+  useEffect(() => {
+    const unsubscribeActivity = realtime.onActivity((activity) => {
+      // Refresh tickets when tasks are created or updated
+      if (activity.type === 'task_created' || activity.type === 'task_updated') {
+        refresh();
+      }
+    });
+
+    return () => {
+      unsubscribeActivity();
+    };
+  }, [realtime]);
 
   async function refresh() {
     setLoading(true);
@@ -80,6 +96,22 @@ export default function TicketsPage() {
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ ticketId: active.id, tasks: selected })
       });
+      
+      // Trigger real-time update
+      realtime.broadcastActivity({
+        type: 'task_created',
+        entityType: 'task',
+        entityId: active.id,
+        data: { ticketId: active.id, count: selected.length }
+      });
+      
+      // Trigger sync to update local database
+      try {
+        const { pullChanges } = await import('@/lib/sync-manager');
+        await pullChanges();
+      } catch (syncError) {
+        console.error('Failed to trigger sync:', syncError);
+      }
       
       // Refresh tickets list
       await refresh();
@@ -219,7 +251,6 @@ export default function TicketsPage() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket #</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
@@ -397,7 +428,6 @@ function TicketRow({
     fetchTaskData();
   }, [ticket.id]);
 
-  const ticketNumber = `#TC-${ticket.id.slice(-6).toUpperCase()}`;
   const completionDate = ticket.aiEta ? new Date(ticket.aiEta).toLocaleDateString() : '—';
 
   async function assignProject(projectId: string) {
@@ -433,9 +463,6 @@ function TicketRow({
 
   return (
     <tr className="hover:bg-gray-50">
-      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-        {ticketNumber}
-      </td>
       <td className="px-4 py-3 text-sm text-gray-900">
         {ticket.projectName}
       </td>
@@ -448,7 +475,10 @@ function TicketRow({
             onClick={() => setShowProjectDropdown(!showProjectDropdown)}
             className="text-blue-600 hover:text-blue-800 text-xs font-medium"
           >
-            {assignedProject ? 'Change' : 'Assign'}
+            {assignedProject ? 
+              (availableProjects.find(p => p.id === assignedProject)?.name || 'Unknown Project') : 
+              'Assign'
+            }
           </button>
           {showProjectDropdown && (
             <div className="absolute top-6 left-0 bg-white border rounded shadow-lg z-10 min-w-48">
@@ -792,10 +822,31 @@ function AssociatedTasksSection({ ticketId }: { ticketId: string }) {
     createdAt: string;
   }>>([]);
   const [loading, setLoading] = useState(true);
+  const realtime = useRealtime();
 
   useEffect(() => {
     fetchTasks();
   }, [ticketId]);
+
+  // Listen for real-time updates
+  useEffect(() => {
+    const unsubscribeActivity = realtime.onActivity((activity) => {
+      // Refresh tasks when they are updated
+      if (activity.type === 'task_updated' && activity.data?.taskId) {
+        // Check if this task belongs to the current ticket
+        const taskId = activity.data.taskId;
+        const isRelevantTask = tasks.some(task => task.id === taskId);
+        
+        if (isRelevantTask) {
+          fetchTasks();
+        }
+      }
+    });
+
+    return () => {
+      unsubscribeActivity();
+    };
+  }, [ticketId, tasks, realtime]);
 
   async function fetchTasks() {
     setLoading(true);

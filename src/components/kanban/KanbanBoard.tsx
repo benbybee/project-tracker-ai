@@ -12,6 +12,7 @@ import { enqueueOp } from '@/lib/ops-helpers';
 import { getFreshBaseVersionForTask } from '@/lib/sync-manager';
 import { useTasksStore } from '@/lib/tasks-store';
 import { Task, TaskStatus } from '@/types/task';
+import { useRealtime } from '@/app/providers';
 
 type BoardVariant = 'default' | 'website';
 
@@ -35,6 +36,7 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+  const realtime = useRealtime();
 
   // Load tasks from Dexie on mount
   useEffect(() => {
@@ -53,6 +55,35 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
       }
     })();
   }, [projectId, bulkUpsert]);
+
+  // Listen for real-time updates
+  useEffect(() => {
+    const unsubscribeActivity = realtime.onActivity((activity) => {
+      // Reload tasks when new tasks are created or updated
+      if (activity.type === 'task_created' || activity.type === 'task_updated') {
+        (async () => {
+          try {
+            // First trigger sync to get latest data from server
+            const { pullChanges } = await import('@/lib/sync-manager');
+            await pullChanges();
+            
+            // Then reload tasks from local database
+            const db = await getDB();
+            const tasks = projectId 
+              ? await db.tasks.where('projectId').equals(projectId).toArray()
+              : await db.tasks.toArray();
+            bulkUpsert(tasks);
+          } catch (error) {
+            console.error('Failed to reload tasks:', error);
+          }
+        })();
+      }
+    });
+
+    return () => {
+      unsubscribeActivity();
+    };
+  }, [realtime, projectId, bulkUpsert]);
 
   // Derive unique roles from tasks
   const uniqueRoles = useMemo(() => {
@@ -153,6 +184,14 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
         payload: { status: toCol },
         baseVersion,
         projectId: task.projectId || undefined,
+      });
+
+      // Broadcast real-time update
+      realtime.broadcastActivity({
+        type: 'task_updated',
+        entityType: 'task',
+        entityId: task.id,
+        data: { taskId: task.id, status: toCol, projectId: task.projectId }
       });
     } catch (error) {
       console.error('Failed to update task:', error);
