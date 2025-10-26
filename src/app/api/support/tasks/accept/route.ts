@@ -16,6 +16,9 @@ export async function POST(req: Request) {
 
     const { ticketId, tasks: proposedTasks } = await req.json();
 
+    console.log('Accepting tasks for ticket:', ticketId);
+    console.log('Proposed tasks:', proposedTasks);
+
     if (!ticketId || !Array.isArray(proposedTasks) || proposedTasks.length === 0) {
       return NextResponse.json({ error: 'Ticket ID and tasks array are required' }, { status: 400 });
     }
@@ -54,6 +57,8 @@ export async function POST(req: Request) {
           priorityScore: '2', // Default priority
           isDaily: false,
         }).returning();
+        
+        console.log('Created task:', newTask);
         createdTasks.push(newTask);
       }
     }

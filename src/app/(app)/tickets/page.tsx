@@ -603,7 +603,7 @@ function TicketDetailsModal({
                   onClick={onAiPropose} 
                   className="rounded-lg bg-black px-3 py-2 text-white text-sm hover:bg-gray-800 transition-colors"
                 >
-                  ✨ AI: Summarize & Propose
+                  ✨ AI Tasks
                 </button>
               </div>
             </header>

@@ -18,6 +18,8 @@ export async function GET(
 
     const { ticketId } = await params;
 
+    console.log('Fetching tasks for ticket:', ticketId);
+
     // Fetch tasks associated with this ticket
     const ticketTasks = await db
       .select({
@@ -33,6 +35,8 @@ export async function GET(
       .leftJoin(projects, eq(tasks.projectId, projects.id))
       .where(eq(tasks.ticketId, ticketId))
       .orderBy(tasks.createdAt);
+
+    console.log('Found tasks:', ticketTasks);
 
     return NextResponse.json({ 
       tasks: ticketTasks.map(task => ({
