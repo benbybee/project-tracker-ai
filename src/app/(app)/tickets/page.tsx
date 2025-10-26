@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { Ticket } from '@/types/ticket';
 import { trpc } from '@/lib/trpc';
+import { Eye, Trash2, CheckCircle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,11 +93,16 @@ export default function TicketsPage() {
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [projectFilter, setProjectFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  // Get unique projects for filtering
+  const uniqueProjects = Array.from(new Set(tickets.map(t => t.projectName))).filter(Boolean);
+
   const filteredTickets = tickets.filter(ticket => {
     if (statusFilter !== 'all' && ticket.status !== statusFilter) return false;
+    if (projectFilter !== 'all' && ticket.projectName !== projectFilter) return false;
     if (dateFilter !== 'all') {
       const ticketDate = new Date(ticket.createdAt);
       const now = new Date();
@@ -172,6 +178,20 @@ export default function TicketsPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Project:</label>
+            <select 
+              value={projectFilter} 
+              onChange={(e) => setProjectFilter(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="all">All Projects</option>
+              {uniqueProjects.map(project => (
+                <option key={project} value={project}>{project}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
             <label className="text-sm font-medium">Sort:</label>
             <select 
               value={sortBy} 
@@ -202,10 +222,11 @@ export default function TicketsPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket #</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI Summary</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tasks</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tasks Due</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -342,29 +363,68 @@ function TicketRow({
   onDelete: () => void;
 }) {
   const [taskCount, setTaskCount] = useState<number>(0);
+  const [tasksDue, setTasksDue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [assignedProject, setAssignedProject] = useState<string>(ticket.suggestedProjectId || '');
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
 
   useEffect(() => {
-    async function fetchTaskCount() {
+    async function fetchTaskData() {
       try {
         const res = await fetch(`/api/tickets/${ticket.id}/tasks`);
         if (res.ok) {
           const data = await res.json();
-          setTaskCount(data.tasks?.length || 0);
+          const tasks = data.tasks || [];
+          setTaskCount(tasks.length);
+          
+          // Count tasks that are not completed
+          const dueTasks = tasks.filter((task: any) => 
+            task.status !== 'completed' && task.status !== 'cancelled'
+          );
+          setTasksDue(dueTasks.length);
         }
       } catch (error) {
-        console.error('Failed to fetch task count:', error);
+        console.error('Failed to fetch task data:', error);
       } finally {
         setLoading(false);
       }
     }
-    fetchTaskCount();
+    fetchTaskData();
   }, [ticket.id]);
 
   const ticketNumber = `#TC-${ticket.id.slice(-6).toUpperCase()}`;
-  const shortSummary = ticket.aiSummary ? 
-    (ticket.aiSummary.length > 50 ? ticket.aiSummary.substring(0, 50) + '...' : ticket.aiSummary) : 
-    'No summary';
+  const completionDate = ticket.aiEta ? new Date(ticket.aiEta).toLocaleDateString() : '—';
+
+  async function assignProject(projectId: string) {
+    try {
+      const res = await fetch('/api/support/tickets/assign-project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId: ticket.id, projectId })
+      });
+      if (res.ok) {
+        setAssignedProject(projectId);
+        setShowProjectDropdown(false);
+      }
+    } catch (error) {
+      console.error('Failed to assign project:', error);
+    }
+  }
+
+  async function closeTicket() {
+    try {
+      const res = await fetch('/api/support/tickets/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId: ticket.id })
+      });
+      if (res.ok) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to close ticket:', error);
+    }
+  }
 
   return (
     <tr className="hover:bg-gray-50">
@@ -377,13 +437,37 @@ function TicketRow({
       <td className="px-4 py-3 text-sm text-gray-600">
         {ticket.domain || '—'}
       </td>
-      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs">
-        <div className="truncate" title={ticket.aiSummary || 'No AI summary available'}>
-          {shortSummary}
+      <td className="px-4 py-3 text-sm text-gray-600 relative">
+        <div className="relative">
+          <button
+            onClick={() => setShowProjectDropdown(!showProjectDropdown)}
+            className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+          >
+            {assignedProject ? 'Change' : 'Assign'}
+          </button>
+          {showProjectDropdown && (
+            <div className="absolute top-6 left-0 bg-white border rounded shadow-lg z-10 min-w-48">
+              <div className="p-2">
+                <div className="text-xs text-gray-500 mb-2">Select Project:</div>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => assignProject('')}
+                    className="block w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded"
+                  >
+                    — Unassigned
+                  </button>
+                  {/* TODO: Add actual projects from API */}
+                  <button
+                    onClick={() => assignProject('project-1')}
+                    className="block w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded"
+                  >
+                    Project 1
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600">
-        {ticket.suggestedProjectId ? 'Assigned' : '—'}
       </td>
       <td className="px-4 py-3">
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -397,6 +481,12 @@ function TicketRow({
       </td>
       <td className="px-4 py-3 text-sm text-gray-600">
         {loading ? '...' : taskCount}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">
+        {loading ? '...' : tasksDue}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">
+        {completionDate}
       </td>
       <td className="px-4 py-3">
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -415,28 +505,26 @@ function TicketRow({
         <div className="flex items-center gap-2">
           <button
             onClick={onOpen}
-            className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+            className="text-blue-600 hover:text-blue-800 p-1"
             title="Open ticket details"
           >
-            Open
+            <Eye className="h-4 w-4" />
           </button>
-          <button
-            onClick={() => {
-              // Trigger AI summary generation
-              const event = new CustomEvent('ai-summarize', { detail: { ticketId: ticket.id } });
-              window.dispatchEvent(event);
-            }}
-            className="text-green-600 hover:text-green-800 text-xs font-medium"
-            title="Generate AI summary"
-          >
-            AI Summary
-          </button>
+          {ticket.status !== 'complete' && (
+            <button
+              onClick={closeTicket}
+              className="text-green-600 hover:text-green-800 p-1"
+              title="Close ticket"
+            >
+              <CheckCircle className="h-4 w-4" />
+            </button>
+          )}
           <button
             onClick={onDelete}
-            className="text-red-600 hover:text-red-800 text-xs font-medium"
+            className="text-red-600 hover:text-red-800 p-1"
             title="Delete ticket"
           >
-            Delete
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </td>
