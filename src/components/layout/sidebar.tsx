@@ -21,6 +21,9 @@ const nav = [
   { href: "/settings",  label: "Settings",  icon: Settings },
 ];
 
+// Extract all nav hrefs for checking more specific routes
+const navHrefs = nav.map(item => item.href);
+
 // NavItem component with proper active state detection
 function NavItem({ href, icon: Icon, label, isCompact, isMobile }: { 
   href: string; 
@@ -37,16 +40,21 @@ function NavItem({ href, icon: Icon, label, isCompact, isMobile }: {
       return pathname === "/dashboard" || pathname === "/";
     }
     
-    // Exact match for the route or its sub-routes
-    // But prevent shorter paths from matching longer ones
+    // Exact match for the route
     if (pathname === href) {
       return true;
     }
     
-    // For sub-routes, ensure we match the path segment correctly
-    // e.g., /projects should not match /projects/website
+    // For sub-routes, check if pathname starts with this href
+    // BUT only if there's no more specific route in nav that matches
     if (pathname.startsWith(href + "/")) {
-      return true;
+      // Check if any other nav item has a more specific (longer) match
+      const hasMoreSpecificMatch = navHrefs.some(
+        (navHref) => navHref !== href && navHref.startsWith(href) && pathname.startsWith(navHref)
+      );
+      
+      // Only mark as active if there's no more specific match
+      return !hasMoreSpecificMatch;
     }
     
     return false;

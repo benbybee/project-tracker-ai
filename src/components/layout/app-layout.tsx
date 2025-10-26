@@ -49,7 +49,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div 
         className="transition-all duration-300 pr-4 md:pr-6 py-4"
-        style={{ paddingLeft: sidebarWidth }}
+        style={{ paddingLeft: isMobile ? '0' : sidebarWidth }}
       >
         <Topbar />
         <main className="mt-4 grid gap-4">{children}</main>
