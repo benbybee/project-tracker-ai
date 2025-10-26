@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
+import { Columns3 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -21,25 +23,30 @@ export default function BoardPage() {
   const { data: projects } = trpc.projects.list.useQuery({});
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Kanban Board</h1>
-        <Button 
-          onClick={() => {
-            if (projects && projects.length > 0) {
-              setCreateModalOpen(true);
-            } else {
-              // Redirect to create project first
-              router.push('/projects/new');
-            }
-          }}
-        >
-          New Task
-        </Button>
-      </div>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          icon={Columns3}
+          title="Kanban Board"
+          subtitle="Visualize and manage your tasks across different stages"
+          actions={
+            <Button 
+              onClick={() => {
+                if (projects && projects.length > 0) {
+                  setCreateModalOpen(true);
+                } else {
+                  // Redirect to create project first
+                  router.push('/projects/new');
+                }
+              }}
+            >
+              New Task
+            </Button>
+          }
+        />
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
+        {/* Filters */}
+        <div className="flex gap-4 mb-6 flex-wrap">
         <Input
           placeholder="Search tasks..."
           value={search}
@@ -60,18 +67,19 @@ export default function BoardPage() {
         </select>
       </div>
 
-      {/* Kanban Board */}
-      <KanbanBoard 
-        projectId={projectFilter === 'all' ? undefined : projectFilter}
-        variant="default"
-      />
+        {/* Kanban Board */}
+        <KanbanBoard 
+          projectId={projectFilter === 'all' ? undefined : projectFilter}
+          variant="default"
+        />
 
-      {/* Task Create Modal */}
-      <TaskCreateModal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        projectId={projects?.[0]?.id}
-      />
+        {/* Task Create Modal */}
+        <TaskCreateModal
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          projectId={projects?.[0]?.id}
+        />
+      </div>
     </div>
   );
 }

@@ -54,7 +54,8 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
         setIsLoading(false);
       }
     })();
-  }, [projectId, bulkUpsert]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   // Listen for real-time updates
   useEffect(() => {
@@ -83,7 +84,8 @@ export function KanbanBoard({ projectId, variant = 'default' }: KanbanBoardProps
     return () => {
       unsubscribeActivity();
     };
-  }, [realtime, projectId, bulkUpsert]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   // Derive unique roles from tasks
   const uniqueRoles = useMemo(() => {

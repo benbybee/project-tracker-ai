@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
+import { Settings as SettingsIcon } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -39,12 +41,17 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Settings</h1>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          icon={SettingsIcon}
+          title="Settings"
+          subtitle="Manage your roles and application preferences"
+        />
 
-      {/* Roles Management */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Roles Management</h2>
+        {/* Roles Management */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Roles Management</h2>
         
         {/* Create New Role */}
         <form onSubmit={handleCreateRole} className="mb-8">
@@ -153,14 +160,15 @@ export default function SettingsPage() {
               No roles created yet. Create your first role above.
             </div>
           )}
+          </div>
         </div>
-      </div>
 
-      {/* Other Settings */}
-      <div className="bg-white rounded-lg shadow p-6 mt-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Other Settings</h2>
-        <div className="text-center py-8 text-gray-500">
-          Additional settings will be available in future updates.
+        {/* Other Settings */}
+        <div className="bg-white rounded-lg shadow p-6 mt-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Other Settings</h2>
+          <div className="text-center py-8 text-gray-500">
+            Additional settings will be available in future updates.
+          </div>
         </div>
       </div>
     </div>

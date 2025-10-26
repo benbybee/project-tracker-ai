@@ -3,23 +3,17 @@
 import { ActivityFeed } from '@/components/activity/ActivityFeed';
 import { GlassCard } from '@/components/ui/glass-card';
 import { Activity, Clock } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 export default function ActivityPage() {
   return (
-    <div className="w-full">
-      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-              <Activity className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Activity Feed</h1>
-              <p className="text-gray-600">Track all project activities and updates</p>
-            </div>
-          </div>
-        </div>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          icon={Activity}
+          title="Activity Feed"
+          subtitle="Track all project activities and updates in real-time"
+        />
 
         {/* Activity Feed */}
         <GlassCard className="p-6">

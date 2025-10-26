@@ -4,7 +4,7 @@ import { SessionProvider } from 'next-auth/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { trpc } from '@/lib/trpc';
 import { httpBatchLink } from '@trpc/client';
-import { useState, createContext, useContext, useEffect, ReactNode } from 'react';
+import { useState, createContext, useContext, useEffect, useCallback, ReactNode } from 'react';
 // @ts-ignore
 import superjson from 'superjson';
 import { getWebSocketClient } from '@/lib/ws-client';
@@ -167,7 +167,7 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const onNotification = (callback: (notification: any) => void) => {
+  const onNotification = useCallback((callback: (notification: any) => void) => {
     setNotificationListeners(prev => new Set([...prev, callback]));
     return () => {
       setNotificationListeners(prev => {
@@ -176,9 +176,9 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
         return newSet;
       });
     };
-  };
+  }, []);
 
-  const onActivity = (callback: (activity: any) => void) => {
+  const onActivity = useCallback((callback: (activity: any) => void) => {
     setActivityListeners(prev => new Set([...prev, callback]));
     return () => {
       setActivityListeners(prev => {
@@ -187,7 +187,7 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
         return newSet;
       });
     };
-  };
+  }, []);
 
   const broadcastNotification = (notification: any) => {
     if (wsClient) {
@@ -209,7 +209,7 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const onChatMessage = (callback: (message: any) => void) => {
+  const onChatMessage = useCallback((callback: (message: any) => void) => {
     setChatMessageListeners(prev => new Set([...prev, callback]));
     return () => {
       setChatMessageListeners(prev => {
@@ -218,9 +218,9 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
         return newSet;
       });
     };
-  };
+  }, []);
 
-  const onChatTyping = (callback: (typing: any) => void) => {
+  const onChatTyping = useCallback((callback: (typing: any) => void) => {
     setChatTypingListeners(prev => new Set([...prev, callback]));
     return () => {
       setChatTypingListeners(prev => {
@@ -229,9 +229,9 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
         return newSet;
       });
     };
-  };
+  }, []);
 
-  const onChatThread = (callback: (thread: any) => void) => {
+  const onChatThread = useCallback((callback: (thread: any) => void) => {
     setChatThreadListeners(prev => new Set([...prev, callback]));
     return () => {
       setChatThreadListeners(prev => {
@@ -240,7 +240,7 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
         return newSet;
       });
     };
-  };
+  }, []);
 
   const broadcastChatMessage = (message: any) => {
     if (wsClient) {

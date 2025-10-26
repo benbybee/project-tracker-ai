@@ -6,6 +6,8 @@ import { TaskEditModal } from '@/components/tasks/TaskEditModal';
 import { useTasksStore } from '@/lib/tasks-store';
 import { getDB } from '@/lib/db.client';
 import type { Task } from '@/types/task';
+import { Calendar } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -24,7 +26,8 @@ export default function DailyPlannerPage() {
       const allTasks = await db.tasks.toArray();
       bulkUpsert(allTasks);
     })();
-  }, [bulkUpsert]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -67,19 +70,22 @@ export default function DailyPlannerPage() {
   );
 
   return (
-    <div className="px-6 py-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Daily Planner</h1>
-        <div className="flex gap-2">
-          <button
-            disabled={!selectedIds.length}
-            className="rounded border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
-            title="Select tasks below to enable bulk actions"
-          >
-            Bulk actions ({selectedIds.length})
-          </button>
-        </div>
-      </div>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <PageHeader
+          icon={Calendar}
+          title="Daily Planner"
+          subtitle="Focus on today's tasks and plan ahead for the next 3 days"
+          actions={
+            <button
+              disabled={!selectedIds.length}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors whitespace-nowrap"
+              title="Select tasks below to enable bulk actions"
+            >
+              Bulk actions ({selectedIds.length})
+            </button>
+          }
+        />
 
       {/* Bulk bar shows only when selected */}
       {selectedIds.length > 0 && (
@@ -122,9 +128,10 @@ export default function DailyPlannerPage() {
         </div>
       </Section>
 
-      {editing && (
-        <TaskEditModal task={editing} open={!!editing} onClose={() => setEditing(null)} />
-      )}
+        {editing && (
+          <TaskEditModal task={editing} open={!!editing} onClose={() => setEditing(null)} />
+        )}
+      </div>
     </div>
   );
 }

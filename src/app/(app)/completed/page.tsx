@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Download, Calendar, FolderOpen, Users } from 'lucide-react';
+import { Download, Calendar, FolderOpen, Users, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { trpc } from '@/lib/trpc';
+import { PageHeader } from '@/components/layout/page-header';
 
 // Use auto dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -117,22 +118,23 @@ export default function CompletedTasksPage() {
   };
 
   return (
-    <div className="px-6 py-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">🗂️ Completed Tasks</h1>
-          <p className="text-sm text-gray-600 mt-1">Archive of completed tasks (last 6 months)</p>
-        </div>
-        <button
-          onClick={exportCSV}
-          disabled={tasks.length === 0}
-          className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </button>
-      </div>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <PageHeader
+          icon={CheckCircle2}
+          title="Completed Tasks"
+          subtitle="Archive of completed tasks (last 6 months)"
+          actions={
+            <button
+              onClick={exportCSV}
+              disabled={tasks.length === 0}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </button>
+          }
+        />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 p-4 bg-white/80 rounded-xl border border-gray-200">
@@ -294,6 +296,7 @@ export default function CompletedTasksPage() {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }

@@ -5,8 +5,9 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { trpc } from '@/lib/trpc';
 import { DndContext, PointerSensor, useSensor, useSensors, DragEndEvent, useDroppable, useDraggable } from '@dnd-kit/core';
-import { MoreVertical, ExternalLink, ArrowDownCircle, FolderOpen, Copy } from 'lucide-react';
+import { MoreVertical, ExternalLink, ArrowDownCircle, FolderOpen, Copy, Globe } from 'lucide-react';
 import WebsiteBoardMetrics from '@/components/projects/WebsiteBoardMetrics';
+import { PageHeader } from '@/components/layout/page-header';
 
 // Use auto dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -272,13 +273,13 @@ export default function WebsiteWorkflowBoard() {
   }
 
   return (
-    <div className="px-6 py-4 space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">🌐 Website Project Workflow</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Drag projects between stages. Projects marked as <b>Completed</b> automatically convert back to general projects.
-        </p>
-      </div>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto space-y-4">
+        <PageHeader
+          icon={Globe}
+          title="Website Project Workflow"
+          subtitle="Drag projects between stages. Projects marked as Completed automatically convert back to general projects."
+        />
 
       {isLoading ? (
         <div className="text-center py-12">
@@ -317,7 +318,8 @@ export default function WebsiteWorkflowBoard() {
             View All Projects
           </Link>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

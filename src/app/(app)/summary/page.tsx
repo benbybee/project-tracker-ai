@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { FileText } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 // Use auto dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -38,8 +40,13 @@ export default function DailySummaryPage() {
   }
 
   return (
-    <div className="px-6 py-4 space-y-4">
-      <h1 className="text-2xl font-semibold text-gray-900">Daily Summary</h1>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <PageHeader
+          icon={FileText}
+          title="Daily Summary"
+          subtitle="AI-generated insights and progress overview"
+        />
       
       {/* KPI Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
@@ -63,12 +70,13 @@ export default function DailySummaryPage() {
         </button>
       </div>
 
-      {/* Summary Output */}
-      {summary && (
-        <div className="rounded-xl border border-gray-200 bg-white/80 p-4 whitespace-pre-wrap text-gray-700">
-          {summary}
-        </div>
-      )}
+        {/* Summary Output */}
+        {summary && (
+          <div className="rounded-xl border border-gray-200 bg-white/80 p-4 whitespace-pre-wrap text-gray-700">
+            {summary}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

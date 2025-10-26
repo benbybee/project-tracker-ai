@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { CalendarDays, Clock, Search, ArrowRight } from "lucide-react";
+import { CalendarDays, Clock, Search, ArrowRight, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 
@@ -16,6 +16,7 @@ import { EmptyProjects } from "@/components/dashboard/EmptyProjects";
 import { TaskCard } from "@/components/tasks/task-card";
 import { useRouter } from "next/navigation";
 import { togglePin } from "@/lib/projects-client";
+import { PageHeader } from "@/components/layout/page-header";
 
 
 export default function DashboardPage() {
@@ -104,7 +105,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6">
+    <div className="px-2 py-6">
       <motion.div
         className="max-w-7xl mx-auto"
         variants={containerVariants}
@@ -112,21 +113,20 @@ export default function DashboardPage() {
         animate="visible"
       >
         {/* Header */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-              Dashboard Overview
-            </h1>
-            <button
-              onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { ctrlKey: true, key: "k" }))}
-              className="text-xs rounded-full px-3 py-1 border border-white/40 bg-white/50 backdrop-blur hover:bg-white/70 transition-colors"
-            >
-              Search tasks & projects (⌘K)
-            </button>
-          </div>
-          <p className="text-slate-600 dark:text-slate-400">
-            At-a-glance control center for your projects and tasks
-          </p>
+        <motion.div variants={itemVariants}>
+          <PageHeader
+            icon={LayoutDashboard}
+            title="Dashboard"
+            subtitle="At-a-glance control center for your projects and tasks"
+            actions={
+              <button
+                onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { ctrlKey: true, key: "k" }))}
+                className="text-xs rounded-full px-3 py-1.5 border border-gray-300 bg-white hover:bg-gray-50 transition-colors whitespace-nowrap"
+              >
+                Search (⌘K)
+              </button>
+            }
+          />
         </motion.div>
 
         {/* Role Filter */}

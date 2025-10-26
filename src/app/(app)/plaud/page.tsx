@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { trpc } from '@/lib/trpc';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Mic } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 // Use auto dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -169,13 +170,13 @@ export default function PlaudIngestPage() {
   }
 
   return (
-    <div className="px-6 py-4 space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">🎙️ Plaud AI Ingestion</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Review and accept tasks extracted from voice notes via Plaud AI webhook
-        </p>
-      </div>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto space-y-4">
+        <PageHeader
+          icon={Mic}
+          title="Plaud AI Ingestion"
+          subtitle="Review and accept tasks extracted from voice notes via Plaud AI webhook"
+        />
 
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-4">
@@ -290,7 +291,8 @@ export default function PlaudIngestPage() {
             Webhook endpoint: <code className="bg-gray-100 px-2 py-1 rounded">/api/plaud/webhook</code>
           </p>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

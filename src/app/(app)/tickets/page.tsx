@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import type { Ticket } from '@/types/ticket';
 import { trpc } from '@/lib/trpc';
-import { Eye, Trash2, CheckCircle } from 'lucide-react';
+import { Eye, Trash2, CheckCircle, Ticket as TicketIcon } from 'lucide-react';
 import { useRealtime } from '@/app/providers';
+import { PageHeader } from '@/components/layout/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,8 @@ export default function TicketsPage() {
     return () => {
       unsubscribeActivity();
     };
-  }, [realtime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function refresh() {
     setLoading(true);
@@ -162,22 +164,28 @@ export default function TicketsPage() {
   });
 
   return (
-    <div className="px-6 py-4">
-      {/* Header with Filters */}
-      <div className="rounded-xl border bg-white/80 backdrop-blur p-4 mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold">🎫 Tickets ({tickets.length})</h1>
-          <button 
-            onClick={refresh} 
-            disabled={loading}
-            className="text-sm rounded-lg border px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
-          >
-            {loading ? 'Loading...' : 'Refresh'}
-          </button>
-        </div>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          icon={TicketIcon}
+          title="Tickets"
+          subtitle="Manage support requests and client feedback"
+          badge={tickets.length}
+          actions={
+            <button 
+              onClick={refresh} 
+              disabled={loading}
+              className="text-sm rounded-lg border border-gray-300 px-3 py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Loading...' : 'Refresh'}
+            </button>
+          }
+        />
 
         {/* Filters */}
-        <div className="flex gap-4 items-center">
+        <div className="rounded-xl border bg-white/80 backdrop-blur p-4 mb-4">
+
+          <div className="flex gap-4 items-center flex-wrap">
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium">Status:</label>
             <select 
@@ -243,10 +251,10 @@ export default function TicketsPage() {
             </button>
           </div>
         </div>
-      </div>
+        </div>
 
-      {/* Tickets Table */}
-      <div className="rounded-xl border bg-white/80 backdrop-blur overflow-hidden">
+        {/* Tickets Table */}
+        <div className="rounded-xl border bg-white/80 backdrop-blur overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
@@ -313,10 +321,10 @@ export default function TicketsPage() {
             </p>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Ticket Details Modal */}
-      {active && (
+        {/* Ticket Details Modal */}
+        {active && (
         <TicketDetailsModal 
           ticket={active}
           onClose={() => setActive(null)}
@@ -331,7 +339,8 @@ export default function TicketsPage() {
           onAiPropose={aiPropose}
           onAcceptSelected={acceptSelected}
         />
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 import { togglePin } from '@/lib/projects-client';
-import { Pin, Eye } from 'lucide-react';
+import { Pin, Eye, FolderKanban } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -34,16 +35,21 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="px-6 py-4 max-w-none">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-        <Button onClick={() => router.push('/projects/new')}>
-          New Project
-        </Button>
-      </div>
+    <div className="px-2 py-6">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          icon={FolderKanban}
+          title="Projects"
+          subtitle="Organize and manage all your projects in one place"
+          actions={
+            <Button onClick={() => router.push('/projects/new')}>
+              New Project
+            </Button>
+          }
+        />
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
+        {/* Filters */}
+        <div className="flex gap-4 mb-6 flex-wrap">
         <Input
           placeholder="Search projects..."
           value={search}
@@ -61,9 +67,9 @@ export default function ProjectsPage() {
         </select>
       </div>
 
-      {/* Projects Table */}
-      {isLoading ? (
-        <div className="text-center py-8">Loading projects...</div>
+        {/* Projects Table */}
+        {isLoading ? (
+          <div className="text-center py-8">Loading projects...</div>
       ) : projects && projects.length > 0 ? (
         <>
           <p className="text-xs text-gray-500 mb-4">💡 Pinned projects appear first</p>
@@ -155,7 +161,8 @@ export default function ProjectsPage() {
             Create Project
           </Button>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
