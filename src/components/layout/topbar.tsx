@@ -27,6 +27,17 @@ export function Topbar() {
   return (
     <header className="sticky top-0 z-40 bg-white/70 backdrop-blur border-b">
       <div className="mx-auto flex items-center gap-3 px-4 py-2">
+        {/* Mobile menu button */}
+        {isMobile && (
+          <button
+            onClick={openMobileSidebar}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5 text-gray-700" />
+          </button>
+        )}
+        
         <input
           className="flex-1 rounded-lg border px-3 py-2 text-sm"
           placeholder="Search (Ctrl+K)"
