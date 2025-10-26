@@ -13,10 +13,25 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
-  const { data: unreadCount, refetch } = trpc.notifications.getUnreadCount.useQuery();
-  const { data: notifications } = trpc.notifications.getNotifications.useQuery({
+  const { data: unreadCount, refetch, error: unreadError } = trpc.notifications.getUnreadCount.useQuery(undefined, {
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    onError: (error) => {
+      console.warn('[NotificationBell] Failed to fetch unread count (non-critical):', error.message);
+    }
+  });
+  
+  const { data: notifications, error: notificationsError } = trpc.notifications.getNotifications.useQuery({
     limit: 10,
     unreadOnly: false,
+  }, {
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    onError: (error) => {
+      console.warn('[NotificationBell] Failed to fetch notifications (non-critical):', error.message);
+    }
   });
 
   // Check for new notifications

@@ -37,7 +37,27 @@ const RealtimeContext = createContext<RealtimeContextType | null>(null);
 export function useRealtime() {
   const context = useContext(RealtimeContext);
   if (!context) {
-    throw new Error('useRealtime must be used within a RealtimeProvider');
+    console.warn('[useRealtime] Called outside of RealtimeProvider, returning fallback');
+    // Return a fallback object instead of throwing
+    return {
+      isConnected: false,
+      status: 'disconnected' as const,
+      onlineUsers: [],
+      updatePresence: () => {},
+      startTyping: () => {},
+      stopTyping: () => {},
+      broadcastUpdate: () => {},
+      onNotification: () => () => {},
+      onActivity: () => () => {},
+      broadcastNotification: () => {},
+      broadcastActivity: () => {},
+      onChatMessage: () => () => {},
+      onChatTyping: () => () => {},
+      onChatThread: () => () => {},
+      broadcastChatMessage: () => {},
+      broadcastChatTyping: () => {},
+      broadcastChatThread: () => {},
+    };
   }
   return context;
 }
@@ -54,56 +74,73 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
   const [chatThreadListeners, setChatThreadListeners] = useState<Set<(thread: any) => void>>(new Set());
 
   useEffect(() => {
-    // Initialize WebSocket client
-    const client = getWebSocketClient();
-    setWsClient(client);
+    try {
+      // Initialize WebSocket client
+      const client = getWebSocketClient();
+      setWsClient(client);
 
-    const handleStatusChange = (newStatus: string) => {
-      setStatus(newStatus as any);
-      setIsConnected(newStatus === 'connected');
-    };
+      const handleStatusChange = (newStatus: string) => {
+        setStatus(newStatus as any);
+        setIsConnected(newStatus === 'connected');
+      };
 
-    const handleMessage = (event: any) => {
-      if (event.type === 'user_presence') {
-        // Update online users list
-        setOnlineUsers(prev => {
-          const existing = prev.find(u => u.userId === event.userId);
-          if (existing) {
-            return prev.map(u => u.userId === event.userId ? { ...u, ...event.data } : u);
-          } else {
-            return [...prev, event.data];
+      const handleMessage = (event: any) => {
+        try {
+          if (event.type === 'user_presence') {
+            // Update online users list
+            setOnlineUsers(prev => {
+              const existing = prev.find(u => u.userId === event.userId);
+              if (existing) {
+                return prev.map(u => u.userId === event.userId ? { ...u, ...event.data } : u);
+              } else {
+                return [...prev, event.data];
+              }
+            });
+          } else if (event.type === 'notification') {
+            // Broadcast notification to listeners
+            notificationListeners.forEach(callback => callback(event.data));
+          } else if (event.type === 'activity') {
+            // Broadcast activity to listeners
+            activityListeners.forEach(callback => callback(event.data));
+          } else if (event.type === 'chat_message') {
+            // Broadcast chat message to listeners
+            chatMessageListeners.forEach(callback => callback(event.data));
+          } else if (event.type === 'chat_typing') {
+            // Broadcast chat typing to listeners
+            chatTypingListeners.forEach(callback => callback(event.data));
+          } else if (event.type === 'chat_thread') {
+            // Broadcast chat thread to listeners
+            chatThreadListeners.forEach(callback => callback(event.data));
           }
-        });
-      } else if (event.type === 'notification') {
-        // Broadcast notification to listeners
-        notificationListeners.forEach(callback => callback(event.data));
-      } else if (event.type === 'activity') {
-        // Broadcast activity to listeners
-        activityListeners.forEach(callback => callback(event.data));
-      } else if (event.type === 'chat_message') {
-        // Broadcast chat message to listeners
-        chatMessageListeners.forEach(callback => callback(event.data));
-      } else if (event.type === 'chat_typing') {
-        // Broadcast chat typing to listeners
-        chatTypingListeners.forEach(callback => callback(event.data));
-      } else if (event.type === 'chat_thread') {
-        // Broadcast chat thread to listeners
-        chatThreadListeners.forEach(callback => callback(event.data));
+        } catch (error) {
+          console.warn('[RealtimeProvider] Error handling message (non-critical):', error);
+        }
+      };
+
+      const unsubscribeStatus = client.on('status', handleStatusChange);
+      const unsubscribeMessage = client.on('message', handleMessage);
+
+      // Connect if not already connected (but don't block on failure)
+      if (!client.isConnected()) {
+        try {
+          client.connect();
+        } catch (error) {
+          console.warn('[RealtimeProvider] WebSocket connection failed (non-critical):', error);
+        }
       }
-    };
 
-    const unsubscribeStatus = client.on('status', handleStatusChange);
-    const unsubscribeMessage = client.on('message', handleMessage);
-
-    // Connect if not already connected
-    if (!client.isConnected()) {
-      client.connect();
+      return () => {
+        try {
+          unsubscribeStatus();
+          unsubscribeMessage();
+        } catch (error) {
+          console.warn('[RealtimeProvider] Cleanup error (non-critical):', error);
+        }
+      };
+    } catch (error) {
+      console.warn('[RealtimeProvider] Initialization failed (non-critical):', error);
+      // Don't throw - allow the app to continue even if WebSocket fails
     }
-
-    return () => {
-      unsubscribeStatus();
-      unsubscribeMessage();
-    };
   }, []);
 
   const updatePresence = (data: any) => {
