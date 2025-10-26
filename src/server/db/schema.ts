@@ -184,6 +184,7 @@ export const tickets = pgTable('tickets', {
   aiEta: date('ai_eta'),
   aiSummary: text('ai_summary'),
   suggestedProjectId: uuid('suggested_project_id').references(() => projects.id),
+  completedAt: timestamp('completed_at'),
 });
 
 export const ticketReplies = pgTable('ticket_replies', {

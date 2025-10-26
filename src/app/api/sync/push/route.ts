@@ -103,6 +103,17 @@ async function processTaskOp(
           })
           .where(eq(tasks.id, entityId));
         applied.push(entityId);
+        
+        // Check if this task is associated with a ticket and trigger completion check
+        const updatedTask = existingTask[0];
+        if (updatedTask.ticketId) {
+          // Trigger ticket completion check asynchronously (don't await to avoid blocking)
+          fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/support/check-completion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticketId: updatedTask.ticketId })
+          }).catch(err => console.error('Failed to check ticket completion:', err));
+        }
       }
     }
   } else if (action === 'delete') {

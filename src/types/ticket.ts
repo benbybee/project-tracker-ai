@@ -16,6 +16,7 @@ export type Ticket = {
   aiEta?: string | null;     // ISO date
   aiSummary?: string | null;
   suggestedProjectId?: string | null;
+  completedAt?: string | null; // ISO timestamp when all tasks completed
   attachments?: Array<{ id: string; name: string; url?: string; size?: number }> | null;
 };
 

@@ -30,6 +30,7 @@ export type Task = {
   projectName?: string | null;
   roleId?: string | null;
   role?: Role | string | null;
+  ticketId?: string | null;  // Associated support ticket
   dueDate?: string | null;    // ISO
   updatedAt?: string | null;  // ISO
   createdAt?: string | null;  // ISO

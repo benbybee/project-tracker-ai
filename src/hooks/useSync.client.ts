@@ -81,14 +81,25 @@ export function useSync() {
   }, []);
 
   const startSync = useCallback(async () => {
-    if (!syncManager) return;
-    
     try {
-      await syncManager.startSync();
+      setIsSyncing(true);
+      // Use the NEW sync system (pushAndPull from sync-manager.ts)
+      const { pushAndPull } = await import('@/lib/sync-manager');
+      await pushAndPull();
+      setIsSyncing(false);
+      
+      // Update sync status
+      if (isBrowser()) {
+        const db = await getDB();
+        const status = await db.getSyncStatus();
+        setSyncStatus(status);
+      }
     } catch (error) {
       console.error('Failed to start sync:', error);
+      setIsSyncing(false);
+      throw error;
     }
-  }, [syncManager]);
+  }, []);
 
   const addToSyncQueue = useCallback(async (
     entityType: 'task' | 'project' | 'role',

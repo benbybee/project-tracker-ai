@@ -3,10 +3,11 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import { db } from '@/server/db';
 import { tickets, ticketAttachments } from '@/server/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, ne } from 'drizzle-orm';
 
 // GET -> { tickets: Ticket[] }
-export async function GET() {
+// Query params: ?includeCompleted=true to show completed tickets
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -14,11 +15,23 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const allTickets = await db
-      .select()
-      .from(tickets)
-      .orderBy(desc(tickets.createdAt))
-      .limit(100); // Paginate later
+    // Check if we should include completed tickets
+    const { searchParams } = new URL(req.url);
+    const includeCompleted = searchParams.get('includeCompleted') === 'true';
+
+    // Query tickets, filtering out completed ones by default
+    const allTickets = includeCompleted 
+      ? await db
+          .select()
+          .from(tickets)
+          .orderBy(desc(tickets.createdAt))
+          .limit(100)
+      : await db
+          .select()
+          .from(tickets)
+          .where(ne(tickets.status, 'complete'))
+          .orderBy(desc(tickets.createdAt))
+          .limit(100);
 
     // Get attachments for each ticket
     const ticketsWithAttachments = await Promise.all(
@@ -43,6 +56,7 @@ export async function GET() {
           aiEta: ticket.aiEta || null,
           aiSummary: ticket.aiSummary,
           suggestedProjectId: ticket.suggestedProjectId || null,
+          completedAt: ticket.completedAt?.toISOString() || null,
           attachments: attachments.map(a => ({
             id: a.id,
             name: a.fileName,

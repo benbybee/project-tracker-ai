@@ -24,6 +24,7 @@ export default function TicketsPage() {
   const [suggestedProject, setSuggestedProject] = useState<{id:string; name:string; reason:string} | null>(null);
   const [availableProjects, setAvailableProjects] = useState<Array<{id:string; name:string}>>([]);
   const [loading, setLoading] = useState(true);
+  const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
   const { data: projects } = trpc.projects.list.useQuery({});
   const realtime = useRealtime();
@@ -31,6 +32,12 @@ export default function TicketsPage() {
   useEffect(() => {
     refresh();
   }, []);
+
+  // Refresh when showCompleted toggle changes
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCompleted]);
 
   // Listen for real-time updates
   useEffect(() => {
@@ -50,7 +57,8 @@ export default function TicketsPage() {
   async function refresh() {
     setLoading(true);
     try {
-      const res = await fetch('/api/support/list');
+      const url = `/api/support/list${showCompleted ? '?includeCompleted=true' : ''}`;
+      const res = await fetch(url);
       const data = await res.json().catch(()=>({tickets:[]}));
       setTickets(data.tickets || []);
     } finally {
@@ -172,13 +180,25 @@ export default function TicketsPage() {
           subtitle="Manage support requests and client feedback"
           badge={tickets.length}
           actions={
-            <button 
-              onClick={refresh} 
-              disabled={loading}
-              className="text-sm rounded-lg border border-gray-300 px-3 py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-            >
-              {loading ? 'Loading...' : 'Refresh'}
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setShowCompleted(!showCompleted)}
+                className={`text-sm rounded-lg border px-3 py-2 transition-colors ${
+                  showCompleted 
+                    ? 'bg-indigo-100 border-indigo-500 text-indigo-700' 
+                    : 'border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {showCompleted ? '✓ Showing Completed' : 'Show Completed'}
+              </button>
+              <button 
+                onClick={refresh} 
+                disabled={loading}
+                className="text-sm rounded-lg border border-gray-300 px-3 py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                {loading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
           }
         />
 
@@ -820,7 +840,7 @@ function TicketDetailsModal({
   );
 }
 
-function AssociatedTasksSection({ ticketId }: { ticketId: string }) {
+function AssociatedTasksSection({ ticketId }: { ticketId: string}) {
   const [tasks, setTasks] = useState<Array<{
     id: string;
     title: string;
@@ -831,31 +851,6 @@ function AssociatedTasksSection({ ticketId }: { ticketId: string }) {
     createdAt: string;
   }>>([]);
   const [loading, setLoading] = useState(true);
-  const realtime = useRealtime();
-
-  useEffect(() => {
-    fetchTasks();
-  }, [ticketId]);
-
-  // Listen for real-time updates
-  useEffect(() => {
-    const unsubscribeActivity = realtime.onActivity((activity) => {
-      // Refresh tasks when they are updated
-      if (activity.type === 'task_updated' && activity.data?.taskId) {
-        // Check if this task belongs to the current ticket
-        const taskId = activity.data.taskId;
-        const isRelevantTask = tasks.some(task => task.id === taskId);
-        
-        if (isRelevantTask) {
-          fetchTasks();
-        }
-      }
-    });
-
-    return () => {
-      unsubscribeActivity();
-    };
-  }, [ticketId, tasks, realtime]);
 
   async function fetchTasks() {
     setLoading(true);
@@ -871,6 +866,11 @@ function AssociatedTasksSection({ ticketId }: { ticketId: string }) {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticketId]);
 
   if (loading) {
     return (

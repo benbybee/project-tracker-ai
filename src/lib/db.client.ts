@@ -49,7 +49,7 @@ export async function getDB() {
         constructor() {
           super("tasktracker-v1");
           
-          this.version(3).stores({
+          this.version(4).stores({
             projects: "id, updatedAt, syncStatus, version",
             tasks: "id, projectId, status, updatedAt, syncStatus, version",
             roles: "id, updatedAt, syncStatus", 
@@ -138,6 +138,7 @@ export async function getDB() {
         async updateSyncStatus(status: any) {
           const existing = await this.getSyncStatus();
           const updated = {
+            id: 'main',  // Required primary key for syncStatus table
             isOnline: false,
             isSyncing: false,
             pendingCount: 0,
@@ -228,10 +229,19 @@ export async function getDB() {
       }
 
       const db = new TaskTrackerDB();
-      await db.open();
+      
+      try {
+        await db.open();
+      } catch (error) {
+        console.error('Failed to open database, attempting to delete and recreate:', error);
+        // If opening fails, delete the database and try again
+        await db.delete();
+        await db.open();
+      }
       
       // Initialize sync status only on client side
       await db.syncStatus.put({
+        id: 'main',  // Required primary key
         isOnline: navigator.onLine,
         isSyncing: false,
         pendingCount: 0,

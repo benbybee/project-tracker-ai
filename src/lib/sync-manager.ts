@@ -197,5 +197,6 @@ export async function handleStaleVersion({
 export async function getFreshBaseVersionForTask(id: string) {
   const db = await getDB();
   const t = await db.tasks.get(id);
-  return t?.version ?? 0;
+  // baseVersion should be the updatedAt timestamp (in ms) from server, not a version counter
+  return t?.updatedAt ? new Date(t.updatedAt).getTime() : 0;
 }
