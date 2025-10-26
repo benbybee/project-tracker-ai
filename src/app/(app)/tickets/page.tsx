@@ -90,11 +90,39 @@ export default function TicketsPage() {
     }
   }
 
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const filteredTickets = tickets.filter(ticket => {
+    if (statusFilter !== 'all' && ticket.status !== statusFilter) return false;
+    if (dateFilter !== 'all') {
+      const ticketDate = new Date(ticket.createdAt);
+      const now = new Date();
+      const daysDiff = Math.floor((now.getTime() - ticketDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (dateFilter === 'today' && daysDiff > 0) return false;
+      if (dateFilter === 'week' && daysDiff > 7) return false;
+      if (dateFilter === 'month' && daysDiff > 30) return false;
+    }
+    return true;
+  }).sort((a, b) => {
+    const aVal = a[sortBy as keyof typeof a];
+    const bVal = b[sortBy as keyof typeof b];
+    
+    if (sortOrder === 'asc') {
+      return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+    } else {
+      return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+    }
+  });
+
   return (
     <div className="px-6 py-4">
-      {/* Full Width Tickets List */}
-      <div className="rounded-xl border bg-white/80 backdrop-blur p-4">
-        <header className="mb-4 flex items-center justify-between">
+      {/* Header with Filters */}
+      <div className="rounded-xl border bg-white/80 backdrop-blur p-4 mb-4">
+        <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-semibold">🎫 Tickets ({tickets.length})</h1>
           <button 
             onClick={refresh} 
@@ -103,63 +131,128 @@ export default function TicketsPage() {
           >
             {loading ? 'Loading...' : 'Refresh'}
           </button>
-        </header>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {tickets.map(t=>(
-            <button 
-              key={t.id} 
-              onClick={()=>{ 
-                setActive(t); 
-                setSummary(''); 
-                setProposed([]); 
-                if (t.status === 'new') {
-                  markTicketAsViewed(t.id);
-                }
-              }}
-              className="text-left rounded-lg border p-4 hover:shadow-md transition-all hover:border-blue-300"
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Status:</label>
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
             >
-              <div className="flex items-start justify-between mb-2">
-                <div className="font-medium text-sm truncate">{t.projectName}</div>
-                <div className="flex gap-1 flex-shrink-0 ml-2">
-                  <span className={`text-xs rounded-full px-2 py-0.5 ${
-                    t.priority === 'urgent' ? 'bg-red-100 text-red-700' :
-                    t.priority === 'high' ? 'bg-orange-100 text-orange-700' :
-                    t.priority === 'normal' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {t.priority}
-                  </span>
-                  <span className={`text-xs rounded-full px-2 py-0.5 ${
-                    t.status === 'new' ? 'bg-green-100 text-green-700' :
-                    t.status === 'viewed' ? 'bg-blue-100 text-blue-700' :
-                    t.status === 'pending_tasks' ? 'bg-orange-100 text-orange-700' :
-                    t.status === 'complete' ? 'bg-emerald-100 text-emerald-700' :
-                    t.status === 'in_review' ? 'bg-yellow-100 text-yellow-700' :
-                    t.status === 'responded' ? 'bg-purple-100 text-purple-700' :
-                    t.status === 'converted' ? 'bg-indigo-100 text-indigo-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {t.status.replace('_', ' ')}
-                  </span>
-                </div>
-              </div>
-              <div className="text-xs text-gray-500 mb-2">
-                👤 {t.customerName} · {(t.domain || '—')}
-              </div>
-              <div className="text-sm text-gray-700 line-clamp-3">{t.details}</div>
-              {t.aiEta && (
-                <div className="text-xs text-blue-600 mt-2">ETA: {t.aiEta}</div>
-              )}
+              <option value="all">All</option>
+              <option value="new">New</option>
+              <option value="viewed">Viewed</option>
+              <option value="pending_tasks">Pending Tasks</option>
+              <option value="complete">Complete</option>
+              <option value="in_review">In Review</option>
+              <option value="responded">Responded</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Submitted:</label>
+            <select 
+              value={dateFilter} 
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Sort:</label>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="createdAt">Date</option>
+              <option value="priority">Priority</option>
+              <option value="status">Status</option>
+              <option value="projectName">Project</option>
+            </select>
+            <button 
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="text-sm border rounded px-2 py-1 hover:bg-gray-50"
+            >
+              {sortOrder === 'asc' ? '↑' : '↓'}
             </button>
-          ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tickets Table */}
+      <div className="rounded-xl border bg-white/80 backdrop-blur overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket #</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI Summary</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tasks</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredTickets.map(ticket => (
+                <TicketRow 
+                  key={ticket.id} 
+                  ticket={ticket}
+                  onOpen={() => {
+                    setActive(ticket);
+                    setSummary('');
+                    setProposed([]);
+                    if (ticket.status === 'new') {
+                      markTicketAsViewed(ticket.id);
+                    }
+                  }}
+                  onDelete={async () => {
+                    if (confirm('Are you sure you want to delete this ticket? This will also delete all associated tasks.')) {
+                      try {
+                        const res = await fetch('/api/support/tickets/delete', {
+                          method: 'DELETE',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ ticketId: ticket.id })
+                        });
+                        if (res.ok) {
+                          // Refresh the tickets list
+                          window.location.reload();
+                        } else {
+                          alert('Failed to delete ticket');
+                        }
+                      } catch (error) {
+                        console.error('Failed to delete ticket:', error);
+                        alert('Failed to delete ticket');
+                      }
+                    }
+                  }}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
         
-        {tickets.length===0 && !loading && (
+        {filteredTickets.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-gray-600 mb-2">No tickets yet</p>
+            <p className="text-gray-600 mb-2">No tickets found</p>
             <p className="text-sm text-gray-500">
-              Share the <a href="/support" className="text-blue-600 underline">/support</a> link with clients
+              {tickets.length === 0 ? (
+                <>Share the <a href="/support" className="text-blue-600 underline">/support</a> link with clients</>
+              ) : (
+                'Try adjusting your filters'
+              )}
             </p>
           </div>
         )}
@@ -231,6 +324,118 @@ function TicketReplyBox({ ticketId }: { ticketId: string }) {
         {success && <span className="text-sm text-green-600">✓ Reply sent!</span>}
       </div>
     </section>
+  );
+}
+
+function TicketRow({ 
+  ticket, 
+  onOpen, 
+  onDelete 
+}: {
+  ticket: Ticket;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
+  const [taskCount, setTaskCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTaskCount() {
+      try {
+        const res = await fetch(`/api/tickets/${ticket.id}/tasks`);
+        if (res.ok) {
+          const data = await res.json();
+          setTaskCount(data.tasks?.length || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch task count:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTaskCount();
+  }, [ticket.id]);
+
+  const ticketNumber = `#TC-${ticket.id.slice(-6).toUpperCase()}`;
+  const shortSummary = ticket.aiSummary ? 
+    (ticket.aiSummary.length > 50 ? ticket.aiSummary.substring(0, 50) + '...' : ticket.aiSummary) : 
+    'No summary';
+
+  return (
+    <tr className="hover:bg-gray-50">
+      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+        {ticketNumber}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-900">
+        {ticket.projectName}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">
+        {ticket.domain || '—'}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs">
+        <div className="truncate" title={ticket.aiSummary || 'No AI summary available'}>
+          {shortSummary}
+        </div>
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">
+        {ticket.suggestedProjectId ? 'Assigned' : '—'}
+      </td>
+      <td className="px-4 py-3">
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+          ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+          ticket.priority === 'normal' ? 'bg-blue-100 text-blue-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {ticket.priority}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">
+        {loading ? '...' : taskCount}
+      </td>
+      <td className="px-4 py-3">
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          ticket.status === 'new' ? 'bg-green-100 text-green-800' :
+          ticket.status === 'viewed' ? 'bg-blue-100 text-blue-800' :
+          ticket.status === 'pending_tasks' ? 'bg-orange-100 text-orange-800' :
+          ticket.status === 'complete' ? 'bg-emerald-100 text-emerald-800' :
+          ticket.status === 'in_review' ? 'bg-yellow-100 text-yellow-800' :
+          ticket.status === 'responded' ? 'bg-purple-100 text-purple-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {ticket.status.replace('_', ' ')}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpen}
+            className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+            title="Open ticket details"
+          >
+            Open
+          </button>
+          <button
+            onClick={() => {
+              // Trigger AI summary generation
+              const event = new CustomEvent('ai-summarize', { detail: { ticketId: ticket.id } });
+              window.dispatchEvent(event);
+            }}
+            className="text-green-600 hover:text-green-800 text-xs font-medium"
+            title="Generate AI summary"
+          >
+            AI Summary
+          </button>
+          <button
+            onClick={onDelete}
+            className="text-red-600 hover:text-red-800 text-xs font-medium"
+            title="Delete ticket"
+          >
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
 
