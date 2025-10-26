@@ -111,6 +111,11 @@ export default function TicketsPage() {
     const aVal = a[sortBy as keyof typeof a];
     const bVal = b[sortBy as keyof typeof b];
     
+    // Handle null/undefined values
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return sortOrder === 'asc' ? 1 : -1;
+    if (bVal == null) return sortOrder === 'asc' ? -1 : 1;
+    
     if (sortOrder === 'asc') {
       return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
     } else {
