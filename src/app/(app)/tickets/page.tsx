@@ -367,6 +367,10 @@ function TicketRow({
   const [loading, setLoading] = useState(true);
   const [assignedProject, setAssignedProject] = useState<string>(ticket.suggestedProjectId || '');
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  
+  // Use tRPC to fetch projects
+  const { data: projectsData } = trpc.projects.list.useQuery({});
+  const availableProjects = projectsData || [];
 
   useEffect(() => {
     async function fetchTaskData() {
@@ -389,6 +393,7 @@ function TicketRow({
         setLoading(false);
       }
     }
+
     fetchTaskData();
   }, [ticket.id]);
 
@@ -456,13 +461,15 @@ function TicketRow({
                   >
                     — Unassigned
                   </button>
-                  {/* TODO: Add actual projects from API */}
-                  <button
-                    onClick={() => assignProject('project-1')}
-                    className="block w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded"
-                  >
-                    Project 1
-                  </button>
+                  {availableProjects.map(project => (
+                    <button
+                      key={project.id}
+                      onClick={() => assignProject(project.id)}
+                      className="block w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded"
+                    >
+                      {project.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
