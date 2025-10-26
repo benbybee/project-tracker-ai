@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Home, FolderKanban, Columns3, CalendarDays, Settings, Command, ChevronLeft, ChevronRight, Archive, BarChart3, Globe, Bot, MessagesSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { isActive, triggerCommandPalette } from "@/lib/sidebar-utils";
+import { triggerCommandPalette } from "@/lib/sidebar-utils";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -21,7 +21,7 @@ const nav = [
   { href: "/settings",  label: "Settings",  icon: Settings },
 ];
 
-// Optimized NavItem component with optimistic updates
+// NavItem component with proper active state detection
 function NavItem({ href, icon: Icon, label, isCompact, isMobile }: { 
   href: string; 
   icon: any; 
@@ -30,38 +30,32 @@ function NavItem({ href, icon: Icon, label, isCompact, isMobile }: {
   isMobile: boolean;
 }) {
   const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
-  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   const isActive = useMemo(() => {
-    if (pendingHref) {
-      return pendingHref === href;
-    }
+    // Special case for dashboard
     if (href === "/dashboard") {
       return pathname === "/dashboard" || pathname === "/";
     }
-    return pathname.startsWith(href);
-  }, [pendingHref, pathname, href]);
-
-  // Clear pending state when pathname changes
-  useEffect(() => {
-    if (pendingHref && pathname.startsWith(href)) {
-      setPendingHref(null);
+    
+    // Exact match for the route or its sub-routes
+    // But prevent shorter paths from matching longer ones
+    if (pathname === href) {
+      return true;
     }
-  }, [pathname, href, pendingHref]);
-
-  const handleClick = (e: React.MouseEvent) => {
-    setPendingHref(href);
-    startTransition(() => {
-      // This signals pending UI; the actual navigation happens via Link
-    });
-  };
+    
+    // For sub-routes, ensure we match the path segment correctly
+    // e.g., /projects should not match /projects/website
+    if (pathname.startsWith(href + "/")) {
+      return true;
+    }
+    
+    return false;
+  }, [pathname, href]);
 
   return (
     <Link
       prefetch
       href={href}
-      onClick={handleClick}
       className="group relative"
       aria-current={isActive ? "page" : undefined}
     >
@@ -74,7 +68,6 @@ function NavItem({ href, icon: Icon, label, isCompact, isMobile }: {
         )}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        data-pending={isPending && pendingHref === href ? "true" : "false"}
       >
         {/* Left accent bar for active state */}
         {isActive && (
