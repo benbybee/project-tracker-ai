@@ -62,46 +62,41 @@ function NavItem({ href, icon: Icon, label, isCompact, isMobile }: {
 
   return (
     <Link
-      prefetch
       href={href}
-      className="group relative"
+      prefetch={true}
+      className={cn(
+        "group relative flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200",
+        "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100",
+        "hover:bg-white/10 active:bg-white/20 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50",
+        "hover:scale-[1.02] active:scale-[0.98]",
+        isActive && "bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg"
+      )}
       aria-current={isActive ? "page" : undefined}
     >
-      <motion.div
-        className={cn(
-          "flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200",
-          "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100",
-          "hover:bg-white/10 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50",
-          isActive && "bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg"
+      {/* Left accent bar for active state */}
+      {isActive && (
+        <motion.div
+          layoutId="sidebar-accent"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        />
+      )}
+      
+      <Icon className="h-5 w-5 flex-shrink-0" />
+      
+      <AnimatePresence>
+        {!isCompact && (
+          <motion.span
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: "auto" }}
+            exit={{ opacity: 0, width: 0 }}
+            transition={{ duration: 0.15 }}
+            className="font-medium overflow-hidden whitespace-nowrap"
+          >
+            {label}
+          </motion.span>
         )}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        {/* Left accent bar for active state */}
-        {isActive && (
-          <motion.div
-            layoutId="sidebar-accent"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          />
-        )}
-        
-        <Icon className="h-5 w-5 flex-shrink-0" />
-        
-        <AnimatePresence>
-          {!isCompact && (
-            <motion.span
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.15 }}
-              className="font-medium overflow-hidden whitespace-nowrap"
-            >
-              {label}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </motion.div>
+      </AnimatePresence>
     </Link>
   );
 }
