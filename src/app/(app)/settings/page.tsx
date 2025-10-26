@@ -91,48 +91,62 @@ export default function SettingsPage() {
           {isLoading ? (
             <div className="text-center py-4">Loading roles...</div>
           ) : roles && roles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {roles.map((role) => (
-                <div
-                  key={role.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div
-                        className="w-4 h-4 rounded-full mr-3"
-                        style={{ backgroundColor: role.color }}
-                      ></div>
-                      <span className="font-medium text-gray-900">{role.name}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          // TODO: Implement edit role functionality
-                          console.log('Edit role:', role.id);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          // TODO: Implement delete role functionality
-                          console.log('Delete role:', role.id);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-2">
-                    Created {new Date(role.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {roles.map((role) => (
+                    <tr key={role.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex items-center">
+                          <div
+                            className="w-4 h-4 rounded-full mr-3"
+                            style={{ backgroundColor: role.color }}
+                          ></div>
+                          <span className="font-medium text-gray-900">{role.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 font-mono">
+                        {role.color}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {new Date(role.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              // TODO: Implement edit role functionality
+                              console.log('Edit role:', role.id);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              // TODO: Implement delete role functionality
+                              console.log('Delete role:', role.id);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">

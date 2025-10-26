@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import { Download, Calendar, FolderOpen, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { trpc } from '@/lib/trpc';
@@ -214,55 +213,76 @@ export default function CompletedTasksPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasks.map((task, index) => (
-              <motion.div
-                key={task.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="rounded-xl border border-gray-200 bg-white/80 p-4 hover:shadow-md transition-all"
-              >
-                <h3 className="font-semibold text-gray-900 mb-2">{task.title}</h3>
-                {task.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">{task.description}</p>
-                )}
-                
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {task.project && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700">
-                      {task.project.name}
-                    </span>
-                  )}
-                  {task.role && (
-                    <span
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs"
-                      style={{
-                        backgroundColor: `${task.role.color}22`,
-                        color: task.role.color,
-                      }}
-                    >
-                      {task.role.name}
-                    </span>
-                  )}
-                  {task.archived && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                      Archived
-                    </span>
-                  )}
-                </div>
-                
-                <p className="text-xs text-gray-500">
-                  Completed {task.archivedAt
-                    ? format(new Date(task.archivedAt), 'MMM d, yyyy')
-                    : format(new Date(task.updatedAt), 'MMM d, yyyy')}
-                </p>
-              </motion.div>
-            ))}
+          <div className="rounded-xl border bg-white/80 backdrop-blur overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {tasks.map((task) => (
+                    <tr key={task.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                          {task.description && (
+                            <div className="text-sm text-gray-600 line-clamp-2 mt-1">{task.description}</div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {task.project ? (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                            {task.project.name}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {task.role ? (
+                          <div className="flex items-center">
+                            <div
+                              className="w-3 h-3 rounded-full mr-2"
+                              style={{ backgroundColor: task.role.color }}
+                            ></div>
+                            <span className="text-gray-600">{task.role.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {task.archived ? (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            Archived
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            Completed
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {task.archivedAt
+                          ? format(new Date(task.archivedAt), 'MMM d, yyyy')
+                          : format(new Date(task.updatedAt), 'MMM d, yyyy')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {hasMore && (
-            <div className="text-center">
+            <div className="text-center mt-6">
               <button
                 onClick={loadMore}
                 disabled={loading}

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 import { togglePin } from '@/lib/projects-client';
+import { Pin, Eye } from 'lucide-react';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -60,59 +61,85 @@ export default function ProjectsPage() {
         </select>
       </div>
 
-      {/* Projects Grid */}
+      {/* Projects Table */}
       {isLoading ? (
         <div className="text-center py-8">Loading projects...</div>
       ) : projects && projects.length > 0 ? (
         <>
           <p className="text-xs text-gray-500 mb-4">💡 Pinned projects appear first</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => router.push(`/projects/${project.id}`)}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="text-xs rounded-full border border-gray-300 px-2 py-1 hover:bg-gray-50 transition-colors"
-                      onClick={(e)=>{ e.stopPropagation(); handleTogglePin(project.id, project.pinned ?? false); }}
-                    >
-                      {project.pinned ? '📌 Pinned' : '📌 Pin'}
-                    </button>
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      project.type === 'website'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {project.type}
-                  </span>
-                </div>
-              </div>
-              
-              {project.description && (
-                <p className="text-gray-600 text-sm mb-3">{project.description}</p>
-              )}
-              
-              {project.role && (
-                <div className="flex items-center mb-3">
-                  <div
-                    className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: project.role.color }}
-                  ></div>
-                  <span className="text-sm text-gray-600">{project.role.name}</span>
-                </div>
-              )}
-
-              <div className="text-xs text-gray-500">
-                Created {new Date(project.createdAt).toLocaleDateString()}
-              </div>
+          <div className="rounded-xl border bg-white/80 backdrop-blur overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {projects.map((project) => (
+                    <tr key={project.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        {project.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            project.type === 'website'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {project.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.role && (
+                          <div className="flex items-center">
+                            <div
+                              className="w-3 h-3 rounded-full mr-2"
+                              style={{ backgroundColor: project.role.color }}
+                            ></div>
+                            <span className="text-gray-600">{project.role.name}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {project.description || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {new Date(project.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTogglePin(project.id, project.pinned ?? false);
+                            }}
+                            className="text-gray-600 hover:text-gray-900"
+                            title={project.pinned ? 'Unpin' : 'Pin'}
+                          >
+                            <Pin className={`h-4 w-4 ${project.pinned ? 'fill-current' : ''}`} />
+                          </button>
+                          <button
+                            onClick={() => router.push(`/projects/${project.id}`)}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="View Project"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
           </div>
         </>
       ) : (
