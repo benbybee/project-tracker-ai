@@ -69,7 +69,7 @@ export async function getDB() {
           // Add hooks for automatic sync status tracking and version management
           this.projects.hook(
             'creating',
-            (primKey: any, obj: any, trans: any) => {
+            (_primKey: any, obj: any, _trans: any) => {
               (obj as any).syncStatus = 'pending';
               (obj as any).updatedAt = new Date().toISOString();
               (obj as any).version = 1;
@@ -78,14 +78,14 @@ export async function getDB() {
 
           this.projects.hook(
             'updating',
-            (modifications: any, primKey: any, obj: any, trans: any) => {
+            (modifications: any, _primKey: any, obj: any, _trans: any) => {
               (modifications as any).syncStatus = 'pending';
               (modifications as any).updatedAt = new Date().toISOString();
               (modifications as any).version = (obj as any).version + 1;
             }
           );
 
-          this.tasks.hook('creating', (primKey: any, obj: any, trans: any) => {
+          this.tasks.hook('creating', (_primKey: any, obj: any, _trans: any) => {
             (obj as any).syncStatus = 'pending';
             (obj as any).updatedAt = new Date().toISOString();
             (obj as any).version = 1;
@@ -93,21 +93,21 @@ export async function getDB() {
 
           this.tasks.hook(
             'updating',
-            (modifications: any, primKey: any, obj: any, trans: any) => {
+            (modifications: any, _primKey: any, obj: any, _trans: any) => {
               (modifications as any).syncStatus = 'pending';
               (modifications as any).updatedAt = new Date().toISOString();
               (modifications as any).version = (obj as any).version + 1;
             }
           );
 
-          this.roles.hook('creating', (primKey: any, obj: any, trans: any) => {
+          this.roles.hook('creating', (_primKey: any, obj: any, _trans: any) => {
             (obj as any).syncStatus = 'pending';
             (obj as any).updatedAt = new Date().toISOString();
           });
 
           this.roles.hook(
             'updating',
-            (modifications: any, primKey: any, obj: any, trans: any) => {
+            (modifications: any, _primKey: any, _obj: any, _trans: any) => {
               (modifications as any).syncStatus = 'pending';
               (modifications as any).updatedAt = new Date().toISOString();
             }
@@ -115,7 +115,7 @@ export async function getDB() {
 
           this.notifications.hook(
             'creating',
-            (primKey: any, obj: any, trans: any) => {
+            (_primKey: any, obj: any, _trans: any) => {
               (obj as any).syncStatus = 'pending';
               (obj as any).updatedAt = new Date().toISOString();
             }
@@ -123,7 +123,7 @@ export async function getDB() {
 
           this.notifications.hook(
             'updating',
-            (modifications: any, primKey: any, obj: any, trans: any) => {
+            (modifications: any, _primKey: any, _obj: any, _trans: any) => {
               (modifications as any).syncStatus = 'pending';
               (modifications as any).updatedAt = new Date().toISOString();
             }

@@ -1,6 +1,6 @@
 import { db } from '@/server/db';
 import { taskAnalytics, userPatterns, tasks } from '@/server/db/schema';
-import { eq, and, gte, sql, desc } from 'drizzle-orm';
+import { eq, and, gte, sql } from 'drizzle-orm';
 
 export interface ProductivityPattern {
   userId: string;
@@ -196,7 +196,7 @@ export class PatternAnalyzer {
   /**
    * Analyze postponement patterns (tasks that get rescheduled)
    */
-  private async analyzePostponementPattern(userId: string): Promise<{
+  private async analyzePostponementPattern(_userId: string): Promise<{
     mostPostponedTypes: string[];
     avgPostponementDays: number;
   }> {

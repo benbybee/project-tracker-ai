@@ -8,7 +8,6 @@ import superjson from 'superjson';
 import { ZodError } from 'zod';
 
 export const createTRPCContext = async (opts: { req: NextRequest }) => {
-  const { req } = opts;
   const session = await getServerSession(authOptions);
 
   return {

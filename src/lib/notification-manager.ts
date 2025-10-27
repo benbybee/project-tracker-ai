@@ -1,11 +1,9 @@
 'use client';
 
-import { NotificationToast } from '@/components/notifications/NotificationToast';
-
-interface NotificationManager {
-  notifications: Map<string, any>;
-  listeners: Set<(notifications: any[]) => void>;
-}
+// interface NotificationManager {
+//   notifications: Map<string, any>;
+//   listeners: Set<(notifications: any[]) => void>;
+// }
 
 class NotificationManagerClass {
   private notifications = new Map<string, any>();

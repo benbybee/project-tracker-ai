@@ -3,12 +3,7 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import {
-  MessageCircle,
-  Users,
-  ChevronDown,
-  ChevronRight,
-} from 'lucide-react';
+import { MessageCircle, Users, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ThreadListProps {

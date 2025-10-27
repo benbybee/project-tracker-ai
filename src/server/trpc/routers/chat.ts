@@ -7,7 +7,7 @@ import {
   messageReactions,
   threadParticipants,
 } from '@/server/db/schema';
-import { eq, desc, and, gte, count, sql } from 'drizzle-orm';
+import { eq, desc, and, count, sql } from 'drizzle-orm';
 
 export const chatRouter = createTRPCRouter({
   // Get threads for a project

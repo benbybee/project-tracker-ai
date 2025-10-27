@@ -46,7 +46,7 @@ export function usePresence() {
   }, [session]);
 
   const updatePresence = useCallback(
-    (data: Partial<PresenceData>) => {
+    (_data: Partial<PresenceData>) => {
       if (!session?.user) return;
 
       // In a real implementation, this would send presence data to the WebSocket
@@ -55,7 +55,7 @@ export function usePresence() {
   );
 
   const startTyping = useCallback(
-    (entityType: 'task' | 'project', entityId: string) => {
+    (_entityType: 'task' | 'project', _entityId: string) => {
       if (!session?.user) return;
 
       // In a real implementation, this would send typing indicator to the WebSocket
@@ -64,7 +64,7 @@ export function usePresence() {
   );
 
   const stopTyping = useCallback(
-    (entityType: 'task' | 'project', entityId: string) => {
+    (_entityType: 'task' | 'project', _entityId: string) => {
       if (!session?.user) return;
 
       // In a real implementation, this would clear typing indicator via the WebSocket

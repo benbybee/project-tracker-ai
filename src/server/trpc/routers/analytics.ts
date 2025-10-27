@@ -7,7 +7,7 @@ import {
   aiSuggestions,
   tasks,
 } from '@/server/db/schema';
-import { eq, and, desc, gte, sql } from 'drizzle-orm';
+import { eq, and, desc, gte } from 'drizzle-orm';
 
 export const analyticsRouter = createTRPCRouter({
   // Record when a task starts (status changes to in_progress)

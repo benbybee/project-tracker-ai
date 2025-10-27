@@ -60,7 +60,7 @@ export function useSync() {
           setSyncProgress(progress);
         });
 
-        manager.on('complete', (progress: SyncProgress) => {
+        manager.on('complete', () => {
           setIsSyncing(false);
           setSyncProgress(null);
 
@@ -170,7 +170,7 @@ export function useEntitySyncStatus(
 }
 
 export function useOfflineOperations() {
-  const [syncManager, setSyncManager] = useState<any>(null);
+  const [, setSyncManager] = useState<any>(null);
 
   useEffect(() => {
     if (!isBrowser()) return;

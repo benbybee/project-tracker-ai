@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
-import { db } from '@/server/db';
 import { projects, tasks, roles } from '@/server/db';
-import { eq, and, sql, isNotNull, lt, gte, lte, or, desc } from 'drizzle-orm';
+import { eq, and, sql, isNotNull, lt, gte, lte, desc } from 'drizzle-orm';
 
 export const dashboardRouter = createTRPCRouter({
   get: protectedProcedure

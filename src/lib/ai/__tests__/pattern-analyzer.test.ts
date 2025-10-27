@@ -82,11 +82,11 @@ describe('PatternAnalyzer', () => {
       const userId = 'test-completion-times';
 
       // Test data: P1 tasks take 75 minutes on average
-      const mockAnalytics = [
-        { priority: '1', duration: 60 },
-        { priority: '1', duration: 90 },
-        { priority: '2', duration: 30 },
-      ];
+      // const mockAnalytics = [
+      //   { priority: '1', duration: 60 },
+      //   { priority: '1', duration: 90 },
+      //   { priority: '2', duration: 30 },
+      // ];
 
       const completionTimes = await (analyzer as any).analyzeCompletionTimes(
         userId
@@ -125,13 +125,13 @@ describe('PatternAnalyzer', () => {
       const userId = 'test-low-confidence';
 
       // Mock database to return very few records
-      const mockDb = {
-        select: vi.fn(() => ({
-          from: vi.fn(() => ({
-            where: vi.fn(() => Promise.resolve([{ count: 5 }])),
-          })),
-        })),
-      };
+      // const mockDb = {
+      //   select: vi.fn(() => ({
+      //     from: vi.fn(() => ({
+      //       where: vi.fn(() => Promise.resolve([{ count: 5 }])),
+      //     })),
+      //   })),
+      // };
 
       const confidence = await (analyzer as any).calculateConfidence(userId);
 
@@ -143,13 +143,13 @@ describe('PatternAnalyzer', () => {
     it('should calculate high confidence with many data points', async () => {
       const userId = 'test-high-confidence';
 
-      const mockDb = {
-        select: vi.fn(() => ({
-          from: vi.fn(() => ({
-            where: vi.fn(() => Promise.resolve([{ count: 60 }])),
-          })),
-        })),
-      };
+      // const mockDb = {
+      //   select: vi.fn(() => ({
+      //     from: vi.fn(() => ({
+      //       where: vi.fn(() => Promise.resolve([{ count: 60 }])),
+      //     })),
+      //   })),
+      // };
 
       const confidence = await (analyzer as any).calculateConfidence(userId);
 

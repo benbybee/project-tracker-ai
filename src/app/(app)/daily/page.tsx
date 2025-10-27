@@ -23,12 +23,8 @@ export default function DailyPlannerPage() {
   const [editing, setEditing] = useState<Task | null>(null);
   const [showAiSuggestions] = useState(true);
 
-  const {
-    suggestions,
-    fetchSuggestions,
-    acceptSuggestion,
-    rejectSuggestion,
-  } = useAiSuggestions();
+  const { suggestions, fetchSuggestions, acceptSuggestion, rejectSuggestion } =
+    useAiSuggestions();
 
   // Load tasks from Dexie on mount
   useEffect(() => {

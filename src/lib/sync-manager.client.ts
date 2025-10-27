@@ -147,9 +147,9 @@ class SyncManager {
   }
 
   private async syncProject(
-    entityId: string,
-    operationType: string,
-    payload: any
+    _entityId: string,
+    _operationType: string,
+    _payload: any
   ): Promise<void> {
     // TODO: Implement proper tRPC sync with lazy import
     // const { trpc } = await import('./trpc');
@@ -189,9 +189,9 @@ class SyncManager {
   }
 
   private async syncRole(
-    entityId: string,
+    _entityId: string,
     operationType: string,
-    payload: any
+    _payload: any
   ): Promise<void> {
     // Roles are typically managed server-side, but we can handle updates
     if (operationType === 'update') {
@@ -279,7 +279,7 @@ class SyncManager {
 export { SyncManager };
 
 export async function createSyncManager() {
-  const db = await getDB();
+  await getDB();
   return new SyncManager();
 }
 

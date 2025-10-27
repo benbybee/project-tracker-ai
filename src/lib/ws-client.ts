@@ -81,10 +81,16 @@ class WebSocketClient {
       };
 
       this.ws.onclose = (event) => {
-        logger.info('WebSocket disconnected:', { code: event.code, reason: event.reason });
+        logger.info('WebSocket disconnected:', {
+          code: event.code,
+          reason: event.reason,
+        });
         this.setStatus('disconnected');
         this.stopHeartbeat();
-        this.emit('disconnected', { code: event.code, reason: event.reason });
+        this.emit('disconnected', {
+          code: event.code,
+          reason: event.reason,
+        });
 
         if (event.code !== 1000) {
           this.scheduleReconnect();

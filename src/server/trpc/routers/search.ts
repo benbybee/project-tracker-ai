@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { db } from '@/server/db';
-import { embeddings, tasks, projects, roles } from '@/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { tasks, projects } from '@/server/db/schema';
+import { sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import OpenAI from 'openai';
 

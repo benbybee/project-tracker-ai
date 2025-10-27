@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createTRPCRouter, publicProcedure, protectedProcedure } from '../trpc';
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { logger } from '@/lib/logger';
 
 export const realtimeRouter = createTRPCRouter({
@@ -59,7 +59,7 @@ export const realtimeRouter = createTRPCRouter({
         version: z.number().default(1),
       })
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       // In a real implementation, this would log to the database
       logger.debug('Logging real-time event', { input });
       return { success: true };
@@ -73,7 +73,7 @@ export const realtimeRouter = createTRPCRouter({
         limit: z.number().default(50),
       })
     )
-    .query(async ({ input }) => {
+    .query(async () => {
       // In a real implementation, this would query the database
       return [];
     }),

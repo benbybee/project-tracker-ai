@@ -12,10 +12,8 @@ import {
 import {
   eq,
   and,
-  or,
   gte,
   lte,
-  isNull,
   isNotNull,
   asc,
   desc,

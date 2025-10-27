@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
-import { db } from '@/server/db';
 import { projects, roles } from '@/server/db';
 import { eq, and, like, or, desc } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
