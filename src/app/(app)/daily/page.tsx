@@ -136,11 +136,6 @@ export default function DailyPlannerPage() {
 
             <DailyPlanSuggestions
               onAcceptPlan={handleAcceptPlan}
-              tasks={todayTasks.map((t) => ({
-                id: t.id,
-                title: t.title,
-                priority: String(t.priorityScore || '2'),
-              }))}
               triggerGenerate={triggerGenerate}
               onGenerateComplete={() => setTriggerGenerate(false)}
             />

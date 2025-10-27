@@ -11,7 +11,7 @@ import { trpc } from '@/lib/trpc';
 export function Topbar() {
   const [isMobile, setIsMobile] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  
+
   // Fetch projects to get a default project ID
   const { data: projects } = trpc.projects.list.useQuery({});
   const defaultProjectId = projects?.[0]?.id || '';

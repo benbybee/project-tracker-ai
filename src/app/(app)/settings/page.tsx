@@ -93,7 +93,11 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              <Button type="submit" disabled={createRoleMutation.isLoading} className="w-full sm:w-auto">
+              <Button
+                type="submit"
+                disabled={createRoleMutation.isLoading}
+                className="w-full sm:w-auto"
+              >
                 {createRoleMutation.isLoading ? 'Creating...' : 'Create Role'}
               </Button>
             </div>

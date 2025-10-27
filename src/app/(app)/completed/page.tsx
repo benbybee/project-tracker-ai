@@ -262,7 +262,7 @@ export default function CompletedTasksPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2 mb-3">
                     {task.project && (
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">

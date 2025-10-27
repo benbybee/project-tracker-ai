@@ -13,17 +13,9 @@ import {
 } from 'lucide-react';
 import type { DailyPlan } from '@/lib/ai/planning-engine';
 
-interface Task {
-  id: string;
-  title: string;
-  priority?: string;
-  estimatedMinutes?: number;
-}
-
 interface DailyPlanSuggestionsProps {
   onAcceptPlan?: (plan: DailyPlan) => Promise<void>;
   onRejectPlan?: (plan: DailyPlan) => void;
-  tasks?: Task[];
   triggerGenerate?: boolean;
   onGenerateComplete?: () => void;
 }
@@ -31,7 +23,6 @@ interface DailyPlanSuggestionsProps {
 export function DailyPlanSuggestions({
   onAcceptPlan,
   onRejectPlan,
-  tasks = [],
   triggerGenerate = false,
   onGenerateComplete,
 }: DailyPlanSuggestionsProps) {
@@ -122,7 +113,8 @@ export function DailyPlanSuggestions({
   };
 
   return (
-    <div className="space-y-4">{/* Generate Plan Button - Removed duplicate, use PlanActionBar instead */}
+    <div className="space-y-4">
+      {/* Generate Plan Button - Removed duplicate, use PlanActionBar instead */}
 
       {/* Loading State */}
       {isLoading && (
