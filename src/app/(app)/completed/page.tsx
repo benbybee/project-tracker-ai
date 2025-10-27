@@ -48,7 +48,7 @@ export default function CompletedTasksPage() {
 
   // Extract unique projects and roles for filters
   const projects = projectsList.map((p) => ({ id: p.id, name: p.name }));
-  const roles = (rolesList || []).map((r: any) => ({
+  const roles = (rolesList || []).map((r) => ({
     id: r.id,
     name: r.name,
     color: r.color,

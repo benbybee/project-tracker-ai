@@ -181,7 +181,13 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
       );
       // Don't throw - allow the app to continue even if WebSocket fails
     }
-  }, []);
+  }, [
+    notificationListeners,
+    activityListeners,
+    chatMessageListeners,
+    chatTypingListeners,
+    chatThreadListeners,
+  ]);
 
   const updatePresence = (data: any) => {
     if (wsClient) {

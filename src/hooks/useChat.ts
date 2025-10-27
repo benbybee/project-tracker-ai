@@ -1,15 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useRealtime } from '@/app/providers';
 import { getDB } from '@/lib/db.client';
 import { useNotifications } from './useNotifications';
 import { useActivityFeed } from './useActivityFeed';
 
+interface OfflineMessage {
+  id: string;
+  threadId: string;
+  content: string;
+  messageType: string;
+  metadata?: Record<string, unknown>;
+}
+
 export function useChat(threadId: string) {
   const [isOnline, setIsOnline] = useState(true);
-  const [offlineMessages, setOfflineMessages] = useState<any[]>([]);
+  const [offlineMessages, setOfflineMessages] = useState<OfflineMessage[]>([]);
   const { onChatMessage, broadcastChatMessage } = useRealtime();
   const { createNotification } = useNotifications();
   const { logActivity } = useActivityFeed();
@@ -59,6 +67,49 @@ export function useChat(threadId: string) {
   const addReactionMutation = trpc.chat.addReaction.useMutation();
   const markThreadReadMutation = trpc.chat.markThreadRead.useMutation();
 
+  const loadOfflineMessages = useCallback(async () => {
+    try {
+      const db = await getDB();
+      const messages = await db.getOfflineMessages();
+      const threadMessages = messages.filter(
+        (msg: OfflineMessage) => msg.threadId === threadId
+      );
+      setOfflineMessages(threadMessages);
+    } catch (error) {
+      console.error('Failed to load offline messages:', error);
+    }
+  }, [threadId]);
+
+  const syncOfflineMessages = useCallback(async () => {
+    try {
+      const db = await getDB();
+      const messages = await db.getOfflineMessages();
+
+      for (const message of messages) {
+        try {
+          await sendMessageMutation.mutateAsync({
+            threadId: message.threadId,
+            content: message.content,
+            messageType: message.messageType,
+            metadata: message.metadata,
+          });
+
+          // Remove from offline storage on success
+          await db.removeOfflineMessage(message.id);
+        } catch (error) {
+          console.error('Failed to sync offline message:', error);
+          // Increment retry count
+          await db.incrementRetryCount(message.id);
+        }
+      }
+
+      // Reload offline messages
+      await loadOfflineMessages();
+    } catch (error) {
+      console.error('Failed to sync offline messages:', error);
+    }
+  }, [sendMessageMutation, loadOfflineMessages]);
+
   // Listen for real-time messages
   useEffect(() => {
     const unsubscribe = onChatMessage((message) => {
@@ -88,55 +139,12 @@ export function useChat(threadId: string) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [syncOfflineMessages]);
 
   // Load offline messages on mount
   useEffect(() => {
     loadOfflineMessages();
-  }, [threadId]);
-
-  const loadOfflineMessages = async () => {
-    try {
-      const db = await getDB();
-      const messages = await db.getOfflineMessages();
-      const threadMessages = messages.filter(
-        (msg: any) => msg.threadId === threadId
-      );
-      setOfflineMessages(threadMessages);
-    } catch (error) {
-      console.error('Failed to load offline messages:', error);
-    }
-  };
-
-  const syncOfflineMessages = async () => {
-    try {
-      const db = await getDB();
-      const messages = await db.getOfflineMessages();
-
-      for (const message of messages) {
-        try {
-          await sendMessageMutation.mutateAsync({
-            threadId: message.threadId,
-            content: message.content,
-            messageType: message.messageType,
-            metadata: message.metadata,
-          });
-
-          // Remove from offline storage on success
-          await db.removeOfflineMessage(message.id);
-        } catch (error) {
-          console.error('Failed to sync offline message:', error);
-          // Increment retry count
-          await db.incrementRetryCount(message.id);
-        }
-      }
-
-      // Reload offline messages
-      await loadOfflineMessages();
-    } catch (error) {
-      console.error('Failed to sync offline messages:', error);
-    }
-  };
+  }, [loadOfflineMessages]);
 
   const sendMessage = async (
     content: string,

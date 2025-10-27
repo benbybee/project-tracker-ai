@@ -45,13 +45,16 @@ export default function DailyPlannerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAiSuggestions]);
 
-  const today = new Date();
-  const start = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate()
-  );
-  const end = new Date(start.getTime() + 86400000);
+  const { start, end } = useMemo(() => {
+    const today = new Date();
+    const start = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const end = new Date(start.getTime() + 86400000);
+    return { start, end };
+  }, []);
 
   const todayTasks = useMemo(
     () =>
@@ -230,7 +233,7 @@ function Section({
 }
 
 function BulkBar({ ids, clear }: { ids: string[]; clear: () => void }) {
-  async function post(path: string, body: any) {
+  async function post(path: string, body: Record<string, unknown>) {
     try {
       await fetch(path, {
         method: 'POST',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Ticket } from '@/types/ticket';
 import { trpc } from '@/lib/trpc';
 import { Eye, Trash2, CheckCircle, Ticket as TicketIcon } from 'lucide-react';
@@ -36,15 +36,26 @@ export default function TicketsPage() {
 
   const realtime = useRealtime();
 
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const url = `/api/support/list${showCompleted ? '?includeCompleted=true' : ''}`;
+      const res = await fetch(url);
+      const data = await res.json().catch(() => ({ tickets: [] }));
+      setTickets(data.tickets || []);
+    } finally {
+      setLoading(false);
+    }
+  }, [showCompleted]);
+
   useEffect(() => {
     refresh();
-  }, []);
+  }, [refresh]);
 
   // Refresh when showCompleted toggle changes
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCompleted]);
+  }, [refresh, showCompleted]);
 
   // Listen for real-time updates
   useEffect(() => {
@@ -63,18 +74,6 @@ export default function TicketsPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  async function refresh() {
-    setLoading(true);
-    try {
-      const url = `/api/support/list${showCompleted ? '?includeCompleted=true' : ''}`;
-      const res = await fetch(url);
-      const data = await res.json().catch(() => ({ tickets: [] }));
-      setTickets(data.tickets || []);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function aiPropose() {
     if (!active) return;
