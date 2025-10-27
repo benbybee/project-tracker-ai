@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Task, TaskStatus } from '@/types/task';
 import { getDB } from '@/lib/db.client';
-import { enqueueOp } from '@/lib/ops-helpers';
+import { enqueueOp, enqueueTaskDelete } from '@/lib/ops-helpers';
 import { getFreshBaseVersionForTask } from '@/lib/sync-manager';
 import { useTasksStore } from '@/lib/tasks-store';
 import {
@@ -30,9 +30,10 @@ interface TaskEditModalProps {
 }
 
 export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
-  const { upsert } = useTasksStore();
+  const { upsert, remove } = useTasksStore();
   const [form, setForm] = useState<Task>(task);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Update form when task prop changes
   useEffect(() => {
@@ -88,6 +89,39 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
       alert('Failed to update task. Please try again.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this task? This action cannot be undone.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+
+    try {
+      // Optimistic removal from store
+      remove(task.id);
+
+      // Delete from Dexie
+      const db = await getDB();
+      await db.tasks.delete(task.id);
+
+      // Enqueue delete operation for sync
+      await enqueueTaskDelete(task.id, task.projectId || '');
+
+      onClose();
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      alert('Failed to delete task. Please try again.');
+      // Revert optimistic update on error
+      upsert(task);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -192,18 +226,28 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex justify-between">
           <Button
             type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={saving}
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={saving || deleting}
           >
-            Cancel
+            {deleting ? 'Deleting...' : 'Delete Task'}
           </Button>
-          <Button type="button" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={saving || deleting}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={saving || deleting}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
