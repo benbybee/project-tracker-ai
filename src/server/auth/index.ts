@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { db, users } from '@/server/db';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
 
 declare module 'next-auth' {
   interface Session {
@@ -54,7 +55,7 @@ export const authOptions: NextAuthOptions = {
             email: user[0].email,
           };
         } catch (error) {
-          console.error('Auth error:', error);
+          logger.error('Authentication error', error);
           return null;
         }
       },

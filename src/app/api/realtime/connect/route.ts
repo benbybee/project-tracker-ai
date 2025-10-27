@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
+import { logger } from '@/lib/logger';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return new Response('Unauthorized', { status: 401 });
     }
@@ -13,19 +14,22 @@ export async function GET(req: NextRequest) {
     // This is a placeholder for WebSocket upgrade
     // In a real implementation, you'd handle WebSocket upgrade here
     // For now, we'll return a simple response indicating the endpoint is ready
-    
-    return new Response(JSON.stringify({
-      status: 'ready',
-      userId: session.user.id,
-      message: 'WebSocket endpoint ready for connection'
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+
+    return new Response(
+      JSON.stringify({
+        status: 'ready',
+        userId: session.user.id,
+        message: 'WebSocket endpoint ready for connection',
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error) {
-    console.error('WebSocket connection error:', error);
+    logger.error('WebSocket connection error', error);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
@@ -33,7 +37,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return new Response('Unauthorized', { status: 401 });
     }
@@ -45,22 +49,22 @@ export async function POST(req: NextRequest) {
     switch (type) {
       case 'presence_update':
         // Update user presence
-        console.log('Presence update:', data);
+        logger.debug('Presence update', { data });
         break;
       case 'typing_start':
         // User started typing
-        console.log('User started typing:', data);
+        logger.debug('User started typing', { data });
         break;
       case 'typing_stop':
         // User stopped typing
-        console.log('User stopped typing:', data);
+        logger.debug('User stopped typing', { data });
         break;
       case 'entity_update':
         // Entity was updated
-        console.log('Entity update:', data);
+        logger.debug('Entity update', { data });
         break;
       default:
-        console.log('Unknown event type:', type, data);
+        logger.debug('Unknown event type', { type, data });
     }
 
     return new Response(JSON.stringify({ success: true }), {
@@ -70,7 +74,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('WebSocket message error:', error);
+    logger.error('WebSocket message error', error);
     return new Response('Internal Server Error', { status: 500 });
   }
 }

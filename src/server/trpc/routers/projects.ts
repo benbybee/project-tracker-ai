@@ -5,6 +5,7 @@ import { projects, roles } from '@/server/db';
 import { eq, and, like, or, desc } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { upsertEmbedding } from '@/server/search/upsertEmbedding';
+import { logProjectActivity } from '@/lib/activity-logger';
 
 const ProjectCreate = z.object({
   name: z.string().min(2),
@@ -48,7 +49,8 @@ export const projectsRouter = createTRPCRouter({
         conditions.push(eq(projects.roleId, input.roleId));
       }
 
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
 
       return await ctx.db
         .select({
@@ -126,26 +128,46 @@ export const projectsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(ProjectCreate)
     .mutation(async ({ input, ctx }) => {
-      const [row] = await ctx.db.insert(projects).values({
-        name: input.name,
-        type: input.type,
-        description: input.description ?? '',
-        roleId: input.roleId ?? null,
-        domain: input.domain ?? null,
-        hostingProvider: input.hostingProvider ?? null,
-        dnsStatus: input.dnsStatus ?? null,
-        goLiveDate: input.goLiveDate ? input.goLiveDate : null,
-        repoUrl: input.repoUrl ?? null,
-        stagingUrl: input.stagingUrl ?? null,
-        // Set initial websiteStatus for website projects
-        websiteStatus: input.type === 'website' ? 'discovery' : null,
-      }).returning();
+      const [row] = await ctx.db
+        .insert(projects)
+        .values({
+          name: input.name,
+          type: input.type,
+          description: input.description ?? '',
+          roleId: input.roleId ?? null,
+          domain: input.domain ?? null,
+          hostingProvider: input.hostingProvider ?? null,
+          dnsStatus: input.dnsStatus ?? null,
+          goLiveDate: input.goLiveDate ? input.goLiveDate : null,
+          repoUrl: input.repoUrl ?? null,
+          stagingUrl: input.stagingUrl ?? null,
+          // Set initial websiteStatus for website projects
+          websiteStatus: input.type === 'website' ? 'discovery' : null,
+        })
+        .returning();
 
       // Create embedding for search
       await upsertEmbedding({
         entityType: 'project',
         entityId: row.id,
-        text: [row.name, row.description ?? '', row.domain ?? '', row.repoUrl ?? ''].join('\n'),
+        text: [
+          row.name,
+          row.description ?? '',
+          row.domain ?? '',
+          row.repoUrl ?? '',
+        ].join('\n'),
+      });
+
+      // Log project creation activity
+      await logProjectActivity({
+        userId: ctx.session.user.id,
+        projectId: row.id,
+        projectName: row.name,
+        action: 'created',
+        payload: {
+          type: row.type,
+          websiteStatus: row.websiteStatus,
+        },
       });
 
       return row;
@@ -168,7 +190,15 @@ export const projectsRouter = createTRPCRouter({
         repoUrl: z.string().optional(),
         stagingUrl: z.string().optional(),
         checklistJson: z.record(z.any()).optional(),
-        websiteStatus: z.enum(['discovery', 'development', 'client_review', 'completed', 'blocked']).optional(),
+        websiteStatus: z
+          .enum([
+            'discovery',
+            'development',
+            'client_review',
+            'completed',
+            'blocked',
+          ])
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -190,6 +220,19 @@ export const projectsRouter = createTRPCRouter({
         });
       }
 
+      // Log project update activity
+      const changedFields = Object.keys(updateData);
+      await logProjectActivity({
+        userId: ctx.session.user.id,
+        projectId: updatedProject.id,
+        projectName: updatedProject.name,
+        action: 'updated',
+        payload: {
+          changedFields,
+          ...updateData,
+        },
+      });
+
       return updatedProject;
     }),
 
@@ -208,45 +251,110 @@ export const projectsRouter = createTRPCRouter({
         });
       }
 
+      // Log project deletion activity
+      await logProjectActivity({
+        userId: ctx.session.user.id,
+        projectId: deletedProject.id,
+        projectName: deletedProject.name,
+        action: 'deleted',
+        payload: { deletedAt: new Date() },
+      });
+
       return deletedProject;
     }),
 
   convertToWebsite: protectedProcedure
-    .input(z.object({ 
-      id: z.string().uuid(),
-      website: z.object({
-        domain: z.string().url().optional().nullable(),
-        hostingProvider: z.string().optional().nullable(),
-        dnsStatus: z.enum(["pending","propagating","active","failed"]).optional().nullable(),
-        goLiveDate: z.string().datetime().optional().nullable(),
-        repoUrl: z.string().url().optional().nullable(),
-        stagingUrl: z.string().url().optional().nullable(),
-      }).partial()
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        website: z
+          .object({
+            domain: z.string().url().optional().nullable(),
+            hostingProvider: z.string().optional().nullable(),
+            dnsStatus: z
+              .enum(['pending', 'propagating', 'active', 'failed'])
+              .optional()
+              .nullable(),
+            goLiveDate: z.string().datetime().optional().nullable(),
+            repoUrl: z.string().url().optional().nullable(),
+            stagingUrl: z.string().url().optional().nullable(),
+          })
+          .partial(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.update(projects).set({
-        type: "website",
-        websiteStatus: "discovery",
-        ...input.website,
-        updatedAt: new Date(),
-      }).where(eq(projects.id, input.id));
+      // Get project name for logging
+      const [project] = await ctx.db
+        .select({ name: projects.name })
+        .from(projects)
+        .where(eq(projects.id, input.id))
+        .limit(1);
+
+      await ctx.db
+        .update(projects)
+        .set({
+          type: 'website',
+          websiteStatus: 'discovery',
+          ...input.website,
+          updatedAt: new Date(),
+        })
+        .where(eq(projects.id, input.id));
+
+      // Log conversion activity
+      if (project) {
+        await logProjectActivity({
+          userId: ctx.session.user.id,
+          projectId: input.id,
+          projectName: project.name,
+          action: 'updated',
+          payload: {
+            conversion: 'general_to_website',
+            websiteData: input.website,
+          },
+        });
+      }
+
       return { ok: true };
     }),
 
   convertToGeneral: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.update(projects).set({
-        type: "general",
-        domain: null,
-        hostingProvider: null,
-        dnsStatus: null,
-        goLiveDate: null,
-        repoUrl: null,
-        stagingUrl: null,
-        websiteStatus: null,
-        updatedAt: new Date(),
-      }).where(eq(projects.id, input.id));
+      // Get project name for logging
+      const [project] = await ctx.db
+        .select({ name: projects.name })
+        .from(projects)
+        .where(eq(projects.id, input.id))
+        .limit(1);
+
+      await ctx.db
+        .update(projects)
+        .set({
+          type: 'general',
+          domain: null,
+          hostingProvider: null,
+          dnsStatus: null,
+          goLiveDate: null,
+          repoUrl: null,
+          stagingUrl: null,
+          websiteStatus: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(projects.id, input.id));
+
+      // Log conversion activity
+      if (project) {
+        await logProjectActivity({
+          userId: ctx.session.user.id,
+          projectId: input.id,
+          projectName: project.name,
+          action: 'updated',
+          payload: {
+            conversion: 'website_to_general',
+          },
+        });
+      }
+
       return { ok: true };
     }),
 });

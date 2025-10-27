@@ -3,8 +3,15 @@ import { db } from '@/server/db';
 import { tasks } from '@/server/db/schema';
 import { and, eq, lt } from 'drizzle-orm';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Verify cron secret to prevent unauthorized access
+    const authHeader = request.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     // Archive completed tasks from before this week
     const now = new Date();
     const dayOfWeek = now.getDay();
@@ -34,12 +41,7 @@ export async function GET() {
 
     const deleted = await db
       .delete(tasks)
-      .where(
-        and(
-          eq(tasks.archived, true),
-          lt(tasks.archivedAt, sixMonthsAgo)
-        )
-      )
+      .where(and(eq(tasks.archived, true), lt(tasks.archivedAt, sixMonthsAgo)))
       .returning();
 
     return NextResponse.json({

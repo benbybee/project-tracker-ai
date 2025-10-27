@@ -5,11 +5,29 @@ import { activityLog } from '@/server/db/schema';
 import { eq, desc, and, gte } from 'drizzle-orm';
 
 export const activityRouter = createTRPCRouter({
-  // Get activity feed
+  // Get activity feed with enhanced filtering
   getActivityFeed: protectedProcedure
     .input(
       z.object({
         projectId: z.string().optional(),
+        taskId: z.string().optional(),
+        actionType: z
+          .enum([
+            'created',
+            'updated',
+            'deleted',
+            'assigned',
+            'completed',
+            'commented',
+            'mentioned',
+            'synced',
+            'conflict_resolved',
+          ])
+          .optional(),
+        targetType: z
+          .enum(['task', 'project', 'comment', 'sync', 'system'])
+          .optional(),
+        dateRange: z.enum(['today', 'week', 'month', 'all']).default('all'),
         limit: z.number().default(20),
         offset: z.number().default(0),
         since: z.date().optional(),
@@ -20,6 +38,43 @@ export const activityRouter = createTRPCRouter({
 
       if (input.projectId) {
         whereConditions.push(eq(activityLog.projectId, input.projectId));
+      }
+
+      if (input.taskId) {
+        whereConditions.push(eq(activityLog.taskId, input.taskId));
+      }
+
+      if (input.actionType) {
+        whereConditions.push(eq(activityLog.action, input.actionType));
+      }
+
+      if (input.targetType) {
+        whereConditions.push(eq(activityLog.targetType, input.targetType));
+      }
+
+      // Date range filtering
+      if (input.dateRange !== 'all') {
+        const now = new Date();
+        let dateThreshold: Date;
+
+        switch (input.dateRange) {
+          case 'today':
+            dateThreshold = new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate()
+            );
+            break;
+          case 'week':
+            dateThreshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case 'month':
+            dateThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          default:
+            dateThreshold = new Date(0);
+        }
+        whereConditions.push(gte(activityLog.createdAt, dateThreshold));
       }
 
       if (input.since) {
@@ -66,7 +121,17 @@ export const activityRouter = createTRPCRouter({
       z.object({
         targetType: z.enum(['task', 'project', 'comment', 'sync', 'system']),
         targetId: z.string().optional(),
-        action: z.enum(['created', 'updated', 'deleted', 'assigned', 'completed', 'commented', 'mentioned', 'synced', 'conflict_resolved']),
+        action: z.enum([
+          'created',
+          'updated',
+          'deleted',
+          'assigned',
+          'completed',
+          'commented',
+          'mentioned',
+          'synced',
+          'conflict_resolved',
+        ]),
         payload: z.any().optional(),
         projectId: z.string().optional(),
         taskId: z.string().optional(),

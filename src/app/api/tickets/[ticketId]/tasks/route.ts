@@ -11,14 +11,12 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { ticketId } = await params;
-
-    console.log('Fetching tasks for ticket:', ticketId);
 
     // Fetch tasks associated with this ticket
     const ticketTasks = await db
@@ -36,10 +34,8 @@ export async function GET(
       .where(eq(tasks.ticketId, ticketId))
       .orderBy(tasks.createdAt);
 
-    console.log('Found tasks:', ticketTasks);
-
-    return NextResponse.json({ 
-      tasks: ticketTasks.map(task => ({
+    return NextResponse.json({
+      tasks: ticketTasks.map((task) => ({
         id: task.id,
         title: task.title,
         description: task.description,
@@ -47,7 +43,7 @@ export async function GET(
         projectName: task.projectName,
         projectId: task.projectId,
         createdAt: task.createdAt,
-      }))
+      })),
     });
   } catch (error) {
     console.error('Failed to fetch ticket tasks:', error);

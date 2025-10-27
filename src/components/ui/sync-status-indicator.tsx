@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, CheckCircle, AlertCircle, Clock, Wifi, WifiOff } from 'lucide-react';
+import {
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Wifi,
+  WifiOff,
+} from 'lucide-react';
 import { useSync } from '@/hooks/useSync.client';
 
 interface SyncStatusIndicatorProps {
@@ -10,7 +17,10 @@ interface SyncStatusIndicatorProps {
   showDetails?: boolean;
 }
 
-export function SyncStatusIndicator({ className = '', showDetails = false }: SyncStatusIndicatorProps) {
+export function SyncStatusIndicator({
+  className = '',
+  showDetails = false,
+}: SyncStatusIndicatorProps) {
   const { isOnline, syncStatus, isSyncing, syncProgress } = useSync();
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -31,7 +41,7 @@ export function SyncStatusIndicator({ className = '', showDetails = false }: Syn
         text: 'Syncing...',
         color: 'text-blue-600',
         bgColor: 'bg-blue-100 dark:bg-blue-900/20',
-        description: syncProgress 
+        description: syncProgress
           ? `Syncing ${syncProgress.completed}/${syncProgress.total} items`
           : 'Syncing your changes...',
       };
@@ -106,17 +116,21 @@ export function SyncStatusIndicator({ className = '', showDetails = false }: Syn
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {statusInfo.description}
             </p>
-            
+
             {syncProgress && (
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>Progress</span>
-                  <span>{syncProgress.completed}/{syncProgress.total}</span>
+                  <span>
+                    {syncProgress.completed}/{syncProgress.total}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(syncProgress.completed / syncProgress.total) * 100}%` }}
+                    style={{
+                      width: `${(syncProgress.completed / syncProgress.total) * 100}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -132,7 +146,8 @@ export function SyncStatusIndicator({ className = '', showDetails = false }: Syn
                 )}
                 {syncStatus.lastSyncAt && (
                   <div>
-                    Last sync: {new Date(syncStatus.lastSyncAt).toLocaleTimeString()}
+                    Last sync:{' '}
+                    {new Date(syncStatus.lastSyncAt).toLocaleTimeString()}
                   </div>
                 )}
               </div>

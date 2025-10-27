@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,13 +16,16 @@ export async function POST(req: Request) {
     const { ticketId, projectId } = await req.json();
 
     if (!ticketId) {
-      return NextResponse.json({ error: 'Ticket ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Ticket ID is required' },
+        { status: 400 }
+      );
     }
 
     // Update ticket with assigned project
     await db
       .update(tickets)
-      .set({ 
+      .set({
         suggestedProjectId: projectId || null,
         updatedAt: new Date(),
       })

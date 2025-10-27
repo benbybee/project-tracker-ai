@@ -64,7 +64,9 @@ export default function SignUpPage() {
       <h1 className="text-2xl font-semibold mb-4">Create your account</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-medium">Email</label>
+          <label htmlFor="email" className="text-sm font-medium">
+            Email
+          </label>
           <input
             id="email"
             name="email"
@@ -76,7 +78,9 @@ export default function SignUpPage() {
           />
         </div>
         <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-medium">Password</label>
+          <label htmlFor="password" className="text-sm font-medium">
+            Password
+          </label>
           <input
             id="password"
             name="password"

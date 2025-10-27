@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/layout/page-header';
 
 export default function ActivityPage() {
   return (
-    <div className="px-2 py-6">
+    <div className="px-4 sm:px-6 md:px-2 py-6">
       <div className="max-w-7xl mx-auto">
         <PageHeader
           icon={Activity}
@@ -21,7 +21,7 @@ export default function ActivityPage() {
             <Clock className="h-4 w-4 text-gray-500" />
             <h2 className="text-lg font-semibold">Recent Activity</h2>
           </div>
-          
+
           <ActivityFeed />
         </GlassCard>
       </div>

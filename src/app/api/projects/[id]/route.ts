@@ -14,12 +14,15 @@ export async function PATCH(
     // Extract allowed fields for update
     const updateData: any = {};
     if (body.type !== undefined) updateData.type = body.type;
-    if (body.websiteStatus !== undefined) updateData.websiteStatus = body.websiteStatus;
+    if (body.websiteStatus !== undefined)
+      updateData.websiteStatus = body.websiteStatus;
     if (body.name !== undefined) updateData.name = body.name;
-    if (body.description !== undefined) updateData.description = body.description;
+    if (body.description !== undefined)
+      updateData.description = body.description;
     if (body.domain !== undefined) updateData.domain = body.domain;
     if (body.stagingUrl !== undefined) updateData.stagingUrl = body.stagingUrl;
-    if (body.hostingProvider !== undefined) updateData.hostingProvider = body.hostingProvider;
+    if (body.hostingProvider !== undefined)
+      updateData.hostingProvider = body.hostingProvider;
     if (body.dnsStatus !== undefined) updateData.dnsStatus = body.dnsStatus;
     if (body.goLiveDate !== undefined) updateData.goLiveDate = body.goLiveDate;
     if (body.repoUrl !== undefined) updateData.repoUrl = body.repoUrl;
@@ -46,10 +49,7 @@ export async function PATCH(
       .returning();
 
     if (!updatedProject) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     return NextResponse.json(updatedProject);
@@ -61,4 +61,3 @@ export async function PATCH(
     );
   }
 }
-

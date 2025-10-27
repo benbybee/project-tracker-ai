@@ -8,17 +8,17 @@ import { inArray } from 'drizzle-orm';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { ids, days } = await req.json();
-    
+
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json({ error: 'Invalid ids' }, { status: 400 });
     }
-    
+
     if (typeof days !== 'number' || days < 1) {
       return NextResponse.json({ error: 'Invalid days' }, { status: 400 });
     }
@@ -37,9 +37,9 @@ export async function POST(req: Request) {
 
       await db
         .update(tasks)
-        .set({ 
+        .set({
           dueDate: newDueStr,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(inArray(tasks.id, [task.id]))
         .returning();
@@ -54,4 +54,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

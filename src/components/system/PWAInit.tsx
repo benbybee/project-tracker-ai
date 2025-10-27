@@ -25,7 +25,7 @@ function disableOfflineToasts() {
   // Remove any existing global event listeners that may dispatch 'offline' toasts
   const existingOnlineHandler = () => {};
   const existingOfflineHandler = () => {};
-  
+
   window.removeEventListener('online', existingOnlineHandler);
   window.removeEventListener('offline', existingOfflineHandler);
 
@@ -41,11 +41,19 @@ function disableOfflineToasts() {
 
   // Prevent default browser "offline" banners in some PWAs
   // Use capture phase to intercept before other handlers
-  window.addEventListener('offline', (e) => {
-    e.stopImmediatePropagation();
-  }, true);
-  
-  window.addEventListener('online', (e) => {
-    e.stopImmediatePropagation();
-  }, true);
+  window.addEventListener(
+    'offline',
+    (e) => {
+      e.stopImmediatePropagation();
+    },
+    true
+  );
+
+  window.addEventListener(
+    'online',
+    (e) => {
+      e.stopImmediatePropagation();
+    },
+    true
+  );
 }

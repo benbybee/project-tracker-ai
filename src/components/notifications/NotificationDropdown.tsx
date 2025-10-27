@@ -23,13 +23,13 @@ interface NotificationDropdownProps {
   onClose: () => void;
 }
 
-export function NotificationDropdown({ 
-  notifications, 
-  onNotificationClick, 
-  onClose 
+export function NotificationDropdown({
+  notifications,
+  onNotificationClick,
+  onClose,
 }: NotificationDropdownProps) {
   const [isMarkingAll, setIsMarkingAll] = useState(false);
-  
+
   const markAllAsReadMutation = trpc.notifications.markAllAsRead.useMutation({
     onSuccess: () => {
       setIsMarkingAll(false);
@@ -43,7 +43,7 @@ export function NotificationDropdown({
 
   const handleNotificationClick = async (notification: Notification) => {
     await onNotificationClick(notification.id);
-    
+
     if (notification.link) {
       window.location.href = notification.link;
     }
@@ -84,7 +84,7 @@ export function NotificationDropdown({
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
         <div className="flex items-center space-x-2">
-          {notifications.some(n => !n.read) && (
+          {notifications.some((n) => !n.read) && (
             <Button
               variant="ghost"
               size="sm"
@@ -100,12 +100,7 @@ export function NotificationDropdown({
               Mark all read
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="p-1"
-          >
+          <Button variant="ghost" size="sm" onClick={onClose} className="p-1">
             <X className="h-3 w-3" />
           </Button>
         </div>
@@ -130,23 +125,25 @@ export function NotificationDropdown({
                 <div className="flex-shrink-0 text-lg">
                   {getNotificationIcon(notification.type)}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className={`text-sm font-medium ${
-                      !notification.read ? 'text-gray-900' : 'text-gray-700'
-                    }`}>
+                    <p
+                      className={`text-sm font-medium ${
+                        !notification.read ? 'text-gray-900' : 'text-gray-700'
+                      }`}
+                    >
                       {notification.title}
                     </p>
                     {!notification.read && (
                       <div className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0" />
                     )}
                   </div>
-                  
+
                   <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                     {notification.message}
                   </p>
-                  
+
                   <div className="flex items-center justify-between mt-2">
                     <time className="text-xs text-gray-500">
                       {getTimeAgo(notification.createdAt)}

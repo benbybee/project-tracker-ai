@@ -14,7 +14,7 @@ interface KanbanTaskProps {
 
 export function KanbanTask({ task }: KanbanTaskProps) {
   const [editOpen, setEditOpen] = useState(false);
-  
+
   const {
     attributes,
     listeners,
@@ -22,9 +22,9 @@ export function KanbanTask({ task }: KanbanTaskProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
+  } = useSortable({
     id: task.id,
-    data: { task, col: task.status }
+    data: { task, col: task.status },
   });
 
   const style = {
@@ -34,7 +34,9 @@ export function KanbanTask({ task }: KanbanTaskProps) {
 
   // Calculate status badges
   const due = task.dueDate ? new Date(task.dueDate) : null;
-  const daysStale = task.updatedAt ? (Date.now() - new Date(task.updatedAt).getTime()) / 86400000 : 0;
+  const daysStale = task.updatedAt
+    ? (Date.now() - new Date(task.updatedAt).getTime()) / 86400000
+    : 0;
   const overdue = !!(due && due.getTime() < Date.now());
   const dueToday = !!(due && new Date().toDateString() === due.toDateString());
   const stale = daysStale > 7;
@@ -126,7 +128,11 @@ export function KanbanTask({ task }: KanbanTaskProps) {
         </div>
       </div>
 
-      <TaskEditModal task={task} open={editOpen} onClose={() => setEditOpen(false)} />
+      <TaskEditModal
+        task={task}
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+      />
     </>
   );
 }

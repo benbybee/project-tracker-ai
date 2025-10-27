@@ -1,35 +1,109 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { ActivityItem } from './ActivityItem';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { RefreshCw, Filter } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface ActivityFeedProps {
   projectId?: string;
+  taskId?: string;
   className?: string;
 }
 
-export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
-  const [filter, setFilter] = useState<'all' | 'project' | 'mentions'>('all');
+type DateRange = 'today' | 'week' | 'month' | 'all';
+type ActionType =
+  | 'created'
+  | 'updated'
+  | 'deleted'
+  | 'assigned'
+  | 'completed'
+  | 'commented'
+  | 'mentioned'
+  | 'synced'
+  | 'conflict_resolved';
+type TargetType = 'task' | 'project' | 'comment' | 'sync' | 'system';
+
+export function ActivityFeed({
+  projectId,
+  taskId,
+  className = '',
+}: ActivityFeedProps) {
+  const [dateRange, setDateRange] = useState<DateRange>('all');
+  const [actionType, setActionType] = useState<ActionType | 'all'>('all');
+  const [targetType, setTargetType] = useState<TargetType | 'all'>('all');
   const [limit, setLimit] = useState(20);
   const [hasNewUpdates, setHasNewUpdates] = useState(false);
 
-  const { data: activities, isLoading, refetch } = trpc.activity.getActivityFeed.useQuery({
-    projectId: filter === 'project' ? projectId : undefined,
+  const {
+    data: activities,
+    isLoading,
+    refetch,
+  } = trpc.activity.getActivityFeed.useQuery({
+    projectId,
+    taskId,
+    actionType: actionType !== 'all' ? actionType : undefined,
+    targetType: targetType !== 'all' ? targetType : undefined,
+    dateRange,
     limit,
   });
 
   const handleLoadMore = () => {
-    setLimit(prev => prev + 20);
+    setLimit((prev) => prev + 20);
   };
 
   const handleRefresh = () => {
     setHasNewUpdates(false);
     refetch();
   };
+
+  // Smart grouping by time buckets
+  const groupedActivities = useMemo(() => {
+    if (!activities) return {};
+
+    const now = new Date();
+    const groups: Record<string, any[]> = {
+      'Just now': [],
+      'Earlier today': [],
+      Yesterday: [],
+      'This week': [],
+      Older: [],
+    };
+
+    activities.forEach((activity) => {
+      const activityDate = new Date(activity.createdAt);
+      const diffMinutes =
+        (now.getTime() - activityDate.getTime()) / (1000 * 60);
+      const diffHours = diffMinutes / 60;
+      const diffDays = diffHours / 24;
+
+      if (diffMinutes < 5) {
+        groups['Just now'].push(activity);
+      } else if (diffHours < 24 && activityDate.getDate() === now.getDate()) {
+        groups['Earlier today'].push(activity);
+      } else if (diffDays < 2 && activityDate.getDate() === now.getDate() - 1) {
+        groups['Yesterday'].push(activity);
+      } else if (diffDays < 7) {
+        groups['This week'].push(activity);
+      } else {
+        groups['Older'].push(activity);
+      }
+    });
+
+    // Remove empty groups
+    return Object.fromEntries(
+      Object.entries(groups).filter(([, items]) => items.length > 0)
+    );
+  }, [activities]);
 
   if (isLoading) {
     return (
@@ -51,21 +125,59 @@ export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Header with filters */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center space-x-2 flex-wrap gap-2">
           <Filter className="h-4 w-4 text-gray-500" />
-          <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+
+          <Select
+            value={dateRange}
+            onValueChange={(value: any) => setDateRange(value)}
+          >
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="project">Project</SelectItem>
-              <SelectItem value="mentions">Mentions</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={targetType}
+            onValueChange={(value: any) => setTargetType(value)}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="task">Tasks</SelectItem>
+              <SelectItem value="project">Projects</SelectItem>
+              <SelectItem value="sync">Syncs</SelectItem>
+              <SelectItem value="system">System</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={actionType}
+            onValueChange={(value: any) => setActionType(value)}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Action" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Actions</SelectItem>
+              <SelectItem value="created">Created</SelectItem>
+              <SelectItem value="updated">Updated</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="deleted">Deleted</SelectItem>
+              <SelectItem value="synced">Synced</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        
+
         <Button
           variant="outline"
           size="sm"
@@ -83,7 +195,9 @@ export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              <span className="text-sm text-blue-700">New updates available</span>
+              <span className="text-sm text-blue-700">
+                New updates available
+              </span>
             </div>
             <button
               onClick={handleRefresh}
@@ -95,32 +209,39 @@ export function ActivityFeed({ projectId, className = '' }: ActivityFeedProps) {
         </div>
       )}
 
-      {/* Activity list */}
-      <div className="space-y-1">
-        {activities?.length === 0 ? (
+      {/* Activity list with smart grouping */}
+      <div className="space-y-6">
+        {Object.keys(groupedActivities).length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p>No activity yet</p>
             <p className="text-sm">Activity will appear here as you work</p>
           </div>
         ) : (
-          activities?.map((activity) => (
-            <ActivityItem
-              key={activity.id}
-              activity={activity as any}
-              showProject={!projectId}
-            />
-          ))
+          Object.entries(groupedActivities).map(
+            ([groupName, groupActivities]) => (
+              <div key={groupName} className="space-y-2">
+                <h3 className="text-sm font-semibold text-gray-600 px-3">
+                  {groupName}
+                </h3>
+                <div className="space-y-1">
+                  {groupActivities.map((activity: any) => (
+                    <ActivityItem
+                      key={activity.id}
+                      activity={activity}
+                      showProject={!projectId}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          )
         )}
       </div>
 
       {/* Load more button */}
       {activities && activities.length >= limit && (
         <div className="text-center pt-4">
-          <Button
-            variant="outline"
-            onClick={handleLoadMore}
-            className="w-full"
-          >
+          <Button variant="outline" onClick={handleLoadMore} className="w-full">
             Load More
           </Button>
         </div>

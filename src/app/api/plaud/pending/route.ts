@@ -8,7 +8,7 @@ import { desc } from 'drizzle-orm';
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -18,8 +18,8 @@ export async function GET() {
       .from(plaudPending)
       .orderBy(desc(plaudPending.createdAt));
 
-    return NextResponse.json({ 
-      items: items.map(item => ({
+    return NextResponse.json({
+      items: items.map((item) => ({
         id: item.id,
         createdAt: item.createdAt.toISOString(),
         title: item.title,
@@ -27,7 +27,7 @@ export async function GET() {
         confidence: item.confidence,
         sourceId: item.sourceId,
         suggestedProjectName: item.suggestedProjectName,
-      }))
+      })),
     });
   } catch (error) {
     console.error('Failed to fetch pending items:', error);
@@ -37,4 +37,3 @@ export async function GET() {
     );
   }
 }
-

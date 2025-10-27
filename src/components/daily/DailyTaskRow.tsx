@@ -39,10 +39,10 @@ export default function DailyTaskRow({
       version: (task.version ?? 0) + 1,
     };
     upsert(next);
-    
+
     const db = await getDB();
     await db.tasks.put(next);
-    
+
     const baseVersion = await getFreshBaseVersionForTask(task.id);
     await enqueueOp({
       entityType: 'task',
@@ -56,7 +56,9 @@ export default function DailyTaskRow({
 
   async function defer(days: number) {
     const base = due ?? new Date();
-    const newDue = new Date(base.getTime() + days * 86400000).toISOString().split('T')[0];
+    const newDue = new Date(base.getTime() + days * 86400000)
+      .toISOString()
+      .split('T')[0];
     await update({ dueDate: newDue });
   }
 
@@ -74,7 +76,9 @@ export default function DailyTaskRow({
         className="text-left min-w-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-gray-900 truncate">{task.title}</span>
+          <span className="font-medium text-gray-900 truncate">
+            {task.title}
+          </span>
           <div className="flex items-center gap-1 flex-shrink-0">
             {overdue && (
               <span className="rounded-full bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5">
@@ -119,21 +123,21 @@ export default function DailyTaskRow({
         </select>
         <button
           onClick={() => defer(1)}
-          className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 transition-colors"
+          className="hidden sm:block rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 transition-colors"
           title="Defer 1 day"
         >
           +1d
         </button>
         <button
           onClick={() => defer(2)}
-          className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 transition-colors"
+          className="hidden sm:block rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 transition-colors"
           title="Defer 2 days"
         >
           +2d
         </button>
         <button
           onClick={() => defer(7)}
-          className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 transition-colors"
+          className="hidden sm:block rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 transition-colors"
           title="Defer 1 week"
         >
           +1w
@@ -142,4 +146,3 @@ export default function DailyTaskRow({
     </div>
   );
 }
-

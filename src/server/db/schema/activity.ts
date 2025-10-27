@@ -4,13 +4,25 @@ import { users, projects, tasks } from '../schema';
 
 export const activityLog = pgTable('activity_log', {
   id: uuid('id').primaryKey().defaultRandom(),
-  actorId: uuid('actor_id').notNull().references(() => users.id),
-  targetType: text('target_type', { 
-    enum: ['task', 'project', 'comment', 'sync', 'system'] 
+  actorId: uuid('actor_id')
+    .notNull()
+    .references(() => users.id),
+  targetType: text('target_type', {
+    enum: ['task', 'project', 'comment', 'sync', 'system'],
   }).notNull(),
   targetId: uuid('target_id'),
-  action: text('action', { 
-    enum: ['created', 'updated', 'deleted', 'assigned', 'completed', 'commented', 'mentioned', 'synced', 'conflict_resolved'] 
+  action: text('action', {
+    enum: [
+      'created',
+      'updated',
+      'deleted',
+      'assigned',
+      'completed',
+      'commented',
+      'mentioned',
+      'synced',
+      'conflict_resolved',
+    ],
   }).notNull(),
   payload: jsonb('payload'),
   projectId: uuid('project_id').references(() => projects.id),

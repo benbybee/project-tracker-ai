@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -24,41 +25,42 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    let deferredPrompt: BeforeInstallPromptEvent | null = null;
-
     // Handle beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later
-      deferredPrompt = e;
-      
-      // No toast - silent handling
+      // Silent handling - no toast
     };
 
     // Handle appinstalled event
     const handleAppInstalled = () => {
-      console.log('PWA was installed');
-      // No toast - silent handling
-      deferredPrompt = null;
+      logger.info('PWA was installed');
+      // Silent handling - no toast
     };
 
     // Handle service worker registration
     const registerSW = async () => {
       if ('serviceWorker' in navigator) {
         try {
-          const registration = await navigator.serviceWorker.register('/service-worker-simple.js');
-          
-          console.log('SW registered: ', registration);
-          
+          const registration = await navigator.serviceWorker.register(
+            '/service-worker-simple.js'
+          );
+
+          logger.info('Service worker registered', {
+            scope: registration.scope,
+          });
+
           // No toast - silent handling
-          
+
           // Handle updates
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (
+                  newWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller
+                ) {
                   // New content is available, reload the page
                   window.location.reload();
                 }
@@ -66,7 +68,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
             }
           });
         } catch (error) {
-          console.log('SW registration failed: ', error);
+          logger.error('Service worker registration failed', error);
         }
       }
     };
@@ -74,20 +76,19 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     // Register event listeners
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
-    
+
     // Register service worker
     registerSW();
 
     // Cleanup
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt
+      );
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

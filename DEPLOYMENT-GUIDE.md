@@ -32,11 +32,13 @@ OPENAI_API_KEY=sk-...
 ```
 
 ### Generate NEXTAUTH_SECRET
+
 ```bash
 openssl rand -base64 32
 ```
 
 ### Environment Setup Notes
+
 - Add to **Production** environment
 - Add to **Preview** environment (if using preview deployments)
 - Ensure `DATABASE_URL` points to your production PostgreSQL database
@@ -57,6 +59,7 @@ npx drizzle-kit status
 ```
 
 ### New Tables Created
+
 - `notifications` - User notifications system
 - `activity_log` - Activity tracking
 - `threads` - Chat threads
@@ -65,6 +68,7 @@ npx drizzle-kit status
 - `thread_participants` - Thread participation
 
 ### Seed Initial Data (Optional)
+
 ```bash
 # Create test user and default roles
 node scripts/seed-user.mjs
@@ -73,12 +77,14 @@ node scripts/seed-user.mjs
 ## 3️⃣ Vercel Deployment
 
 ### Clean Deployment (Recommended)
+
 ```bash
 # Force fresh build cache
 VERCEL_FORCE_NO_BUILD_CACHE=1 vercel --prod
 ```
 
 ### Or via Vercel Dashboard
+
 1. Go to **Deployments** tab
 2. Click **Redeploy**
 3. **Uncheck** "Use existing Build Cache"
@@ -110,6 +116,7 @@ VERCEL_FORCE_NO_BUILD_CACHE=1 vercel --prod
    - [ ] Should return 200 OK
 
 ### Advanced Features (if enabled)
+
 - [ ] Real-time collaboration (presence indicators)
 - [ ] Chat functionality
 - [ ] Notifications system
@@ -118,12 +125,14 @@ VERCEL_FORCE_NO_BUILD_CACHE=1 vercel --prod
 ## 5️⃣ Rollback Safety
 
 ### Create Git Tag
+
 ```bash
 git tag -a v2.6.1 -m "Sprint 2.6.1 — UX & Workflow Enhancements"
 git push --tags
 ```
 
 ### Vercel Rollback
+
 1. Go to **Deployments** tab
 2. Find previous successful deployment
 3. Click **Promote to Production**
@@ -132,21 +141,24 @@ git push --tags
 ## 6️⃣ Monitoring & Health Checks
 
 ### Key Endpoints to Monitor
+
 - `/api/trpc/health` - tRPC health check
 - `/api/maintenance/archive-completed` - Cron job endpoint
 - `/api/realtime/connect` - WebSocket connection
 
 ### Database Health
+
 ```sql
 -- Check new tables exist
-SELECT table_name FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN ('notifications', 'activity_log', 'threads', 'messages');
 ```
 
 ## 7️⃣ Sprint 2.6.1 Features Deployed
 
 ### ✅ UI/UX Enhancements
+
 - Website project board with variant support
 - Enhanced Kanban drag-and-drop with optimistic updates
 - Improved task creation/editing modals
@@ -156,6 +168,7 @@ AND table_name IN ('notifications', 'activity_log', 'threads', 'messages');
 - Simplified top bar redesign
 
 ### ✅ Workflow Improvements
+
 - Enhanced daily planner with AI integration
 - Kanban role filtering
 - Weekly auto-clear completed tasks with cron jobs
@@ -163,6 +176,7 @@ AND table_name IN ('notifications', 'activity_log', 'threads', 'messages');
 - Daily summary page with AI integration
 
 ### ✅ New Features
+
 - Google Drive integration scaffold
 - Plaud AI ingestion page
 - Real-time collaboration system
@@ -173,12 +187,14 @@ AND table_name IN ('notifications', 'activity_log', 'threads', 'messages');
 ## 🚨 Troubleshooting
 
 ### Common Issues
+
 1. **Build Failures**: Check TypeScript errors, missing dependencies
 2. **Database Connection**: Verify `DATABASE_URL` format and credentials
 3. **Environment Variables**: Ensure all required vars are set in Vercel
 4. **Migration Issues**: Check database permissions and connection
 
 ### Support
+
 - Check Vercel function logs for runtime errors
 - Monitor database connection pool
 - Verify all environment variables are properly set
@@ -188,6 +204,7 @@ AND table_name IN ('notifications', 'activity_log', 'threads', 'messages');
 ## 🎯 Success Criteria
 
 Deployment is successful when:
+
 - [ ] All smoke tests pass
 - [ ] No console errors in browser
 - [ ] Database migrations applied successfully

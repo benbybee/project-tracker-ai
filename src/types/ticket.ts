@@ -1,5 +1,13 @@
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
-export type TicketStatus = 'new' | 'viewed' | 'pending_tasks' | 'complete' | 'in_review' | 'responded' | 'converted' | 'closed';
+export type TicketStatus =
+  | 'new'
+  | 'viewed'
+  | 'pending_tasks'
+  | 'complete'
+  | 'in_review'
+  | 'responded'
+  | 'converted'
+  | 'closed';
 
 export type Ticket = {
   id: string;
@@ -13,11 +21,16 @@ export type Ticket = {
   dueDateSuggested?: string | null;
   priority: TicketPriority;
   status: TicketStatus;
-  aiEta?: string | null;     // ISO date
+  aiEta?: string | null; // ISO date
   aiSummary?: string | null;
   suggestedProjectId?: string | null;
   completedAt?: string | null; // ISO timestamp when all tasks completed
-  attachments?: Array<{ id: string; name: string; url?: string; size?: number }> | null;
+  attachments?: Array<{
+    id: string;
+    name: string;
+    url?: string;
+    size?: number;
+  }> | null;
 };
 
 export type TicketReply = {
@@ -36,4 +49,3 @@ export type TicketAttachment = {
   fileSize?: number | null;
   url?: string | null;
 };
-

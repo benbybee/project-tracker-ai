@@ -10,7 +10,7 @@ import { desc, eq, ne } from 'drizzle-orm';
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     const includeCompleted = searchParams.get('includeCompleted') === 'true';
 
     // Query tickets, filtering out completed ones by default
-    const allTickets = includeCompleted 
+    const allTickets = includeCompleted
       ? await db
           .select()
           .from(tickets)
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
           aiSummary: ticket.aiSummary,
           suggestedProjectId: ticket.suggestedProjectId || null,
           completedAt: ticket.completedAt?.toISOString() || null,
-          attachments: attachments.map(a => ({
+          attachments: attachments.map((a) => ({
             id: a.id,
             name: a.fileName,
             size: a.fileSize,
@@ -67,8 +67,8 @@ export async function GET(req: Request) {
       })
     );
 
-    return NextResponse.json({ 
-      tickets: ticketsWithAttachments
+    return NextResponse.json({
+      tickets: ticketsWithAttachments,
     });
   } catch (error) {
     console.error('Failed to fetch tickets:', error);
@@ -78,4 +78,3 @@ export async function GET(req: Request) {
     );
   }
 }
-

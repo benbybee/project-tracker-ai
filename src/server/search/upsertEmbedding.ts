@@ -4,9 +4,10 @@ import { embeddings } from '@/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 // Initialize OpenAI client only if API key is available
-const client = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'sk-dummy-key' 
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
+const client =
+  process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'sk-dummy-key'
+    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    : null;
 
 export async function upsertEmbedding(params: {
   entityType: 'task' | 'project';
@@ -18,7 +19,7 @@ export async function upsertEmbedding(params: {
 
   // Skip embedding generation if OpenAI client is not available
   if (!client) {
-    console.log('OpenAI client not available, skipping embedding generation');
+    // Silently skip embedding generation if OpenAI is not configured
     return;
   }
 
@@ -44,13 +45,11 @@ export async function upsertEmbedding(params: {
     );
 
   // Then insert the new embedding
-  await db
-    .insert(embeddings)
-    .values({
-      entityType,
-      entityId,
-      chunkIndex: 0,
-      chunkText: text,
-      embedding: vector as any,
-    });
+  await db.insert(embeddings).values({
+    entityType,
+    entityId,
+    chunkIndex: 0,
+    chunkText: text,
+    embedding: vector as any,
+  });
 }

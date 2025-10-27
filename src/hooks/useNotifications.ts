@@ -10,12 +10,14 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const { onNotification, broadcastNotification } = useRealtime();
 
-  const { data: notificationsData, refetch: refetchNotifications } = trpc.notifications.getNotifications.useQuery({
-    limit: 20,
-    unreadOnly: false,
-  });
+  const { data: notificationsData, refetch: refetchNotifications } =
+    trpc.notifications.getNotifications.useQuery({
+      limit: 20,
+      unreadOnly: false,
+    });
 
-  const { data: unreadCountData, refetch: refetchUnreadCount } = trpc.notifications.getUnreadCount.useQuery();
+  const { data: unreadCountData, refetch: refetchUnreadCount } =
+    trpc.notifications.getUnreadCount.useQuery();
 
   const markAsReadMutation = trpc.notifications.markAsRead.useMutation({
     onSuccess: () => {
@@ -31,14 +33,15 @@ export function useNotifications() {
     },
   });
 
-  const createNotificationMutation = trpc.notifications.createNotification.useMutation({
-    onSuccess: (notification) => {
-      // Broadcast the notification to other clients
-      broadcastNotification(notification);
-      refetchNotifications();
-      refetchUnreadCount();
-    },
-  });
+  const createNotificationMutation =
+    trpc.notifications.createNotification.useMutation({
+      onSuccess: (notification) => {
+        // Broadcast the notification to other clients
+        broadcastNotification(notification);
+        refetchNotifications();
+        refetchUnreadCount();
+      },
+    });
 
   // Update local state when data changes
   useEffect(() => {
@@ -56,11 +59,11 @@ export function useNotifications() {
   // Listen for real-time notifications
   useEffect(() => {
     const unsubscribe = onNotification((notification) => {
-      setNotifications(prev => [notification, ...prev]);
+      setNotifications((prev) => [notification, ...prev]);
       if (!notification.read) {
-        setUnreadCount(prev => prev + 1);
+        setUnreadCount((prev) => prev + 1);
       }
-      
+
       // Show toast notification for new notifications
       if (!notification.read) {
         notificationManager.addNotification(notification);
@@ -88,7 +91,15 @@ export function useNotifications() {
   }) => {
     return await createNotificationMutation.mutateAsync({
       ...notification,
-      type: notification.type as 'task_assigned' | 'task_updated' | 'task_completed' | 'project_updated' | 'comment_added' | 'mention' | 'sync_conflict' | 'collaboration'
+      type: notification.type as
+        | 'task_assigned'
+        | 'task_updated'
+        | 'task_completed'
+        | 'project_updated'
+        | 'comment_added'
+        | 'mention'
+        | 'sync_conflict'
+        | 'collaboration',
     });
   };
 

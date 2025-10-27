@@ -11,24 +11,31 @@ export async function POST(req: Request) {
     const incoming = Array.isArray(body?.items) ? body.items : [];
 
     if (incoming.length === 0) {
-      return NextResponse.json({ ok: true, received: 0, message: 'No items provided' });
+      return NextResponse.json({
+        ok: true,
+        received: 0,
+        message: 'No items provided',
+      });
     }
 
     // Insert incoming items into plaud_pending table
-    const inserted = await db.insert(plaudPending).values(
-      incoming.map((item: any) => ({
-        title: item.title || 'Untitled',
-        description: item.description || null,
-        confidence: item.confidence ? parseInt(item.confidence) : null,
-        sourceId: item.sourceId || null,
-        suggestedProjectName: item.suggestedProjectName || null,
-      }))
-    ).returning();
+    const inserted = await db
+      .insert(plaudPending)
+      .values(
+        incoming.map((item: any) => ({
+          title: item.title || 'Untitled',
+          description: item.description || null,
+          confidence: item.confidence ? parseInt(item.confidence) : null,
+          sourceId: item.sourceId || null,
+          suggestedProjectName: item.suggestedProjectName || null,
+        }))
+      )
+      .returning();
 
-    return NextResponse.json({ 
-      ok: true, 
+    return NextResponse.json({
+      ok: true,
       received: incoming.length,
-      created: inserted.length
+      created: inserted.length,
     });
   } catch (error) {
     console.error('Plaud webhook error:', error);

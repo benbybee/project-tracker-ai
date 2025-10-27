@@ -6,7 +6,7 @@ import { useRealtime } from '@/app/providers';
 export default function SyncIndicator() {
   const [status, setStatus] = useState(getStatus());
   const { isConnected: isRealtimeConnected, onlineUsers } = useRealtime();
-  
+
   useEffect(() => {
     const unsubscribe = onSyncStatus(setStatus);
     return () => {
@@ -17,10 +17,14 @@ export default function SyncIndicator() {
   }, []);
 
   // basic dot
-  const color = status === 'syncing' ? 'bg-blue-500 animate-pulse'
-              : status === 'error'   ? 'bg-red-500'
-              : isRealtimeConnected ? 'bg-green-500'
-              : 'bg-gray-400';
+  const color =
+    status === 'syncing'
+      ? 'bg-blue-500 animate-pulse'
+      : status === 'error'
+        ? 'bg-red-500'
+        : isRealtimeConnected
+          ? 'bg-green-500'
+          : 'bg-gray-400';
 
   return (
     <button

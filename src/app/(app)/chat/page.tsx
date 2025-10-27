@@ -2,7 +2,7 @@
 
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { GlassCard } from '@/components/ui/glass-card';
-import { MessageCircle, Users } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 
 export default function ChatPage() {
   return (
@@ -16,14 +16,16 @@ export default function ChatPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Team Chat</h1>
-              <p className="text-gray-600">Collaborate and communicate with your team</p>
+              <p className="text-gray-600">
+                Collaborate and communicate with your team
+              </p>
             </div>
           </div>
         </div>
 
         {/* Chat Panel */}
         <GlassCard className="p-0 overflow-hidden">
-          <ChatPanel 
+          <ChatPanel
             projectId="default-project" // In a real app, this would come from context or params
             className="h-[600px]"
           />

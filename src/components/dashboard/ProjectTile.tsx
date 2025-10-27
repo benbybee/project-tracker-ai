@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import { ArrowRight, Globe } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { GlassCard } from "@/components/ui/glass-card";
+import { motion } from 'framer-motion';
+import { ArrowRight, Globe } from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { GlassCard } from '@/components/ui/glass-card';
 
 interface ProjectTileProps {
   project: {
@@ -25,10 +24,20 @@ interface ProjectTileProps {
   index?: number;
   onTogglePin?: (projectId: string, pinned: boolean) => void;
   onConvertToWebsite?: (projectId: string) => void;
+  onClick?: (projectId: string) => void;
 }
 
-export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsite }: ProjectTileProps) {
-  const progress = project.totalTasks > 0 ? (project.completedTasks / project.totalTasks) * 100 : 0;
+export function ProjectTile({
+  project,
+  index = 0,
+  onTogglePin,
+  onConvertToWebsite,
+  onClick,
+}: ProjectTileProps) {
+  const progress =
+    project.totalTasks > 0
+      ? (project.completedTasks / project.totalTasks) * 100
+      : 0;
   const progressRounded = Math.round(progress);
   const [converting, setConverting] = useState(false);
 
@@ -42,7 +51,7 @@ export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsit
     e.preventDefault();
     e.stopPropagation();
     if (converting) return;
-    
+
     setConverting(true);
     try {
       await onConvertToWebsite?.(project.id);
@@ -51,20 +60,24 @@ export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsit
     }
   };
 
+  const handleClick = () => {
+    onClick?.(project.id);
+  };
+
   return (
-    <Link href={`/projects/${project.id}`} prefetch>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          type: "spring",
-          stiffness: 300,
-          damping: 30,
-          delay: index * 0.1,
-        }}
-        whileHover={{ y: -2, scale: 1.01 }}
-        className="cursor-pointer block"
-      >
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+        delay: index * 0.1,
+      }}
+      whileHover={{ y: -2, scale: 1.01 }}
+      className="cursor-pointer block"
+      onClick={handleClick}
+    >
       <GlassCard className="relative overflow-hidden group">
         {/* Pin button */}
         <button
@@ -100,10 +113,7 @@ export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsit
 
         {/* Progress ring */}
         <div className="relative w-16 h-16 mx-auto mb-3">
-          <svg
-            className="w-16 h-16 transform -rotate-90"
-            viewBox="0 0 36 36"
-          >
+          <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
             {/* Background circle */}
             <path
               d="M18 2.0845
@@ -125,8 +135,8 @@ export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsit
               strokeDasharray={`${progress}, 100`}
               className="text-blue-500 transition-all duration-300"
               style={{
-                strokeLinecap: "round",
-                filter: "drop-shadow(0 0 6px rgba(59, 130, 246, 0.3))",
+                strokeLinecap: 'round',
+                filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.3))',
               }}
             />
           </svg>
@@ -143,7 +153,7 @@ export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsit
           <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-1 truncate">
             {project.name}
           </h3>
-          
+
           {/* Project type and role */}
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -169,9 +179,9 @@ export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsit
 
           {/* Progress bar */}
           <div className="mt-2 h-1.5 w-full rounded-full bg-white/40 overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-indigo-400 to-violet-500 transition-all duration-300" 
-              style={{ width: `${progressRounded}%` }} 
+            <div
+              className="h-full bg-gradient-to-r from-indigo-400 to-violet-500 transition-all duration-300"
+              style={{ width: `${progressRounded}%` }}
             />
           </div>
         </div>
@@ -195,7 +205,6 @@ export function ProjectTile({ project, index = 0, onTogglePin, onConvertToWebsit
           />
         </div>
       </GlassCard>
-      </motion.div>
-    </Link>
+    </motion.div>
   );
 }

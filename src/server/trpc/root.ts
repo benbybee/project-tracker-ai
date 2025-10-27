@@ -9,6 +9,7 @@ import { realtimeRouter } from './routers/realtime';
 import { notificationsRouter } from './routers/notifications';
 import { activityRouter } from './routers/activity';
 import { chatRouter } from './routers/chat';
+import { analyticsRouter } from './routers/analytics';
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   notifications: notificationsRouter,
   activity: activityRouter,
   chat: chatRouter,
+  analytics: analyticsRouter,
 });
 
 export type AppRouter = typeof appRouter;

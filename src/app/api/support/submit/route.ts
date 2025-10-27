@@ -12,35 +12,47 @@ export async function POST(req: Request) {
     const domain = form.get('domain')?.toString() || null;
     const details = String(form.get('details') || '');
     const dueDateSuggested = form.get('dueDateSuggested')?.toString() || null;
-    const priority = (form.get('priority')?.toString() || 'normal') as 'low'|'normal'|'high'|'urgent';
+    const priority = (form.get('priority')?.toString() || 'normal') as
+      | 'low'
+      | 'normal'
+      | 'high'
+      | 'urgent';
 
     if (!customerName || !customerEmail || !projectName || !details) {
-      return NextResponse.json({ error: 'Customer name, email, project name and details are required' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Customer name, email, project name and details are required',
+        },
+        { status: 400 }
+      );
     }
 
     // Simple ETA heuristic stub: urgent +3 days, else +5 days
     const now = new Date();
     const eta = new Date(now);
     eta.setDate(eta.getDate() + (priority === 'urgent' ? 3 : 5));
-    const aiEta = eta.toISOString().slice(0,10);
+    const aiEta = eta.toISOString().slice(0, 10);
 
     // Insert ticket into database
-    const [ticket] = await db.insert(tickets).values({
-      customerName,
-      customerEmail,
-      projectName,
-      domain,
-      details,
-      dueDateSuggested,
-      priority,
-      status: 'new',
-      aiEta,
-    }).returning();
+    const [ticket] = await db
+      .insert(tickets)
+      .values({
+        customerName,
+        customerEmail,
+        projectName,
+        domain,
+        details,
+        dueDateSuggested,
+        priority,
+        status: 'new',
+        aiEta,
+      })
+      .returning();
 
     // Handle file attachments with Vercel Blob storage
     const files = form.getAll('files') as File[];
     const attachmentPromises = files
-      .filter(f => f.size > 0)
+      .filter((f) => f.size > 0)
       .map(async (file) => {
         try {
           // Upload file to Vercel Blob
@@ -69,10 +81,10 @@ export async function POST(req: Request) {
 
     await Promise.all(attachmentPromises);
 
-    return NextResponse.json({ 
-      ok: true, 
-      id: ticket.id, 
-      aiEta 
+    return NextResponse.json({
+      ok: true,
+      id: ticket.id,
+      aiEta,
     });
   } catch (error: any) {
     console.error('Failed to create ticket:', error);
@@ -83,12 +95,12 @@ export async function POST(req: Request) {
       stack: error?.stack,
     });
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to create ticket',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
+        details:
+          process.env.NODE_ENV === 'development' ? error?.message : undefined,
       },
       { status: 500 }
     );
   }
 }
-

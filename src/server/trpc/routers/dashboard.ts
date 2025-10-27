@@ -48,11 +48,7 @@ export const dashboardRouter = createTRPCRouter({
         .from(projects)
         .leftJoin(tasks, eq(projects.id, tasks.projectId))
         .leftJoin(roles, eq(projects.roleId, roles.id))
-        .where(
-          roleConditions.length > 0 
-            ? and(...roleConditions)
-            : undefined
-        )
+        .where(roleConditions.length > 0 ? and(...roleConditions) : undefined)
         .groupBy(projects.id, roles.id)
         .orderBy(desc(projects.pinned), desc(projects.updatedAt));
 
@@ -119,7 +115,7 @@ export const dashboardRouter = createTRPCRouter({
         .limit(5);
 
       return {
-        projects: projectsWithCounts.map(p => ({
+        projects: projectsWithCounts.map((p) => ({
           id: p.id,
           name: p.name,
           type: p.type,
@@ -135,4 +131,3 @@ export const dashboardRouter = createTRPCRouter({
       };
     }),
 });
-

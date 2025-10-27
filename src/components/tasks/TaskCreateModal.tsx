@@ -6,10 +6,22 @@ import { getDB } from '@/lib/db.client';
 import { enqueueOp } from '@/lib/ops-helpers';
 import { useTasksStore } from '@/lib/tasks-store';
 import { useParams } from 'next/navigation';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface TaskCreateModalProps {
   open: boolean;
@@ -18,10 +30,15 @@ interface TaskCreateModalProps {
   defaultStatus?: TaskStatus;
 }
 
-export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: TaskCreateModalProps) {
+export function TaskCreateModal({
+  open,
+  onClose,
+  projectId,
+  defaultStatus,
+}: TaskCreateModalProps) {
   const { upsert } = useTasksStore();
   const params = useParams<{ id?: string }>();
-  
+
   const [form, setForm] = useState<Partial<Task>>({
     projectId: projectId || params?.id,
     status: defaultStatus || 'not_started',
@@ -30,11 +47,11 @@ export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: Tas
     dueDate: '',
     priorityScore: 2,
   });
-  
+
   const [saving, setSaving] = useState(false);
 
   const updateForm = (updates: Partial<Task>) => {
-    setForm(prev => ({ ...prev, ...updates }));
+    setForm((prev) => ({ ...prev, ...updates }));
   };
 
   const handleSave = async () => {
@@ -44,7 +61,7 @@ export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: Tas
     }
 
     setSaving(true);
-    
+
     try {
       const now = new Date().toISOString();
       const task: Task = {
@@ -141,7 +158,9 @@ export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: Tas
             </label>
             <Select
               value={form.status}
-              onValueChange={(value) => updateForm({ status: value as TaskStatus })}
+              onValueChange={(value) =>
+                updateForm({ status: value as TaskStatus })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
@@ -179,7 +198,9 @@ export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: Tas
             </label>
             <Select
               value={form.priorityScore?.toString() || '2'}
-              onValueChange={(value) => updateForm({ priorityScore: parseInt(value) as 1 | 2 | 3 | 4 })}
+              onValueChange={(value) =>
+                updateForm({ priorityScore: parseInt(value) as 1 | 2 | 3 | 4 })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select priority" />
@@ -195,7 +216,12 @@ export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: Tas
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={saving}
+          >
             Cancel
           </Button>
           <Button type="button" onClick={handleSave} disabled={saving}>
@@ -206,4 +232,3 @@ export function TaskCreateModal({ open, onClose, projectId, defaultStatus }: Tas
     </Dialog>
   );
 }
-

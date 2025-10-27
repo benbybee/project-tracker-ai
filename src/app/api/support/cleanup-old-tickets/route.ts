@@ -13,7 +13,7 @@ import { and, eq, lt } from 'drizzle-orm';
 export async function POST() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -36,12 +36,12 @@ export async function POST() {
     if (oldTickets.length === 0) {
       return NextResponse.json({
         deleted: 0,
-        message: 'No old completed tickets to delete'
+        message: 'No old completed tickets to delete',
       });
     }
 
     // Delete the old tickets (cascade will delete related data)
-    const ticketIds = oldTickets.map(t => t.id);
+    const ticketIds = oldTickets.map((t) => t.id);
     for (const ticketId of ticketIds) {
       await db.delete(tickets).where(eq(tickets.id, ticketId));
     }
@@ -49,9 +49,8 @@ export async function POST() {
     return NextResponse.json({
       deleted: ticketIds.length,
       message: `Deleted ${ticketIds.length} completed ticket(s) older than 90 days`,
-      ticketIds
+      ticketIds,
     });
-
   } catch (error) {
     console.error('Failed to cleanup old tickets:', error);
     return NextResponse.json(
@@ -68,7 +67,7 @@ export async function POST() {
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -83,7 +82,7 @@ export async function GET() {
         id: tickets.id,
         projectName: tickets.projectName,
         completedAt: tickets.completedAt,
-        createdAt: tickets.createdAt
+        createdAt: tickets.createdAt,
       })
       .from(tickets)
       .where(
@@ -95,15 +94,16 @@ export async function GET() {
 
     return NextResponse.json({
       count: oldTickets.length,
-      tickets: oldTickets.map(t => ({
+      tickets: oldTickets.map((t) => ({
         id: t.id,
         projectName: t.projectName,
         completedAt: t.completedAt?.toISOString(),
         createdAt: t.createdAt.toISOString(),
-        age: Math.floor((Date.now() - (t.completedAt?.getTime() || 0)) / (1000 * 60 * 60 * 24))
-      }))
+        age: Math.floor(
+          (Date.now() - (t.completedAt?.getTime() || 0)) / (1000 * 60 * 60 * 24)
+        ),
+      })),
     });
-
   } catch (error) {
     console.error('Failed to preview old tickets:', error);
     return NextResponse.json(
@@ -112,4 +112,3 @@ export async function GET() {
     );
   }
 }
-

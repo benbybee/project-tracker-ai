@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure, protectedProcedure } from '../trpc';
+import { logger } from '@/lib/logger';
 
 export const realtimeRouter = createTRPCRouter({
   // Get online users (placeholder implementation)
@@ -14,8 +15,8 @@ export const realtimeRouter = createTRPCRouter({
         lastActiveAt: Date.now(),
         currentProject: undefined,
         currentTask: undefined,
-        isEditing: false
-      }
+        isEditing: false,
+      },
     ];
   }),
 
@@ -33,7 +34,10 @@ export const realtimeRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // In a real implementation, this would update the database
-      console.log('Updating presence for user:', ctx.session?.user?.id, input);
+      logger.debug('Updating presence for user', {
+        userId: ctx.session?.user?.id,
+        input,
+      });
       return { success: true };
     }),
 
@@ -41,7 +45,13 @@ export const realtimeRouter = createTRPCRouter({
   logEvent: protectedProcedure
     .input(
       z.object({
-        type: z.enum(['task_updated', 'project_updated', 'user_presence', 'user_typing', 'conflict_detected']),
+        type: z.enum([
+          'task_updated',
+          'project_updated',
+          'user_presence',
+          'user_typing',
+          'conflict_detected',
+        ]),
         entity: z.enum(['task', 'project', 'user']),
         action: z.enum(['create', 'update', 'delete', 'presence', 'typing']),
         entityId: z.string().optional(),
@@ -51,7 +61,7 @@ export const realtimeRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // In a real implementation, this would log to the database
-      console.log('Logging real-time event:', input);
+      logger.debug('Logging real-time event', { input });
       return { success: true };
     }),
 
@@ -77,7 +87,10 @@ export const realtimeRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      console.log('User started typing:', ctx.session?.user?.id, input);
+      logger.debug('User started typing', {
+        userId: ctx.session?.user?.id,
+        input,
+      });
       return { success: true };
     }),
 
@@ -90,7 +103,10 @@ export const realtimeRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      console.log('User stopped typing:', ctx.session?.user?.id, input);
+      logger.debug('User stopped typing', {
+        userId: ctx.session?.user?.id,
+        input,
+      });
       return { success: true };
     }),
 });

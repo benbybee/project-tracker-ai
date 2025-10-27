@@ -10,7 +10,12 @@ interface ToastPWAProps {
   onClose?: () => void;
 }
 
-export function ToastPWA({ message, type, duration = 5000, onClose }: ToastPWAProps) {
+export function ToastPWA({
+  message,
+  type,
+  duration = 5000,
+  onClose,
+}: ToastPWAProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -77,7 +82,11 @@ export function ToastPWA({ message, type, duration = 5000, onClose }: ToastPWAPr
                 aria-label="Close notification"
               >
                 <span className="sr-only">Close</span>
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path
                     fillRule="evenodd"
                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -95,20 +104,25 @@ export function ToastPWA({ message, type, duration = 5000, onClose }: ToastPWAPr
 
 // Hook for managing PWA toasts
 export function usePWAToast() {
-  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'info' | 'error' }>>([]);
+  const [toasts, setToasts] = useState<
+    Array<{ id: string; message: string; type: 'success' | 'info' | 'error' }>
+  >([]);
 
-  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'info' | 'error' = 'info'
+  ) => {
     const id = Math.random().toString(36).substr(2, 9);
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type }]);
   };
 
   const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   const ToastContainer = () => (
     <div className="fixed bottom-4 left-4 z-50 space-y-2">
-      {toasts.map(toast => (
+      {toasts.map((toast) => (
         <ToastPWA
           key={toast.id}
           message={toast.message}

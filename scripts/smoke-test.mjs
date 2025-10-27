@@ -15,18 +15,20 @@ if (!deploymentUrl) {
   process.exit(1);
 }
 
-const baseUrl = deploymentUrl.startsWith('http') ? deploymentUrl : `https://${deploymentUrl}`;
+const baseUrl = deploymentUrl.startsWith('http')
+  ? deploymentUrl
+  : `https://${deploymentUrl}`;
 
 function makeRequest(url, description) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https') ? https : http;
-    
+
     console.log(`🔍 Testing: ${description}`);
     console.log(`   URL: ${url}`);
-    
+
     const req = client.get(url, { timeout: 10000 }, (res) => {
       let data = '';
-      res.on('data', chunk => data += chunk);
+      res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           console.log(`   ✅ ${res.statusCode} - ${description}`);
@@ -37,12 +39,12 @@ function makeRequest(url, description) {
         }
       });
     });
-    
+
     req.on('error', (error) => {
       console.log(`   ❌ Error - ${description}: ${error.message}`);
       reject(error);
     });
-    
+
     req.on('timeout', () => {
       console.log(`   ❌ Timeout - ${description}`);
       reject(new Error('Request timeout'));
@@ -53,7 +55,7 @@ function makeRequest(url, description) {
 async function runSmokeTests() {
   console.log('🧪 Sprint 2.6.1 Smoke Tests');
   console.log(`Testing: ${baseUrl}\n`);
-  
+
   const tests = [
     { url: `${baseUrl}/`, description: 'Home page' },
     { url: `${baseUrl}/dashboard`, description: 'Dashboard' },
@@ -64,12 +66,15 @@ async function runSmokeTests() {
     { url: `${baseUrl}/activity`, description: 'Activity feed' },
     { url: `${baseUrl}/chat`, description: 'Chat interface' },
     { url: `${baseUrl}/summary`, description: 'Daily summary' },
-    { url: `${baseUrl}/api/maintenance/archive-completed`, description: 'Cron endpoint' },
+    {
+      url: `${baseUrl}/api/maintenance/archive-completed`,
+      description: 'Cron endpoint',
+    },
   ];
-  
+
   let passed = 0;
   let failed = 0;
-  
+
   for (const test of tests) {
     try {
       await makeRequest(test.url, test.description);
@@ -78,12 +83,14 @@ async function runSmokeTests() {
       failed++;
     }
   }
-  
+
   console.log('\n📊 Test Results:');
   console.log(`   ✅ Passed: ${passed}`);
   console.log(`   ❌ Failed: ${failed}`);
-  console.log(`   📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
-  
+  console.log(
+    `   📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`
+  );
+
   if (failed === 0) {
     console.log('\n🎉 All smoke tests passed! Deployment is healthy.');
   } else {

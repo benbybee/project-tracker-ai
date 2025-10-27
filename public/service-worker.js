@@ -18,9 +18,10 @@ const ROUTES_TO_CACHE = [
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
-  
+
   event.waitUntil(
-    caches.open(STATIC_CACHE)
+    caches
+      .open(STATIC_CACHE)
       .then((cache) => {
         console.log('Caching static assets');
         return cache.addAll([
@@ -43,9 +44,10 @@ self.addEventListener('install', (event) => {
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating...');
-  
+
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
@@ -79,40 +81,42 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        // Return cached version if available
-        if (cachedResponse) {
-          console.log('Serving from cache:', request.url);
-          return cachedResponse;
-        }
+    caches.match(request).then((cachedResponse) => {
+      // Return cached version if available
+      if (cachedResponse) {
+        console.log('Serving from cache:', request.url);
+        return cachedResponse;
+      }
 
-        // Otherwise, fetch from network
-        return fetch(request)
-          .then((response) => {
-            // Don't cache non-successful responses
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // Clone the response for caching
-            const responseToCache = response.clone();
-
-            // Cache the response
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseToCache);
-              });
-
+      // Otherwise, fetch from network
+      return fetch(request)
+        .then((response) => {
+          // Don't cache non-successful responses
+          if (
+            !response ||
+            response.status !== 200 ||
+            response.type !== 'basic'
+          ) {
             return response;
-          })
-          .catch(() => {
-            // If network fails and no cache, return offline page for navigation requests
-            if (request.mode === 'navigate') {
-              return caches.match('/dashboard') || caches.match('/');
-            }
+          }
+
+          // Clone the response for caching
+          const responseToCache = response.clone();
+
+          // Cache the response
+          caches.open(DYNAMIC_CACHE).then((cache) => {
+            cache.put(request, responseToCache);
           });
-      })
+
+          return response;
+        })
+        .catch(() => {
+          // If network fails and no cache, return offline page for navigation requests
+          if (request.mode === 'navigate') {
+            return caches.match('/dashboard') || caches.match('/');
+          }
+        });
+    })
   );
 });
 
@@ -134,25 +138,23 @@ self.addEventListener('push', (event) => {
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
-        primaryKey: 1
+        primaryKey: 1,
       },
       actions: [
         {
           action: 'explore',
           title: 'Go to TaskTracker',
-          icon: '/icons/icon-192x192.png'
+          icon: '/icons/icon-192x192.png',
         },
         {
           action: 'close',
           title: 'Close',
-          icon: '/icons/icon-192x192.png'
-        }
-      ]
+          icon: '/icons/icon-192x192.png',
+        },
+      ],
     };
 
-    event.waitUntil(
-      self.registration.showNotification(data.title, options)
-    );
+    event.waitUntil(self.registration.showNotification(data.title, options));
   }
 });
 
@@ -161,8 +163,6 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/dashboard')
-    );
+    event.waitUntil(clients.openWindow('/dashboard'));
   }
 });

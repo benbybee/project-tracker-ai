@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 export async function DELETE(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,7 +16,10 @@ export async function DELETE(req: Request) {
     const { ticketId } = await req.json();
 
     if (!ticketId) {
-      return NextResponse.json({ error: 'Ticket ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Ticket ID is required' },
+        { status: 400 }
+      );
     }
 
     // First, delete all associated tasks

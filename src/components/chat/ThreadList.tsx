@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { MessageCircle, Users, Clock, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  MessageCircle,
+  Users,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ThreadListProps {
@@ -28,12 +33,14 @@ export function ThreadList({
   threads,
   onThreadSelect,
   selectedThreadId,
-  className = ''
+  className = '',
 }: ThreadListProps) {
-  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(
+    new Set()
+  );
 
   const toggleExpanded = (threadId: string) => {
-    setExpandedThreads(prev => {
+    setExpandedThreads((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(threadId)) {
         newSet.delete(threadId);
@@ -94,7 +101,7 @@ export function ThreadList({
                     <div className="w-2 h-2 bg-blue-500 rounded-full" />
                   )}
                 </div>
-                
+
                 <div className="flex items-center space-x-1">
                   <span className="text-xs text-gray-500">
                     {getTimeAgo(thread.lastMessageAt)}
@@ -128,7 +135,10 @@ export function ThreadList({
               <div className="flex items-center space-x-3 mt-2 text-xs text-gray-500">
                 <div className="flex items-center space-x-1">
                   <Users className="h-3 w-3" />
-                  <span>{thread.participants.length} participant{thread.participants.length === 1 ? '' : 's'}</span>
+                  <span>
+                    {thread.participants.length} participant
+                    {thread.participants.length === 1 ? '' : 's'}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <MessageCircle className="h-3 w-3" />
@@ -149,7 +159,9 @@ export function ThreadList({
                 <div className="p-3">
                   {/* Participants */}
                   <div className="mb-3">
-                    <h4 className="text-xs font-medium text-gray-700 mb-2">Participants</h4>
+                    <h4 className="text-xs font-medium text-gray-700 mb-2">
+                      Participants
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {thread.participants.map((participant) => (
                         <div
@@ -177,11 +189,7 @@ export function ThreadList({
                     >
                       Open Thread
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs"
-                    >
+                    <Button variant="ghost" size="sm" className="text-xs">
                       Settings
                     </Button>
                   </div>

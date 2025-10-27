@@ -6,23 +6,25 @@ import { getDB, SyncStatus, isBrowser } from '@/lib/db.client';
 
 // Custom online status hook
 function useOnline() {
-  const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? navigator.onLine : true);
-  
+  const [isOnline, setIsOnline] = useState(
+    typeof window !== 'undefined' ? navigator.onLine : true
+  );
+
   useEffect(() => {
     if (!isBrowser()) return;
-    
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-  
+
   return isOnline;
 }
 
@@ -61,7 +63,7 @@ export function useSync() {
         manager.on('complete', (progress: SyncProgress) => {
           setIsSyncing(false);
           setSyncProgress(null);
-          
+
           // Update sync status
           db.getSyncStatus().then(setSyncStatus);
         });
@@ -71,7 +73,6 @@ export function useSync() {
           setSyncProgress(null);
           console.error('Sync error:', error);
         });
-
       } catch (error) {
         console.error('Failed to load sync status:', error);
       }
@@ -87,7 +88,7 @@ export function useSync() {
       const { pushAndPull } = await import('@/lib/sync-manager');
       await pushAndPull();
       setIsSyncing(false);
-      
+
       // Update sync status
       if (isBrowser()) {
         const db = await getDB();
@@ -101,20 +102,28 @@ export function useSync() {
     }
   }, []);
 
-  const addToSyncQueue = useCallback(async (
-    entityType: 'task' | 'project' | 'role',
-    entityId: string,
-    operationType: 'create' | 'update' | 'delete',
-    payload: any
-  ) => {
-    if (!syncManager) return;
-    
-    try {
-      await syncManager.addToSyncQueue(entityType, entityId, operationType, payload);
-    } catch (error) {
-      console.error('Failed to add to sync queue:', error);
-    }
-  }, [syncManager]);
+  const addToSyncQueue = useCallback(
+    async (
+      entityType: 'task' | 'project' | 'role',
+      entityId: string,
+      operationType: 'create' | 'update' | 'delete',
+      payload: any
+    ) => {
+      if (!syncManager) return;
+
+      try {
+        await syncManager.addToSyncQueue(
+          entityType,
+          entityId,
+          operationType,
+          payload
+        );
+      } catch (error) {
+        console.error('Failed to add to sync queue:', error);
+      }
+    },
+    [syncManager]
+  );
 
   return {
     isOnline,
@@ -123,13 +132,20 @@ export function useSync() {
     isSyncing,
     startSync,
     addToSyncQueue,
-    hasPendingSync: syncStatus?.pendingCount ? syncStatus.pendingCount > 0 : false,
+    hasPendingSync: syncStatus?.pendingCount
+      ? syncStatus.pendingCount > 0
+      : false,
     hasFailedSync: syncStatus?.failedCount ? syncStatus.failedCount > 0 : false,
   };
 }
 
-export function useEntitySyncStatus(entityType: 'task' | 'project' | 'role', entityId: string) {
-  const [syncStatus, setSyncStatus] = useState<'pending' | 'synced' | 'failed'>('synced');
+export function useEntitySyncStatus(
+  entityType: 'task' | 'project' | 'role',
+  entityId: string
+) {
+  const [syncStatus, setSyncStatus] = useState<'pending' | 'synced' | 'failed'>(
+    'synced'
+  );
 
   useEffect(() => {
     if (!isBrowser()) return;
@@ -137,7 +153,7 @@ export function useEntitySyncStatus(entityType: 'task' | 'project' | 'role', ent
     const checkSyncStatus = async () => {
       try {
         const db = await getDB();
-        const table = db[entityType + 's' as keyof typeof db] as any;
+        const table = db[(entityType + 's') as keyof typeof db] as any;
         const item = await table.get(entityId);
         if (item) {
           setSyncStatus(item.syncStatus);
@@ -172,102 +188,107 @@ export function useOfflineOperations() {
     loadSyncManager();
   }, []);
 
-  const createOffline = useCallback(async (
-    entityType: 'task' | 'project' | 'role',
-    payload: any
-  ) => {
-    const entityId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Add to local database
-    try {
-      const db = await getDB();
-      const table = db[entityType + 's' as keyof typeof db] as any;
-      await table.add({
-        id: entityId,
-        ...payload,
-        syncStatus: 'pending',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+  const createOffline = useCallback(
+    async (entityType: 'task' | 'project' | 'role', payload: any) => {
+      const entityId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Add to ops queue using the new system
-      const { enqueueOp } = await import('@/lib/ops-helpers');
-      await enqueueOp({
-        entityType: entityType as 'task' | 'project',
-        entityId,
-        action: 'create',
-        payload,
-        projectId: payload.projectId,
-        baseVersion: 0
-      });
+      // Add to local database
+      try {
+        const db = await getDB();
+        const table = db[(entityType + 's') as keyof typeof db] as any;
+        await table.add({
+          id: entityId,
+          ...payload,
+          syncStatus: 'pending',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
 
-      return entityId;
-    } catch (error) {
-      console.error('Failed to create offline:', error);
-      throw error;
-    }
-  }, []);
+        // Add to ops queue using the new system
+        const { enqueueOp } = await import('@/lib/ops-helpers');
+        await enqueueOp({
+          entityType: entityType as 'task' | 'project',
+          entityId,
+          action: 'create',
+          payload,
+          projectId: payload.projectId,
+          baseVersion: 0,
+        });
 
-  const updateOffline = useCallback(async (
-    entityType: 'task' | 'project' | 'role',
-    entityId: string,
-    updates: any
-  ) => {
-    try {
-      const db = await getDB();
-      const table = db[entityType + 's' as keyof typeof db] as any;
-      const existing = await table.get(entityId);
-      
-      await table.update(entityId, {
-        ...updates,
-        syncStatus: 'pending',
-        updatedAt: new Date().toISOString(),
-      });
+        return entityId;
+      } catch (error) {
+        console.error('Failed to create offline:', error);
+        throw error;
+      }
+    },
+    []
+  );
 
-      // Add to ops queue using the new system
-      const { enqueueOp } = await import('@/lib/ops-helpers');
-      await enqueueOp({
-        entityType: entityType as 'task' | 'project',
-        entityId,
-        action: 'update',
-        payload: updates,
-        projectId: updates.projectId || existing?.projectId,
-        baseVersion: existing?.updatedAt ? new Date(existing.updatedAt).getTime() : undefined
-      });
-    } catch (error) {
-      console.error('Failed to update offline:', error);
-      throw error;
-    }
-  }, []);
+  const updateOffline = useCallback(
+    async (
+      entityType: 'task' | 'project' | 'role',
+      entityId: string,
+      updates: any
+    ) => {
+      try {
+        const db = await getDB();
+        const table = db[(entityType + 's') as keyof typeof db] as any;
+        const existing = await table.get(entityId);
 
-  const deleteOffline = useCallback(async (
-    entityType: 'task' | 'project' | 'role',
-    entityId: string
-  ) => {
-    try {
-      const db = await getDB();
-      const table = db[entityType + 's' as keyof typeof db] as any;
-      const existing = await table.get(entityId);
-      
-      await table.update(entityId, {
-        syncStatus: 'pending',
-        updatedAt: new Date().toISOString(),
-      });
+        await table.update(entityId, {
+          ...updates,
+          syncStatus: 'pending',
+          updatedAt: new Date().toISOString(),
+        });
 
-      // Add to ops queue using the new system
-      const { enqueueOp } = await import('@/lib/ops-helpers');
-      await enqueueOp({
-        entityType: entityType as 'task' | 'project',
-        entityId,
-        action: 'delete',
-        payload: {},
-        projectId: existing?.projectId
-      });
-    } catch (error) {
-      console.error('Failed to delete offline:', error);
-      throw error;
-    }
-  }, []);
+        // Add to ops queue using the new system
+        const { enqueueOp } = await import('@/lib/ops-helpers');
+        await enqueueOp({
+          entityType: entityType as 'task' | 'project',
+          entityId,
+          action: 'update',
+          payload: updates,
+          projectId: updates.projectId || existing?.projectId,
+          baseVersion: existing?.updatedAt
+            ? new Date(existing.updatedAt).getTime()
+            : undefined,
+        });
+      } catch (error) {
+        console.error('Failed to update offline:', error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  const deleteOffline = useCallback(
+    async (entityType: 'task' | 'project' | 'role', entityId: string) => {
+      try {
+        const db = await getDB();
+        const table = db[(entityType + 's') as keyof typeof db] as any;
+        const existing = await table.get(entityId);
+
+        await table.update(entityId, {
+          syncStatus: 'pending',
+          updatedAt: new Date().toISOString(),
+        });
+
+        // Add to ops queue using the new system
+        const { enqueueOp } = await import('@/lib/ops-helpers');
+        await enqueueOp({
+          entityType: entityType as 'task' | 'project',
+          entityId,
+          action: 'delete',
+          payload: {},
+          projectId: existing?.projectId,
+        });
+      } catch (error) {
+        console.error('Failed to delete offline:', error);
+        throw error;
+      }
+    },
+    []
+  );
 
   return {
     createOffline,

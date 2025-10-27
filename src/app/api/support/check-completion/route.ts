@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import { db } from '@/server/db';
 import { tickets, tasks } from '@/server/db/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 /**
  * POST /api/support/check-completion
@@ -13,7 +13,7 @@ import { eq, and, or } from 'drizzle-orm';
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -21,7 +21,10 @@ export async function POST(req: NextRequest) {
     const { ticketId } = await req.json();
 
     if (!ticketId) {
-      return NextResponse.json({ error: 'ticketId is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'ticketId is required' },
+        { status: 400 }
+      );
     }
 
     // Get the ticket
@@ -42,13 +45,13 @@ export async function POST(req: NextRequest) {
       .where(eq(tasks.ticketId, ticketId));
 
     // Check if we should update the status
-    const shouldUpdate = 
+    const shouldUpdate =
       // Ticket has tasks
       ticketTasks.length > 0 &&
       // Ticket is not already complete
       ticket.status !== 'complete' &&
       // All tasks are completed
-      ticketTasks.every(task => task.status === 'completed');
+      ticketTasks.every((task) => task.status === 'completed');
 
     if (shouldUpdate) {
       // Update ticket to complete status
@@ -64,18 +67,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         updated: true,
         message: 'Ticket marked as complete',
-        completedTasksCount: ticketTasks.length
+        completedTasksCount: ticketTasks.length,
       });
     }
 
     // Check if ticket should be moved back to pending_tasks
-    const shouldMoveToPending = 
+    const shouldMoveToPending =
       // Ticket has tasks
       ticketTasks.length > 0 &&
       // Ticket is currently complete
       ticket.status === 'complete' &&
       // Some tasks are not completed
-      ticketTasks.some(task => task.status !== 'completed');
+      ticketTasks.some((task) => task.status !== 'completed');
 
     if (shouldMoveToPending) {
       // Move ticket back to pending_tasks
@@ -91,7 +94,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         updated: true,
         message: 'Ticket moved back to pending tasks',
-        incompleteTasksCount: ticketTasks.filter(t => t.status !== 'completed').length
+        incompleteTasksCount: ticketTasks.filter(
+          (t) => t.status !== 'completed'
+        ).length,
       });
     }
 
@@ -99,10 +104,10 @@ export async function POST(req: NextRequest) {
       updated: false,
       message: 'No status update needed',
       totalTasks: ticketTasks.length,
-      completedTasks: ticketTasks.filter(t => t.status === 'completed').length,
-      currentStatus: ticket.status
+      completedTasks: ticketTasks.filter((t) => t.status === 'completed')
+        .length,
+      currentStatus: ticket.status,
     });
-
   } catch (error) {
     console.error('Failed to check ticket completion:', error);
     return NextResponse.json(
@@ -111,4 +116,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

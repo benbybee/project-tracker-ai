@@ -11,7 +11,7 @@ import OpenAI from 'openai';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -31,10 +31,10 @@ export async function POST(req: Request) {
 
     // Get historical project assignments for this customer
     const historicalProjects = await db
-      .select({ 
+      .select({
         projectId: tickets.suggestedProjectId,
         projectName: projects.name,
-        count: sql<number>`count(*)`.as('count')
+        count: sql<number>`count(*)`.as('count'),
       })
       .from(tickets)
       .leftJoin(projects, eq(tickets.suggestedProjectId, projects.id))
@@ -51,40 +51,42 @@ export async function POST(req: Request) {
 
     // AI-powered project suggestion logic
     let suggestedProject = null;
-    
+
     // 1. Check if customer has historical project assignments
     if (historicalProjects.length > 0 && historicalProjects[0].projectId) {
       suggestedProject = {
         id: historicalProjects[0].projectId,
         name: historicalProjects[0].projectName,
-        reason: 'Based on your previous ticket history'
+        reason: 'Based on your previous ticket history',
       };
     }
     // 2. Check if domain matches any existing project
     else if (ticket.domain) {
-      const domainMatch = allProjects.find(p => 
-        p.name.toLowerCase().includes(ticket.domain!.toLowerCase()) ||
-        ticket.domain!.toLowerCase().includes(p.name.toLowerCase())
+      const domainMatch = allProjects.find(
+        (p) =>
+          p.name.toLowerCase().includes(ticket.domain!.toLowerCase()) ||
+          ticket.domain!.toLowerCase().includes(p.name.toLowerCase())
       );
       if (domainMatch) {
         suggestedProject = {
           id: domainMatch.id,
           name: domainMatch.name,
-          reason: 'Based on domain similarity'
+          reason: 'Based on domain similarity',
         };
       }
     }
     // 3. Check if project name matches existing project
     else {
-      const nameMatch = allProjects.find(p => 
-        p.name.toLowerCase().includes(ticket.projectName.toLowerCase()) ||
-        ticket.projectName.toLowerCase().includes(p.name.toLowerCase())
+      const nameMatch = allProjects.find(
+        (p) =>
+          p.name.toLowerCase().includes(ticket.projectName.toLowerCase()) ||
+          ticket.projectName.toLowerCase().includes(p.name.toLowerCase())
       );
       if (nameMatch) {
         suggestedProject = {
           id: nameMatch.id,
           name: nameMatch.name,
-          reason: 'Based on project name similarity'
+          reason: 'Based on project name similarity',
         };
       }
     }
@@ -92,7 +94,7 @@ export async function POST(req: Request) {
     // Generate AI summary and tasks using OpenAI
     let aiSummary = '';
     let aiTasks = [];
-    
+
     try {
       // Initialize OpenAI client inside the function
       const openai = new OpenAI({
@@ -109,12 +111,14 @@ TICKET DETAILS:
 - Request: ${ticket.details}
 
 AVAILABLE PROJECTS:
-${allProjects.map(p => `- ${p.name} (ID: ${p.id})`).join('\n')}
+${allProjects.map((p) => `- ${p.name} (ID: ${p.id})`).join('\n')}
 
 HISTORICAL CONTEXT:
-${historicalProjects.length > 0 ? 
-  `This customer has previously worked on: ${historicalProjects.map(h => h.projectName).join(', ')}` : 
-  'No previous project history for this customer'}
+${
+  historicalProjects.length > 0
+    ? `This customer has previously worked on: ${historicalProjects.map((h) => h.projectName).join(', ')}`
+    : 'No previous project history for this customer'
+}
 
 SUGGESTED PROJECT: ${suggestedProject ? `${suggestedProject.name} (${suggestedProject.reason})` : 'None - manual assignment needed'}
 
@@ -137,76 +141,81 @@ Format your response as JSON:
 }`;
 
       const completion = await openai.chat.completions.create({
-        model: "gpt-4",
+        model: 'gpt-4',
         messages: [
           {
-            role: "system",
-            content: "You are an expert project manager and technical consultant. Analyze support tickets and break them down into actionable development tasks with realistic time estimates."
+            role: 'system',
+            content:
+              'You are an expert project manager and technical consultant. Analyze support tickets and break them down into actionable development tasks with realistic time estimates.',
           },
           {
-            role: "user",
-            content: prompt
-          }
+            role: 'user',
+            content: prompt,
+          },
         ],
         temperature: 0.3,
-        max_tokens: 1500
+        max_tokens: 1500,
       });
 
-      const aiResponse = JSON.parse(completion.choices[0].message.content || '{}');
+      const aiResponse = JSON.parse(
+        completion.choices[0].message.content || '{}'
+      );
       aiSummary = aiResponse.summary || '';
       aiTasks = aiResponse.tasks || [];
     } catch (error) {
       console.error('OpenAI API error:', error);
       // Fallback to rule-based approach
-      aiSummary = `AI Analysis for ${ticket.customerName} (${ticket.customerEmail}):\n\n` +
+      aiSummary =
+        `AI Analysis for ${ticket.customerName} (${ticket.customerEmail}):\n\n` +
         `Project: ${ticket.projectName}\n` +
         `Priority: ${ticket.priority}\n` +
         `Domain: ${ticket.domain || 'Not specified'}\n\n` +
         `Request Summary: ${ticket.details.slice(0, 200)}${ticket.details.length > 200 ? '...' : ''}\n\n` +
         `Suggested Project: ${suggestedProject ? suggestedProject.name : 'No suggestion - manual assignment required'}\n` +
         `Reason: ${suggestedProject ? suggestedProject.reason : 'No historical data or domain match found'}`;
-      
+
       aiTasks = [
         {
           title: `Initial Review: ${ticket.projectName}`,
           description: `Review requirements with ${ticket.customerName} and clarify scope`,
           estimatedHours: 2,
-          suggestedProject: suggestedProject?.name
+          suggestedProject: suggestedProject?.name,
         },
         {
           title: 'Development Work',
           description: `Implement requested changes: ${ticket.details.slice(0, 100)}...`,
           estimatedHours: 8,
-          suggestedProject: suggestedProject?.name
+          suggestedProject: suggestedProject?.name,
         },
         {
           title: 'QA & Client Review',
           description: `Test implementation and gather feedback from ${ticket.customerName}`,
           estimatedHours: 2,
-          suggestedProject: suggestedProject?.name
-        }
+          suggestedProject: suggestedProject?.name,
+        },
       ];
     }
 
     // Map AI tasks to our format and assign project IDs
     const tasks = aiTasks.map((task: any) => {
-      const projectId = task.suggestedProject ? 
-        allProjects.find(p => p.name === task.suggestedProject)?.id || suggestedProject?.id :
-        suggestedProject?.id;
-        
+      const projectId = task.suggestedProject
+        ? allProjects.find((p) => p.name === task.suggestedProject)?.id ||
+          suggestedProject?.id
+        : suggestedProject?.id;
+
       return {
         id: randomUUID(),
         title: task.title,
         description: task.description,
         projectId,
-        estimatedHours: task.estimatedHours || 4
+        estimatedHours: task.estimatedHours || 4,
       };
     });
 
     // Update ticket with AI summary and suggested project
     await db
       .update(tickets)
-      .set({ 
+      .set({
         aiSummary: aiSummary,
         suggestedProjectId: suggestedProject?.id,
         status: 'in_review',
@@ -218,7 +227,7 @@ Format your response as JSON:
       summary: aiSummary,
       tasks,
       suggestedProject,
-      availableProjects: allProjects
+      availableProjects: allProjects,
     });
   } catch (error) {
     console.error('Failed to generate AI summary:', error);
@@ -228,4 +237,3 @@ Format your response as JSON:
     );
   }
 }
-

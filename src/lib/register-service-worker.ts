@@ -36,14 +36,14 @@ export function registerServiceWorker() {
       e.preventDefault();
       // Stash the event so it can be triggered later
       deferredPrompt = e;
-      
+
       // Show install prompt
       showInstallPrompt();
     };
 
     // Handle appinstalled event
     const handleAppInstalled = () => {
-      console.log('PWA was installed');
+      // PWA was installed
       showToast('App installed successfully', 'success');
       deferredPrompt = null;
     };
@@ -52,16 +52,21 @@ export function registerServiceWorker() {
     const registerSW = async () => {
       if ('serviceWorker' in navigator) {
         try {
-          const registration = await navigator.serviceWorker.register('/service-worker-simple.js');
-          
-          console.log('SW registered: ', registration);
-          
+          const registration = await navigator.serviceWorker.register(
+            '/service-worker-simple.js'
+          );
+
+          // Service worker registered successfully
+
           // Handle updates
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (
+                  newWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller
+                ) {
                   // New content is available, reload the page
                   window.location.reload();
                 }
@@ -69,7 +74,8 @@ export function registerServiceWorker() {
             }
           });
         } catch (error) {
-          console.log('SW registration failed: ', error);
+          // Service worker registration failed silently
+          // User experience is not affected
         }
       }
     };
@@ -79,11 +85,7 @@ export function registerServiceWorker() {
       if (deferredPrompt) {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-          } else {
-            console.log('User dismissed the install prompt');
-          }
+          // User has made their choice about installing the PWA
           deferredPrompt = null;
         });
       }
@@ -94,11 +96,13 @@ export function registerServiceWorker() {
       // Create toast element
       const toast = document.createElement('div');
       toast.className = `fixed bottom-4 left-4 z-50 max-w-sm w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 transform transition-all duration-300 ease-in-out ${
-        type === 'success' ? 'border-green-200 bg-green-50' : 
-        type === 'error' ? 'border-red-200 bg-red-50' : 
-        'border-blue-200 bg-blue-50'
+        type === 'success'
+          ? 'border-green-200 bg-green-50'
+          : type === 'error'
+            ? 'border-red-200 bg-red-50'
+            : 'border-blue-200 bg-blue-50'
       }`;
-      
+
       toast.innerHTML = `
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -117,9 +121,9 @@ export function registerServiceWorker() {
           </div>
         </div>
       `;
-      
+
       document.body.appendChild(toast);
-      
+
       // Auto remove after 5 seconds
       setTimeout(() => {
         if (toast.parentElement) {
@@ -131,13 +135,16 @@ export function registerServiceWorker() {
     // Register event listeners
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
-    
+
     // Register service worker
     registerSW();
 
     // Cleanup
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt
+      );
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);

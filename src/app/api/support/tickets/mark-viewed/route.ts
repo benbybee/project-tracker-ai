@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,13 +16,16 @@ export async function POST(req: Request) {
     const { ticketId } = await req.json();
 
     if (!ticketId) {
-      return NextResponse.json({ error: 'Ticket ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Ticket ID is required' },
+        { status: 400 }
+      );
     }
 
     // Update ticket status to 'viewed' if it's currently 'new'
     await db
       .update(tickets)
-      .set({ 
+      .set({
         status: 'viewed',
         updatedAt: new Date(),
       })

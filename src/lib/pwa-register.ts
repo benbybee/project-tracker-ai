@@ -7,6 +7,6 @@ export function registerSW() {
 
   // Temporarily disabled to fix build issues
   // TODO: Re-enable service worker after deployment is working
-  console.log('[PWA] Service worker registration temporarily disabled');
+  // Service worker registration is intentionally disabled
   return;
 }
