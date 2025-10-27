@@ -1,29 +1,20 @@
-const fs = require('fs');
-const path = require('path');
+// ⚠️ DEPRECATED: This script has been replaced by generate-pwa-icons.js
+// 
+// The new script uses the Sharp library to generate proper PNG icons
+// from a source image (public/app-icon-source.png).
+//
+// To generate PWA icons, run:
+//   npm run pwa:icons
+//   or
+//   node scripts/generate-pwa-icons.js
+//
+// Make sure you have a source image at: public/app-icon-source.png
 
-// Create icons directory
-const iconsDir = path.join(__dirname, '..', 'public', 'icons');
-if (!fs.existsSync(iconsDir)) {
-  fs.mkdirSync(iconsDir, { recursive: true });
-}
-
-// Create placeholder SVG icons
-const createIcon = (size, filename) => {
-  const svg = `
-<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="${size}" height="${size}" rx="20" fill="#6D4AFF"/>
-  <rect x="20" y="20" width="${size - 40}" height="${size - 40}" rx="10" fill="white" fill-opacity="0.1"/>
-  <rect x="40" y="40" width="${size - 80}" height="${size - 80}" rx="5" fill="white"/>
-  <text x="${size / 2}" y="${size / 2 + 10}" text-anchor="middle" fill="#6D4AFF" font-family="Arial, sans-serif" font-size="24" font-weight="bold">TT</text>
-</svg>`;
-
-  fs.writeFileSync(path.join(iconsDir, filename), svg);
-  console.log(`Created ${filename}`);
-};
-
-// Generate icons
-createIcon(192, 'icon-192x192.png');
-createIcon(512, 'icon-512x512.png');
-createIcon(512, 'maskable-icon-512x512.png');
-
-console.log('Icons generated successfully!');
+console.log('⚠️  DEPRECATED SCRIPT');
+console.log('');
+console.log('This script has been replaced by generate-pwa-icons.js');
+console.log('');
+console.log('To generate PWA icons, run:');
+console.log('  npm run pwa:icons');
+console.log('');
+console.log('Make sure you have a source image at: public/app-icon-source.png');
