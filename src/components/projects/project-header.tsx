@@ -229,7 +229,9 @@ export function ProjectHeader({
                   <RefreshCw
                     className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
                   />
-                  <span className="ml-2">{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
+                  <span className="ml-2">
+                    {isSyncing ? 'Syncing...' : 'Sync Now'}
+                  </span>
                 </Button>
               )}
 
