@@ -244,7 +244,11 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
             >
               Cancel
             </Button>
-            <Button type="button" onClick={handleSave} disabled={saving || deleting}>
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || deleting}
+            >
               {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>

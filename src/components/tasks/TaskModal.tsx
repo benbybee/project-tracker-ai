@@ -25,6 +25,9 @@ import { Plus, X, GripVertical } from 'lucide-react';
 import { useOfflineOperations, useSync } from '@/hooks/useSync.client';
 import { useRealtime } from '@/app/providers';
 import { useParams } from 'next/navigation';
+import { getDB } from '@/lib/db.client';
+import { enqueueTaskDelete } from '@/lib/ops-helpers';
+import { useTasksStore } from '@/lib/tasks-store';
 
 const TaskSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
@@ -73,9 +76,11 @@ export function TaskModal({
 }: TaskModalProps) {
   const [addToDaily, setAddToDaily] = useState(defaultValues?.isDaily || false);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { createOffline, updateOffline } = useOfflineOperations();
   const { isOnline } = useSync();
   const { startTyping, stopTyping, updatePresence } = useRealtime();
+  const { remove: removeTaskFromStore } = useTasksStore();
   const params = useParams<{ id?: string }>();
 
   const createTask = trpc.tasks.create.useMutation();
@@ -152,6 +157,39 @@ export function TaskModal({
       console.error('Failed to save task:', error);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!defaultValues?.id) return;
+
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this task? This action cannot be undone.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+
+    try {
+      // Optimistic removal from store
+      removeTaskFromStore(defaultValues.id);
+
+      // Delete from Dexie
+      const db = await getDB();
+      await db.tasks.delete(defaultValues.id);
+
+      // Enqueue delete operation for sync
+      await enqueueTaskDelete(defaultValues.id, projectId);
+
+      onClose();
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      alert('Failed to delete task. Please try again.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -426,17 +464,40 @@ export function TaskModal({
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting
-                ? 'Saving...'
-                : defaultValues?.id
-                  ? 'Update Task'
-                  : 'Create Task'}
-            </Button>
+          <DialogFooter
+            className={defaultValues?.id ? 'flex justify-between' : ''}
+          >
+            {defaultValues?.id && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={submitting || deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete Task'}
+              </Button>
+            )}
+            <div
+              className={
+                defaultValues?.id ? 'flex gap-2' : 'flex gap-2 ml-auto'
+              }
+            >
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={submitting || deleting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting || deleting}>
+                {submitting
+                  ? 'Saving...'
+                  : defaultValues?.id
+                    ? 'Update Task'
+                    : 'Create Task'}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
