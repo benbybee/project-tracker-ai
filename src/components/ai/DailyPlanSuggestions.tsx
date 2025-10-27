@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
@@ -24,17 +24,34 @@ interface DailyPlanSuggestionsProps {
   onAcceptPlan?: (plan: DailyPlan) => Promise<void>;
   onRejectPlan?: (plan: DailyPlan) => void;
   tasks?: Task[];
+  triggerGenerate?: boolean;
+  onGenerateComplete?: () => void;
 }
 
 export function DailyPlanSuggestions({
   onAcceptPlan,
   onRejectPlan,
   tasks = [],
+  triggerGenerate = false,
+  onGenerateComplete,
 }: DailyPlanSuggestionsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isAccepting, setIsAccepting] = useState(false);
+  const [lastTrigger, setLastTrigger] = useState(false);
+
+  // Watch for trigger from parent
+  useEffect(() => {
+    if (triggerGenerate && triggerGenerate !== lastTrigger) {
+      setLastTrigger(triggerGenerate);
+      generatePlan();
+      if (onGenerateComplete) {
+        onGenerateComplete();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [triggerGenerate]);
 
   const generatePlan = async () => {
     setIsLoading(true);
@@ -105,18 +122,7 @@ export function DailyPlanSuggestions({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Generate Plan Button */}
-      {!plan && !isLoading && (
-        <button
-          onClick={generatePlan}
-          disabled={tasks.length === 0}
-          className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
-        >
-          <Sparkles className="h-5 w-5" />
-          <span className="font-medium">Generate AI Daily Plan</span>
-        </button>
-      )}
+    <div className="space-y-4">{/* Generate Plan Button - Removed duplicate, use PlanActionBar instead */}
 
       {/* Loading State */}
       {isLoading && (

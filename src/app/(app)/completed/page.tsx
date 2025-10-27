@@ -143,7 +143,7 @@ export default function CompletedTasksPage() {
   };
 
   return (
-    <div className="px-2 py-6">
+    <div className="px-4 sm:px-6 md:px-2 py-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <PageHeader
           icon={CheckCircle2}
@@ -153,22 +153,23 @@ export default function CompletedTasksPage() {
             <button
               onClick={exportCSV}
               disabled={tasks.length === 0}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               <Download className="h-4 w-4" />
-              Export CSV
+              <span className="hidden sm:inline">Export CSV</span>
+              <span className="sm:hidden">Export</span>
             </button>
           }
         />
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 p-4 bg-white/80 rounded-xl border border-gray-200">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-500" />
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 p-4 bg-white/80 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 sm:flex-initial"
             >
               <option value="7">Last 7 days</option>
               <option value="30">Last 30 days</option>
@@ -177,12 +178,12 @@ export default function CompletedTasksPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <FolderOpen className="h-4 w-4 text-gray-500" />
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <FolderOpen className="h-4 w-4 text-gray-500 flex-shrink-0" />
             <select
               value={projectFilter}
               onChange={(e) => setProjectFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 sm:flex-initial"
             >
               <option value="">All Projects</option>
               {projects.map((p) => (
@@ -193,12 +194,12 @@ export default function CompletedTasksPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-gray-500" />
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <Users className="h-4 w-4 text-gray-500 flex-shrink-0" />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 sm:flex-initial"
             >
               <option value="">All Roles</option>
               {roles.map((r) => (
@@ -244,7 +245,65 @@ export default function CompletedTasksPage() {
           </div>
         ) : (
           <>
-            <div className="rounded-xl border bg-white/80 backdrop-blur overflow-hidden">
+            {/* Mobile View */}
+            <div className="block sm:hidden space-y-3">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="border border-gray-200 rounded-lg p-4 bg-white/80 backdrop-blur hover:bg-gray-50 transition-colors"
+                >
+                  <div className="mb-3">
+                    <div className="text-sm font-medium text-gray-900 mb-1">
+                      {task.title}
+                    </div>
+                    {task.description && (
+                      <div className="text-xs text-gray-600 line-clamp-2">
+                        {task.description}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {task.project && (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                        {task.project.name}
+                      </span>
+                    )}
+                    {task.archived ? (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                        Archived
+                      </span>
+                    ) : (
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                        Completed
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    {task.role ? (
+                      <div className="flex items-center">
+                        <div
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{ backgroundColor: task.role.color }}
+                        ></div>
+                        <span className="text-gray-600">{task.role.name}</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">No role</span>
+                    )}
+                    <span className="text-gray-500">
+                      {task.archivedAt
+                        ? format(new Date(task.archivedAt), 'MMM d, yyyy')
+                        : format(new Date(task.updatedAt), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden sm:block rounded-xl border bg-white/80 backdrop-blur overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b">

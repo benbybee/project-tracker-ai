@@ -5,9 +5,16 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import SyncIndicator from '@/components/sync/SyncIndicator';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ConflictReviewButton } from '@/components/sync/ConflictModal';
+import { TaskModal } from '@/components/tasks/TaskModal';
+import { trpc } from '@/lib/trpc';
 
 export function Topbar() {
   const [isMobile, setIsMobile] = useState(false);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  
+  // Fetch projects to get a default project ID
+  const { data: projects } = trpc.projects.list.useQuery({});
+  const defaultProjectId = projects?.[0]?.id || '';
 
   useEffect(() => {
     const checkMobile = () => {
@@ -49,23 +56,28 @@ export function Topbar() {
           </div>
           <NotificationBell />
           <GradientButton
-            onClick={() => {
-              // TODO: Implement new task functionality
-            }}
+            onClick={() => setTaskModalOpen(true)}
             className="hidden sm:block"
           >
             New Task
           </GradientButton>
           <GradientButton
-            onClick={() => {
-              // TODO: Implement new task functionality
-            }}
+            onClick={() => setTaskModalOpen(true)}
             className="sm:hidden px-3"
           >
             +
           </GradientButton>
         </div>
       </div>
+
+      {/* Task Creation Modal */}
+      {taskModalOpen && defaultProjectId && (
+        <TaskModal
+          projectId={defaultProjectId}
+          isOpen={taskModalOpen}
+          onClose={() => setTaskModalOpen(false)}
+        />
+      )}
     </header>
   );
 }

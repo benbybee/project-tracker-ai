@@ -22,6 +22,7 @@ export default function DailyPlannerPage() {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<Task | null>(null);
   const [showAiSuggestions] = useState(true);
+  const [triggerGenerate, setTriggerGenerate] = useState(false);
 
   const { suggestions, fetchSuggestions, acceptSuggestion, rejectSuggestion } =
     useAiSuggestions();
@@ -128,7 +129,7 @@ export default function DailyPlannerPage() {
         {showAiSuggestions && (
           <div className="space-y-4">
             <PlanActionBar
-              onGeneratePlan={() => {}}
+              onGeneratePlan={() => setTriggerGenerate(!triggerGenerate)}
               onUpdatePatterns={handleUpdatePatterns}
               isLoading={false}
             />
@@ -140,6 +141,8 @@ export default function DailyPlannerPage() {
                 title: t.title,
                 priority: String(t.priorityScore || '2'),
               }))}
+              triggerGenerate={triggerGenerate}
+              onGenerateComplete={() => setTriggerGenerate(false)}
             />
 
             {/* Context-aware Suggestions */}
