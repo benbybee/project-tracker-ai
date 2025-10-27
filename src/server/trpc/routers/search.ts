@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
-import { db } from '@/server/db';
 import { tasks, projects } from '@/server/db/schema';
 import { sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';

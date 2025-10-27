@@ -9,15 +9,7 @@ import {
   tickets,
   taskAnalytics,
 } from '@/server/db';
-import {
-  eq,
-  and,
-  gte,
-  lte,
-  isNotNull,
-  asc,
-  desc,
-} from 'drizzle-orm';
+import { eq, and, gte, lte, isNotNull, asc, desc } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { upsertEmbedding } from '@/server/search/upsertEmbedding';
 import { logTaskActivity } from '@/lib/activity-logger';

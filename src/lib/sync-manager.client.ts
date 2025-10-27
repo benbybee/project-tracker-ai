@@ -147,8 +147,11 @@ class SyncManager {
   }
 
   private async syncProject(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _entityId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _operationType: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _payload: any
   ): Promise<void> {
     // TODO: Implement proper tRPC sync with lazy import
@@ -189,8 +192,10 @@ class SyncManager {
   }
 
   private async syncRole(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _entityId: string,
     operationType: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _payload: any
   ): Promise<void> {
     // Roles are typically managed server-side, but we can handle updates

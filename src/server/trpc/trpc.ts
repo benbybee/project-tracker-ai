@@ -7,6 +7,7 @@ import { db } from '@/server/db';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const createTRPCContext = async (opts: { req: NextRequest }) => {
   const session = await getServerSession(authOptions);
 

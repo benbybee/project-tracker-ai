@@ -196,6 +196,7 @@ export class PatternAnalyzer {
   /**
    * Analyze postponement patterns (tasks that get rescheduled)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async analyzePostponementPattern(_userId: string): Promise<{
     mostPostponedTypes: string[];
     avgPostponementDays: number;

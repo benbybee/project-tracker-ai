@@ -46,6 +46,7 @@ export function usePresence() {
   }, [session]);
 
   const updatePresence = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (_data: Partial<PresenceData>) => {
       if (!session?.user) return;
 
@@ -55,6 +56,7 @@ export function usePresence() {
   );
 
   const startTyping = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (_entityType: 'task' | 'project', _entityId: string) => {
       if (!session?.user) return;
 
@@ -64,6 +66,7 @@ export function usePresence() {
   );
 
   const stopTyping = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (_entityType: 'task' | 'project', _entityId: string) => {
       if (!session?.user) return;
 

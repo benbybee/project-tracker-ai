@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
