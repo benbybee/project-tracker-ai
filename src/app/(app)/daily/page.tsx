@@ -12,7 +12,6 @@ import { DailyPlanSuggestions } from '@/components/ai/DailyPlanSuggestions';
 import { SuggestionCard } from '@/components/ai/SuggestionCard';
 import { PlanActionBar } from '@/components/ai/PlanActionBar';
 import { useAiSuggestions } from '@/hooks/useAiSuggestions';
-import type { DailyPlan } from '@/lib/ai/planning-engine';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -93,7 +92,7 @@ export default function DailyPlannerPage() {
     [selected]
   );
 
-  const handleAcceptPlan = async (plan: DailyPlan) => {
+  const handleAcceptPlan = async () => {
     // Refresh page to see changes
     window.location.reload();
   };

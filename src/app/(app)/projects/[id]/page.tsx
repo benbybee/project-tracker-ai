@@ -24,7 +24,7 @@ export default function ProjectDetailPage() {
   const { data: tasks } = trpc.tasks.list.useQuery({
     projectId,
   });
-  const { isConnected, status, onlineUsers } = useRealtime();
+  const { isConnected, onlineUsers } = useRealtime();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
 

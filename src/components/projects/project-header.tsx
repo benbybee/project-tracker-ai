@@ -42,7 +42,6 @@ type Project = {
 
 export function ProjectHeader({
   project,
-  role,
   onNewTask,
 }: {
   project: Project;

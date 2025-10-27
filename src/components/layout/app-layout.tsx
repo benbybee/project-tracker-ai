@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
-import { getSidebarWidth } from '@/lib/sidebar-utils';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarWidth, setSidebarWidth] = useState('256px'); // Default expanded width

@@ -12,15 +12,10 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 import { useState, useEffect, useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
 import KanbanFilters from './KanbanFilters';
-import { EmptyState } from '@/components/ui/empty-state';
 import { getDB } from '@/lib/db.client';
 import { enqueueOp } from '@/lib/ops-helpers';
 import { getFreshBaseVersionForTask } from '@/lib/sync-manager';

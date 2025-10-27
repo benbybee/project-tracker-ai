@@ -220,10 +220,7 @@ export default function ProjectsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleTogglePin(
-                            project.id,
-                            project.pinned ?? false
-                          );
+                          handleTogglePin(project.id, project.pinned ?? false);
                         }}
                         className="text-gray-600 hover:text-gray-900 p-2"
                         title={project.pinned ? 'Unpin' : 'Pin'}
@@ -242,7 +239,9 @@ export default function ProjectsPage() {
                   )}
 
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                    <span>Created {new Date(project.createdAt).toLocaleDateString()}</span>
+                    <span>
+                      Created {new Date(project.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
 
                   <button

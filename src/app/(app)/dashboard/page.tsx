@@ -365,7 +365,10 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Search Affordance - Hidden on mobile */}
-        <motion.div variants={itemVariants} className="hidden md:block fixed bottom-6 right-6">
+        <motion.div
+          variants={itemVariants}
+          className="hidden md:block fixed bottom-6 right-6"
+        >
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

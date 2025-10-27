@@ -44,7 +44,6 @@ function NavItem({
   icon: Icon,
   label,
   isCompact,
-  isMobile,
 }: {
   href: string;
   icon: any;
@@ -131,7 +130,6 @@ export function Sidebar() {
   const [isCompact, setIsCompact] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   // Check for mobile/tablet screens
   useEffect(() => {
@@ -209,8 +207,6 @@ export function Sidebar() {
           isMobile ? 'w-[256px]' : isCompact ? 'w-[84px]' : 'w-[256px]'
         )}
         aria-label="Main navigation"
-        onMouseEnter={() => !isMobile && setIsHovered(true)}
-        onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
         {/* Header with logo and toggle */}
         <div

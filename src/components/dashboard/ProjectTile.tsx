@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Globe } from 'lucide-react';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
 import { GlassCard } from '@/components/ui/glass-card';
 
 interface ProjectTileProps {

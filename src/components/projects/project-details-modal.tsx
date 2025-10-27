@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
 import { TaskEditModal } from '@/components/tasks/TaskEditModal';
@@ -222,8 +221,14 @@ export function ProjectDetailsModal({
                           onClick={() => {
                             setSelectedTask({
                               ...task,
-                              createdAt: task.createdAt instanceof Date ? task.createdAt.toISOString() : task.createdAt,
-                              updatedAt: task.updatedAt instanceof Date ? task.updatedAt.toISOString() : task.updatedAt,
+                              createdAt:
+                                task.createdAt instanceof Date
+                                  ? task.createdAt.toISOString()
+                                  : task.createdAt,
+                              updatedAt:
+                                task.updatedAt instanceof Date
+                                  ? task.updatedAt.toISOString()
+                                  : task.updatedAt,
                             } as Task);
                             setEditTaskOpen(true);
                           }}

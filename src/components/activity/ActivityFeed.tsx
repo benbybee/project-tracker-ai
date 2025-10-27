@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RefreshCw, Filter } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 
 interface ActivityFeedProps {
   projectId?: string;

@@ -7,10 +7,8 @@ import {
   Clock,
   Trash2,
   CheckCircle2,
-  AlarmClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { addDays } from '@/lib/date-utils';
 
 export type Role = { id: string; name: string; color: string };
 export type Subtask = { id: number; title: string; completed: boolean };
@@ -47,7 +45,6 @@ export function TaskCard({
   onSnooze,
   onDelete,
   className,
-  draggable = false,
 }: {
   task: Task;
   onOpen?: (task: Task) => void;
@@ -65,7 +62,7 @@ export function TaskCard({
   const hasSubs = subTotal > 0;
 
   const due = task.dueDate ? new Date(task.dueDate) : null;
-  const { badge, dueText, overdue } = dueBadge(due);
+  const { dueText, overdue } = dueBadge(due);
 
   // Calculate status indicators
   const daysStale = task.updatedAt

@@ -21,9 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useState } from 'react';
-import { Plus, X, GripVertical } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useOfflineOperations, useSync } from '@/hooks/useSync.client';
-import { getDB } from '@/lib/db.client';
 import { useRealtime } from '@/app/providers';
 import { useParams } from 'next/navigation';
 
@@ -93,7 +92,7 @@ export function TaskModal({
     control,
     watch,
     setValue,
-    formState: { isSubmitting, errors },
+    formState: { errors },
   } = useForm<TaskForm>({
     resolver: zodResolver(TaskSchema),
     defaultValues: {

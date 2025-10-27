@@ -5,7 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task } from '@/types/task';
 import { TaskEditModal } from '@/components/tasks/TaskEditModal';
-import { CalendarDays, Clock } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface KanbanTaskProps {
@@ -61,7 +61,7 @@ export function KanbanTask({ task }: KanbanTaskProps) {
           'flex flex-col gap-2',
           isDragging && 'opacity-50 rotate-2'
         )}
-        onClick={(e) => {
+        onClick={() => {
           // Only open modal if not dragging
           if (!isDragging) {
             setEditOpen(true);

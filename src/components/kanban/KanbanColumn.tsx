@@ -26,24 +26,7 @@ const STATUS_LABELS = {
   launch: 'Launch',
 };
 
-const STATUS_COLORS = {
-  not_started: 'bg-gray-100',
-  in_progress: 'bg-blue-100',
-  blocked: 'bg-red-100',
-  completed: 'bg-green-100',
-  content: 'bg-purple-100',
-  design: 'bg-pink-100',
-  dev: 'bg-cyan-100',
-  qa: 'bg-yellow-100',
-  launch: 'bg-orange-100',
-};
-
-export function KanbanColumn({
-  status,
-  items,
-  title,
-  onEditTask,
-}: KanbanColumnProps) {
+export function KanbanColumn({ status, items, title }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: {
@@ -53,8 +36,6 @@ export function KanbanColumn({
 
   const columnTitle =
     title || STATUS_LABELS[status as keyof typeof STATUS_LABELS] || status;
-  const columnColor =
-    STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100';
 
   return (
     <div

@@ -53,7 +53,9 @@ export async function POST(request: Request) {
         await patternAnalyzer.analyzeUserPatterns(user.id);
         results.successful++;
       } catch (error: any) {
-        logger.error(`Failed to analyze patterns for user ${user.id}`, error, { userId: user.id });
+        logger.error(`Failed to analyze patterns for user ${user.id}`, error, {
+          userId: user.id,
+        });
         results.failed++;
         results.errors.push({
           userId: user.id,

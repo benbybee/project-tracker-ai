@@ -226,7 +226,9 @@ export default function TicketsPage() {
         <div className="rounded-xl border bg-white/80 backdrop-blur p-4 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 lg:gap-4">
             <div className="flex items-center gap-2 min-w-0">
-              <label className="text-sm font-medium flex-shrink-0">Status:</label>
+              <label className="text-sm font-medium flex-shrink-0">
+                Status:
+              </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -257,7 +259,9 @@ export default function TicketsPage() {
             </div>
 
             <div className="hidden sm:flex items-center gap-2 min-w-0">
-              <label className="text-sm font-medium flex-shrink-0">Project:</label>
+              <label className="text-sm font-medium flex-shrink-0">
+                Project:
+              </label>
               <select
                 value={projectFilter}
                 onChange={(e) => setProjectFilter(e.target.value)}
@@ -437,14 +441,11 @@ export default function TicketsPage() {
                       )
                     ) {
                       try {
-                        const res = await fetch(
-                          '/api/support/tickets/delete',
-                          {
-                            method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ ticketId: ticket.id }),
-                          }
-                        );
+                        const res = await fetch('/api/support/tickets/delete', {
+                          method: 'DELETE',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ ticketId: ticket.id }),
+                        });
                         if (res.ok) {
                           window.location.reload();
                         } else {
@@ -1033,7 +1034,9 @@ function MobileTicketCard({
     <div className="rounded-xl border bg-white/80 backdrop-blur p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 mb-2">{ticket.projectName}</h3>
+          <h3 className="font-medium text-gray-900 mb-2">
+            {ticket.projectName}
+          </h3>
           <div className="flex items-center gap-2 flex-wrap mb-2">
             <span
               className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

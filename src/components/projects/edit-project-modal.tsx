@@ -70,7 +70,6 @@ export function EditProjectModal({
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm<EditProjectFields>({
     resolver: zodResolver(EditProjectSchema),
     defaultValues: {

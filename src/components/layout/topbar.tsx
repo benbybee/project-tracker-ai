@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Search, Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
 import SyncIndicator from '@/components/sync/SyncIndicator';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
@@ -40,7 +40,7 @@ export function Topbar() {
 
         <input
           className="flex-1 min-w-0 rounded-lg border px-3 py-2 text-sm"
-          placeholder={isMobile ? "Search..." : "Search (Ctrl+K)"}
+          placeholder={isMobile ? 'Search...' : 'Search (Ctrl+K)'}
         />
         <div className="flex items-center gap-2 flex-shrink-0">
           <SyncIndicator />
