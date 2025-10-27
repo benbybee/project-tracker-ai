@@ -145,10 +145,10 @@ export function ProjectHeader({
 
       {/* Foreground content */}
       <div className="relative -mt-20 sm:-mt-24 px-4 md:px-6 pb-4">
-        <GlassCard className="p-5 sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
+        <GlassCard className="p-4 sm:p-6">
+          <div className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl sm:text-2xl font-semibold">
                   {project.name}
                 </h1>
@@ -213,8 +213,10 @@ export function ProjectHeader({
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <GradientButton onClick={onNewTask}>New Task</GradientButton>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
+              <GradientButton onClick={onNewTask} className="w-full sm:w-auto">
+                New Task
+              </GradientButton>
 
               {/* Sync Button */}
               {isOnline && (
@@ -222,12 +224,12 @@ export function ProjectHeader({
                   variant="outline"
                   onClick={handleSyncNow}
                   disabled={isSyncing}
-                  className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30"
+                  className="w-full sm:w-auto bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30"
                 >
                   <RefreshCw
                     className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
                   />
-                  {isSyncing ? 'Syncing...' : 'Sync Now'}
+                  <span className="ml-2">{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
                 </Button>
               )}
 
@@ -236,7 +238,7 @@ export function ProjectHeader({
                 <Button
                   variant="outline"
                   onClick={handleConvertToWebsite}
-                  className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30"
+                  className="hidden sm:flex w-full sm:w-auto bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30"
                 >
                   Convert to Website Project
                 </Button>
@@ -244,30 +246,34 @@ export function ProjectHeader({
                 <Button
                   variant="outline"
                   onClick={handleConvertToGeneral}
-                  className="bg-gradient-to-r from-violet-500/20 to-purple-500/20 hover:from-violet-500/30 hover:to-purple-500/30"
+                  className="hidden sm:flex w-full sm:w-auto bg-gradient-to-r from-violet-500/20 to-purple-500/20 hover:from-violet-500/30 hover:to-purple-500/30"
                 >
                   Convert to General Project
                 </Button>
               )}
 
               {/* Project Management Buttons */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditModalOpen(true)}
-                className="bg-gradient-to-r from-gray-500/20 to-slate-500/20 hover:from-gray-500/30 hover:to-slate-500/30"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2 ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="bg-gradient-to-r from-gray-500/20 to-slate-500/20 hover:from-gray-500/30 hover:to-slate-500/30"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">Edit</span>
+                </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="bg-gradient-to-r from-red-500/20 to-pink-500/20 hover:from-red-500/30 hover:to-pink-500/30"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="bg-gradient-to-r from-red-500/20 to-pink-500/20 hover:from-red-500/30 hover:to-pink-500/30"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">Delete</span>
+                </Button>
+              </div>
             </div>
           </div>
 

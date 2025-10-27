@@ -69,7 +69,7 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="w-full">
-      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-2 py-6">
         {/* Project Header */}
         <ProjectHeader
           project={project}
@@ -106,7 +106,7 @@ export default function ProjectDetailPage() {
         <section className="mt-8">
           <header className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Board</h2>
-            <div className="text-sm text-slate-500">
+            <div className="hidden md:block text-sm text-slate-500">
               Drag tasks between columns.
             </div>
           </header>

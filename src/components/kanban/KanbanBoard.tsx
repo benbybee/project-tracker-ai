@@ -254,7 +254,7 @@ export function KanbanBoard({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {columns.map((column) => (
           <div key={column} className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -286,7 +286,7 @@ export function KanbanBoard({
         onDragEnd={onDragEnd}
         collisionDetection={closestCenter}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {columns.map((status) => {
             const items = tasksByCol[status] || [];
             return <KanbanColumn key={status} status={status} items={items} />;
