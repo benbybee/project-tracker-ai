@@ -8,9 +8,21 @@ import {
 } from './prompt-templates';
 import { ProductivityPattern } from './pattern-analyzer';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        'OPENAI_API_KEY environment variable is required for AI features'
+      );
+    }
+    openaiClient = new OpenAI({ apiKey });
+  }
+  return openaiClient;
+}
 
 export interface DailyPlan {
   plan: Array<{
@@ -97,7 +109,7 @@ export class PlanningEngine {
     const prompt = buildDailyPlanPrompt(context);
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4-turbo-preview',
         messages: [
           {
@@ -153,7 +165,7 @@ export class PlanningEngine {
     );
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAIClient().chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
@@ -213,7 +225,7 @@ export class PlanningEngine {
     });
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAIClient().chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
@@ -271,7 +283,7 @@ export class PlanningEngine {
     const prompt = buildContextualSuggestionPrompt(context);
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAIClient().chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
@@ -306,7 +318,7 @@ export class PlanningEngine {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAIClient().chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [{ role: 'user', content: 'Say "OK"' }],
         max_tokens: 10,

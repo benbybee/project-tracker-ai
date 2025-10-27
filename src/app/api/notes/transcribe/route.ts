@@ -3,10 +3,19 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey === 'sk-dummy-key') {
+      throw new Error('OpenAI API key not configured');
+    }
+    openaiClient = new OpenAI({ apiKey });
+  }
+  return openaiClient;
+}
 
 // Reference: https://platform.openai.com/docs/guides/speech-to-text
 // API: https://platform.openai.com/docs/api-reference/audio/createTranscription
@@ -78,7 +87,7 @@ export async function POST(req: Request) {
 
     // Transcribe using Whisper API
     // OpenAI SDK accepts File objects directly
-    const transcription = await openai.audio.transcriptions.create({
+    const transcription = await getOpenAIClient().audio.transcriptions.create({
       file: audioFile,
       model: 'whisper-1',
       language: 'en', // Can be auto-detected if not specified

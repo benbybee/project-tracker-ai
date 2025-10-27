@@ -22,6 +22,7 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx scripts/seed.ts",
     "pwa:icons": "node scripts/generate-pwa-icons.js",
+    "pwa:verify": "node scripts/verify-pwa.js",
     "vercel:sim": "node scripts/vercel-sim-build.mjs",
     "repo:doctor": "node scripts/repo-doctor.mjs --root .",
     "repo:doctor:fix": "node scripts/repo-doctor.mjs --root . --fix"

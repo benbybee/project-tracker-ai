@@ -5,11 +5,21 @@ import { sql } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import OpenAI from 'openai';
 
-// Initialize OpenAI client only if API key is available
-const client =
-  process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'sk-dummy-key'
-    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-    : null;
+// Lazy initialization to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (
+    !process.env.OPENAI_API_KEY ||
+    process.env.OPENAI_API_KEY === 'sk-dummy-key'
+  ) {
+    return null;
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
 
 export const searchRouter = createTRPCRouter({
   query: protectedProcedure
@@ -17,6 +27,7 @@ export const searchRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       try {
         // Return empty results if OpenAI client is not available
+        const client = getOpenAIClient();
         if (!client) {
           return [];
         }

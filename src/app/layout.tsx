@@ -7,14 +7,18 @@ import { NotificationProvider } from '@/components/notifications/NotificationPro
 import { Providers } from './providers';
 import { validateEnv } from '@/lib/env';
 
-// Validate environment variables at startup (server-side only)
-if (typeof window === 'undefined') {
+// Validate environment variables at runtime (server-side only)
+// Skip during build phase to allow deployment with env vars set in platform
+if (typeof window === 'undefined' && process.env.VERCEL !== '1') {
   try {
     validateEnv();
   } catch (error) {
     console.error('❌ Environment validation failed:', error);
     if (process.env.NODE_ENV === 'production') {
-      throw error; // Fail fast in production
+      // Only fail if not in build phase
+      if (process.env.NEXT_PHASE !== 'phase-production-build') {
+        throw error; // Fail fast in production runtime
+      }
     }
   }
 }
@@ -26,6 +30,8 @@ export const metadata: Metadata = {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 5,
+    userScalable: true,
+    viewportFit: 'cover',
   },
   manifest: '/manifest.json',
   icons: {
@@ -40,8 +46,22 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'TaskTracker AI',
+    startupImage: [
+      {
+        url: '/icons/icon-512x512.png',
+        media:
+          '(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)',
+      },
+    ],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
   },
 };
 

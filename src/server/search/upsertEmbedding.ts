@@ -3,11 +3,21 @@ import { db } from '@/server/db';
 import { embeddings } from '@/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 
-// Initialize OpenAI client only if API key is available
-const client =
-  process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'sk-dummy-key'
-    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-    : null;
+// Lazy initialization to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (
+    !process.env.OPENAI_API_KEY ||
+    process.env.OPENAI_API_KEY === 'sk-dummy-key'
+  ) {
+    return null;
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
 
 export async function upsertEmbedding(params: {
   entityType: 'task' | 'project';
@@ -18,6 +28,7 @@ export async function upsertEmbedding(params: {
   if (!text?.trim()) return;
 
   // Skip embedding generation if OpenAI client is not available
+  const client = getOpenAIClient();
   if (!client) {
     // Silently skip embedding generation if OpenAI is not configured
     return;
