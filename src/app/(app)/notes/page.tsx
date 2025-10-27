@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { FileText, Plus, Search } from 'lucide-react';
+import { FileText, Plus, Search, Mic, Eye, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
-import { NoteCard } from '@/components/notes/NoteCard';
 import { NoteModal } from '@/components/notes/NoteModal';
 import { NoteDetailsModal } from '@/components/notes/NoteDetailsModal';
 import { Button } from '@/components/ui/button';
@@ -213,43 +212,104 @@ export default function NotesPage() {
           </div>
         </div>
 
-        {/* Notes List */}
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Loading notes...</p>
+        {/* Desktop Notes Table */}
+        <div className="hidden md:block rounded-xl border bg-white/80 backdrop-blur overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Title
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Project
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Content Preview
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Duration
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredNotes.map((note) => (
+                  <NoteRow
+                    key={note.id}
+                    note={note}
+                    onOpen={() => handleNoteClick(note)}
+                    onDelete={() => handleDeleteNote(note)}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : filteredNotes.length === 0 ? (
-          <div className="text-center py-12 rounded-xl border bg-white/80">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600 mb-2">
-              {notes.length === 0 ? 'No notes yet' : 'No notes found'}
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              {notes.length === 0
-                ? 'Create your first note to get started with AI-powered task generation'
-                : 'Try adjusting your filters or search query'}
-            </p>
-            {notes.length === 0 && (
-              <Button
-                onClick={handleCreateNote}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create Note
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onClick={() => handleNoteClick(note)}
-              />
-            ))}
-          </div>
-        )}
+
+          {filteredNotes.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <p className="text-gray-600 mb-2">No notes found</p>
+              <p className="text-sm text-gray-500">
+                {notes.length === 0 ? (
+                  <>
+                    Create your first note to get started with AI-powered task
+                    generation
+                  </>
+                ) : (
+                  'Try adjusting your filters or search query'
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Notes Card View */}
+        <div className="block md:hidden">
+          {filteredNotes.length === 0 && !loading ? (
+            <div className="text-center py-12 rounded-xl border bg-white/80">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 mb-2">
+                {notes.length === 0 ? 'No notes yet' : 'No notes found'}
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                {notes.length === 0
+                  ? 'Create your first note to get started with AI-powered task generation'
+                  : 'Try adjusting your filters or search query'}
+              </p>
+              {notes.length === 0 && (
+                <Button
+                  onClick={handleCreateNote}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Note
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredNotes.map((note) => (
+                <MobileNoteCard
+                  key={note.id}
+                  note={note}
+                  onOpen={() => handleNoteClick(note)}
+                  onDelete={() => handleDeleteNote(note)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Note Modal */}
         {showNoteModal && (
@@ -277,6 +337,167 @@ export default function NotesPage() {
             onTasksAccepted={handleTasksAccepted}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+function NoteRow({
+  note,
+  onOpen,
+  onDelete,
+}: {
+  note: Note;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getContentSnippet = (content: string) => {
+    return content.length > 100 ? `${content.slice(0, 100)}...` : content;
+  };
+
+  return (
+    <tr className="hover:bg-gray-50">
+      <td className="px-4 py-3 text-sm">
+        {note.noteType === 'audio' ? (
+          <div className="flex items-center gap-1 text-purple-600">
+            <Mic className="h-4 w-4" />
+            <span className="text-xs">Audio</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 text-blue-600">
+            <FileText className="h-4 w-4" />
+            <span className="text-xs">Text</span>
+          </div>
+        )}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+        {note.title}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">{note.projectName}</td>
+      <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
+        {getContentSnippet(note.content)}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">
+        {note.noteType === 'audio' && note.audioDuration
+          ? formatDuration(note.audioDuration)
+          : '—'}
+      </td>
+      <td className="px-4 py-3 text-sm text-gray-600">
+        {formatDate(note.createdAt)}
+      </td>
+      <td className="px-4 py-3">
+        {note.tasksGenerated ? (
+          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+            Tasks Created
+          </span>
+        ) : (
+          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+            No Tasks
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpen}
+            className="text-blue-600 hover:text-blue-800 p-1"
+            title="Open note details"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="text-red-600 hover:text-red-800 p-1"
+            title="Delete note"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function MobileNoteCard({
+  note,
+  onOpen,
+  onDelete,
+}: {
+  note: Note;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="rounded-xl border bg-white/80 backdrop-blur p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            {note.noteType === 'audio' ? (
+              <Mic className="h-5 w-5 text-purple-600 flex-shrink-0" />
+            ) : (
+              <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
+            )}
+            <h3 className="font-medium text-gray-900">{note.title}</h3>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <span className="text-xs text-gray-600">📁 {note.projectName}</span>
+            <span className="text-xs text-gray-600">
+              📅 {formatDate(note.createdAt)}
+            </span>
+            {note.noteType === 'audio' && note.audioDuration && (
+              <span className="text-xs text-gray-600">
+                🎙️ {formatDuration(note.audioDuration)}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+            {note.content}
+          </p>
+          {note.tasksGenerated && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              Tasks Created
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+        <button
+          onClick={onOpen}
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors text-sm font-medium"
+        >
+          <Eye className="h-4 w-4" />
+          View
+        </button>
+        <button
+          onClick={onDelete}
+          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          title="Delete note"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
