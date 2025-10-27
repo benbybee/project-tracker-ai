@@ -276,6 +276,41 @@ export type NewTicketReply = typeof ticketReplies.$inferInsert;
 export type TicketAttachment = typeof ticketAttachments.$inferSelect;
 export type NewTicketAttachment = typeof ticketAttachments.$inferInsert;
 
+// Notes table
+export const notes = pgTable('notes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  noteType: text('note_type', { enum: ['text', 'audio'] })
+    .notNull()
+    .default('text'),
+  audioUrl: text('audio_url'),
+  audioDuration: integer('audio_duration'), // seconds
+  tasksGenerated: boolean('tasks_generated').default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const notesRelations = relations(notes, ({ one }) => ({
+  user: one(users, {
+    fields: [notes.userId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [notes.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export type Note = typeof notes.$inferSelect;
+export type NewNote = typeof notes.$inferInsert;
+
 // Import notification, activity, chat, and analytics schemas
 export * from './schema/notifications';
 export * from './schema/activity';

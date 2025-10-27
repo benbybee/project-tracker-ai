@@ -23,7 +23,7 @@ export default function SettingsPage() {
 
   const { data: roles, isLoading } = trpc.roles.list.useQuery();
   const utils = trpc.useUtils();
-  
+
   const createRoleMutation = trpc.roles.create.useMutation({
     onSuccess: () => {
       setNewRoleName('');
@@ -59,7 +59,11 @@ export default function SettingsPage() {
     }
   };
 
-  const handleEditRole = (role: { id: string; name: string; color: string }) => {
+  const handleEditRole = (role: {
+    id: string;
+    name: string;
+    color: string;
+  }) => {
     setEditingRole({ id: role.id, name: role.name, color: role.color });
   };
 
@@ -82,7 +86,11 @@ export default function SettingsPage() {
   };
 
   const handleDeleteRole = async (roleId: string) => {
-    if (!confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this role? This action cannot be undone.'
+      )
+    ) {
       return;
     }
 
@@ -170,7 +178,7 @@ export default function SettingsPage() {
                 <div className="block sm:hidden space-y-3">
                   {roles.map((role) => {
                     const isEditing = editingRole?.id === role.id;
-                    
+
                     return (
                       <div
                         key={role.id}
@@ -185,7 +193,10 @@ export default function SettingsPage() {
                               <Input
                                 value={editingRole.name}
                                 onChange={(e) =>
-                                  setEditingRole({ ...editingRole, name: e.target.value })
+                                  setEditingRole({
+                                    ...editingRole,
+                                    name: e.target.value,
+                                  })
                                 }
                                 placeholder="Enter role name"
                               />
@@ -199,14 +210,20 @@ export default function SettingsPage() {
                                   type="color"
                                   value={editingRole.color}
                                   onChange={(e) =>
-                                    setEditingRole({ ...editingRole, color: e.target.value })
+                                    setEditingRole({
+                                      ...editingRole,
+                                      color: e.target.value,
+                                    })
                                   }
                                   className="w-10 h-10 border border-gray-300 rounded cursor-pointer"
                                 />
                                 <Input
                                   value={editingRole.color}
                                   onChange={(e) =>
-                                    setEditingRole({ ...editingRole, color: e.target.value })
+                                    setEditingRole({
+                                      ...editingRole,
+                                      color: e.target.value,
+                                    })
                                   }
                                   className="flex-1"
                                 />
@@ -221,7 +238,9 @@ export default function SettingsPage() {
                                 disabled={updateRoleMutation.isLoading}
                               >
                                 <Save className="w-4 h-4 mr-1" />
-                                {updateRoleMutation.isLoading ? 'Saving...' : 'Save'}
+                                {updateRoleMutation.isLoading
+                                  ? 'Saving...'
+                                  : 'Save'}
                               </Button>
                               <Button
                                 variant="outline"
@@ -254,7 +273,8 @@ export default function SettingsPage() {
                               </div>
                             </div>
                             <div className="text-xs text-gray-500 mb-3">
-                              Created: {new Date(role.createdAt).toLocaleDateString()}
+                              Created:{' '}
+                              {new Date(role.createdAt).toLocaleDateString()}
                             </div>
                             <div className="flex gap-2">
                               <Button
@@ -307,7 +327,7 @@ export default function SettingsPage() {
                       <tbody className="divide-y divide-gray-200">
                         {roles.map((role) => {
                           const isEditing = editingRole?.id === role.id;
-                          
+
                           return (
                             <tr key={role.id} className="hover:bg-gray-50">
                               {isEditing ? (
@@ -318,7 +338,10 @@ export default function SettingsPage() {
                                         <Input
                                           value={editingRole.name}
                                           onChange={(e) =>
-                                            setEditingRole({ ...editingRole, name: e.target.value })
+                                            setEditingRole({
+                                              ...editingRole,
+                                              name: e.target.value,
+                                            })
                                           }
                                           placeholder="Role name"
                                           className="w-full"
@@ -329,14 +352,20 @@ export default function SettingsPage() {
                                           type="color"
                                           value={editingRole.color}
                                           onChange={(e) =>
-                                            setEditingRole({ ...editingRole, color: e.target.value })
+                                            setEditingRole({
+                                              ...editingRole,
+                                              color: e.target.value,
+                                            })
                                           }
                                           className="w-10 h-10 border border-gray-300 rounded cursor-pointer"
                                         />
                                         <Input
                                           value={editingRole.color}
                                           onChange={(e) =>
-                                            setEditingRole({ ...editingRole, color: e.target.value })
+                                            setEditingRole({
+                                              ...editingRole,
+                                              color: e.target.value,
+                                            })
                                           }
                                           className="w-28"
                                         />
@@ -346,16 +375,22 @@ export default function SettingsPage() {
                                           variant="default"
                                           size="sm"
                                           onClick={handleSaveEdit}
-                                          disabled={updateRoleMutation.isLoading}
+                                          disabled={
+                                            updateRoleMutation.isLoading
+                                          }
                                         >
                                           <Save className="w-4 h-4 mr-1" />
-                                          {updateRoleMutation.isLoading ? 'Saving...' : 'Save'}
+                                          {updateRoleMutation.isLoading
+                                            ? 'Saving...'
+                                            : 'Save'}
                                         </Button>
                                         <Button
                                           variant="outline"
                                           size="sm"
                                           onClick={handleCancelEdit}
-                                          disabled={updateRoleMutation.isLoading}
+                                          disabled={
+                                            updateRoleMutation.isLoading
+                                          }
                                         >
                                           <X className="w-4 h-4 mr-1" />
                                           Cancel
@@ -381,7 +416,9 @@ export default function SettingsPage() {
                                     {role.color}
                                   </td>
                                   <td className="px-4 py-3 text-sm text-gray-500">
-                                    {new Date(role.createdAt).toLocaleDateString()}
+                                    {new Date(
+                                      role.createdAt
+                                    ).toLocaleDateString()}
                                   </td>
                                   <td className="px-4 py-3 text-sm">
                                     <div className="flex gap-2">
@@ -397,7 +434,9 @@ export default function SettingsPage() {
                                         variant="outline"
                                         size="sm"
                                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        onClick={() => handleDeleteRole(role.id)}
+                                        onClick={() =>
+                                          handleDeleteRole(role.id)
+                                        }
                                         disabled={deleteRoleMutation.isLoading}
                                       >
                                         <Trash2 className="w-4 h-4 mr-1" />

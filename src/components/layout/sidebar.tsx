@@ -17,6 +17,7 @@ import {
   Globe,
   Bot,
   MessagesSquare,
+  FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ const nav = [
   { href: '/projects', label: 'Projects', icon: FolderKanban },
   { href: '/board', label: 'Board', icon: Columns3 },
   { href: '/daily', label: 'Daily', icon: CalendarDays },
+  { href: '/notes', label: 'Notes', icon: FileText },
   { href: '/summary', label: 'Summary', icon: BarChart3 },
   { href: '/projects/website', label: 'Website Boards', icon: Globe },
   { href: '/plaud', label: 'Plaud AI', icon: Bot },
