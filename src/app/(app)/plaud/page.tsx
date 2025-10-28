@@ -39,6 +39,8 @@ export default function PlaudIngestPage() {
   const [importProjectId, setImportProjectId] = useState('');
   const [importing, setImporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   const { data: projects } = trpc.projects.list.useQuery({});
 
@@ -226,6 +228,36 @@ export default function PlaudIngestPage() {
     }
   }
 
+  async function handleDebugLink() {
+    if (!importUrl.trim()) {
+      setError('Please enter a Plaud share link to debug');
+      return;
+    }
+
+    setError(null);
+    setDebugInfo(null);
+
+    try {
+      const res = await fetch('/api/plaud/debug-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shareUrl: importUrl }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to debug link');
+      }
+
+      setDebugInfo(data.debug);
+      setShowDebug(true);
+    } catch (err: any) {
+      console.error('Debug failed:', err);
+      setError(err.message || 'Failed to debug Plaud link');
+    }
+  }
+
   return (
     <div className="px-2 py-6">
       <div className="max-w-7xl mx-auto space-y-4">
@@ -282,7 +314,133 @@ export default function PlaudIngestPage() {
               )}
             </button>
           </div>
+
+          {/* Debug Button */}
+          <button
+            onClick={handleDebugLink}
+            disabled={!importUrl.trim()}
+            className="text-xs text-gray-500 hover:text-gray-700 underline disabled:opacity-50"
+          >
+            Debug Link
+          </button>
         </div>
+
+        {/* Debug Info Display */}
+        {showDebug && debugInfo && (
+          <div className="rounded-xl border border-gray-200 bg-white/80 backdrop-blur p-4 mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold">Debug Information</h3>
+              <button
+                onClick={() => setShowDebug(false)}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                Close
+              </button>
+            </div>
+            <div className="space-y-2 text-xs">
+              <div>
+                <span className="font-medium">HTML Length:</span>{' '}
+                {debugInfo.htmlLength} bytes
+              </div>
+              <div>
+                <span className="font-medium">Content Type:</span>{' '}
+                {debugInfo.contentType}
+              </div>
+              <div>
+                <span className="font-medium">Page Title:</span> {debugInfo.title}
+              </div>
+              <div>
+                <span className="font-medium">Has Next.js Data:</span>{' '}
+                {debugInfo.hasNextData ? '✅ Yes' : '❌ No'}
+              </div>
+              <div>
+                <span className="font-medium">Has Plaud Branding:</span>{' '}
+                {debugInfo.hasPlaud ? '✅ Yes' : '❌ No'}
+              </div>
+              <div>
+                <span className="font-medium">Share ID:</span> {debugInfo.shareId}
+              </div>
+              <div>
+                <span className="font-medium">Potential Audio URLs Found:</span>{' '}
+                {debugInfo.potentialAudioUrls.length}
+              </div>
+              {debugInfo.potentialAudioUrls.length > 0 && (
+                <div className="mt-2">
+                  <div className="font-medium mb-1">URLs:</div>
+                  <ul className="list-disc list-inside space-y-1 pl-2">
+                    {debugInfo.potentialAudioUrls.map((url: string, idx: number) => (
+                      <li key={idx} className="break-all text-blue-600">
+                        {url}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {debugInfo.apiResults && debugInfo.apiResults.length > 0 && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer font-medium">
+                    API Endpoint Results ({debugInfo.apiResults.length})
+                  </summary>
+                  <div className="mt-2 space-y-2">
+                    {debugInfo.apiResults.map((result: any, idx: number) => (
+                      <div key={idx} className="p-2 bg-gray-50 rounded">
+                        <div className="font-medium text-xs">
+                          {result.url}
+                        </div>
+                        {result.error ? (
+                          <div className="text-red-600 text-xs">
+                            Error: {result.error}
+                          </div>
+                        ) : (
+                          <div className="space-y-1 text-xs mt-1">
+                            <div>
+                              Status: {result.status}{' '}
+                              {result.ok ? '✅' : '❌'}
+                            </div>
+                            <div>Content-Type: {result.contentType}</div>
+                            {result.isJson && (
+                              <div>
+                                <span className="font-medium">JSON:</span> ✅
+                              </div>
+                            )}
+                            {result.preview && (
+                              <details>
+                                <summary className="cursor-pointer">
+                                  Preview
+                                </summary>
+                                <pre className="mt-1 p-1 bg-white rounded text-xs overflow-x-auto">
+                                  {result.preview}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+              <details className="mt-2">
+                <summary className="cursor-pointer font-medium">
+                  HTML Snippet (first 1000 chars)
+                </summary>
+                <pre className="mt-2 p-2 bg-gray-50 rounded text-xs overflow-x-auto">
+                  {debugInfo.htmlSnippet}
+                </pre>
+              </details>
+              {debugInfo.nextDataPreview && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer font-medium">
+                    Next.js Data Preview
+                  </summary>
+                  <pre className="mt-2 p-2 bg-gray-50 rounded text-xs overflow-x-auto">
+                    {debugInfo.nextDataPreview}
+                  </pre>
+                </details>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Success Message */}
         {importSuccess && (
