@@ -148,6 +148,26 @@ export async function POST(req: Request) {
     // Deduplicate URLs
     const uniqueUrls = [...new Set(potentialUrls)];
 
+    // Extract all script tags to see what JS is being loaded
+    const scriptMatches = html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+    const scripts: string[] = [];
+    for (const match of scriptMatches) {
+      if (match[1] && match[1].trim()) {
+        scripts.push(match[1].trim().substring(0, 500));
+      }
+    }
+
+    // Look for script src tags
+    const scriptSrcMatches = html.matchAll(
+      /<script[^>]+src=["']([^"']+)["']/gi
+    );
+    const scriptSrcs: string[] = [];
+    for (const match of scriptSrcMatches) {
+      if (match[1]) {
+        scriptSrcs.push(match[1]);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       debug: {
@@ -160,6 +180,9 @@ export async function POST(req: Request) {
         title,
         potentialAudioUrls: uniqueUrls,
         apiResults,
+        fullHtml: html, // Include full HTML since it's small
+        scripts,
+        scriptSrcs,
         htmlSnippet: html.substring(0, 1000),
         nextDataPreview: nextData
           ? JSON.stringify(nextData).substring(0, 2000)

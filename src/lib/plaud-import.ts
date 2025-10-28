@@ -52,6 +52,12 @@ export async function fetchPlaudAudio(
     `https://web.plaud.ai/api/share/${shareId}`,
     `https://api.plaud.ai/share/${shareId}`,
     `https://web.plaud.ai/api/public/share/${shareId}`,
+    `https://api.plaud.ai/api/share/${shareId}`,
+    `https://api.plaud.ai/v1/share/${shareId}`,
+    `https://web.plaud.ai/api/v1/share/${shareId}`,
+    `https://api.plaud.ai/api/v1/shares/${shareId}`,
+    `https://web.plaud.ai/api/recordings/${shareId}`,
+    `https://api.plaud.ai/recordings/${shareId}`,
   ];
 
   for (const apiUrl of apiEndpoints) {

@@ -288,7 +288,7 @@ export default function PlaudIngestPage() {
             <select
               value={importProjectId}
               onChange={(e) => setImportProjectId(e.target.value)}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-2 focus:ring-blue-500"
               disabled={importing}
             >
               <option value="">No project (optional)</option>
