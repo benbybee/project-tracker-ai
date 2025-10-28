@@ -347,7 +347,8 @@ export default function PlaudIngestPage() {
                 {debugInfo.contentType}
               </div>
               <div>
-                <span className="font-medium">Page Title:</span> {debugInfo.title}
+                <span className="font-medium">Page Title:</span>{' '}
+                {debugInfo.title}
               </div>
               <div>
                 <span className="font-medium">Has Next.js Data:</span>{' '}
@@ -358,7 +359,8 @@ export default function PlaudIngestPage() {
                 {debugInfo.hasPlaud ? '✅ Yes' : '❌ No'}
               </div>
               <div>
-                <span className="font-medium">Share ID:</span> {debugInfo.shareId}
+                <span className="font-medium">Share ID:</span>{' '}
+                {debugInfo.shareId}
               </div>
               <div>
                 <span className="font-medium">Potential Audio URLs Found:</span>{' '}
@@ -368,11 +370,13 @@ export default function PlaudIngestPage() {
                 <div className="mt-2">
                   <div className="font-medium mb-1">URLs:</div>
                   <ul className="list-disc list-inside space-y-1 pl-2">
-                    {debugInfo.potentialAudioUrls.map((url: string, idx: number) => (
-                      <li key={idx} className="break-all text-blue-600">
-                        {url}
-                      </li>
-                    ))}
+                    {debugInfo.potentialAudioUrls.map(
+                      (url: string, idx: number) => (
+                        <li key={idx} className="break-all text-blue-600">
+                          {url}
+                        </li>
+                      )
+                    )}
                   </ul>
                 </div>
               )}
@@ -384,9 +388,7 @@ export default function PlaudIngestPage() {
                   <div className="mt-2 space-y-2">
                     {debugInfo.apiResults.map((result: any, idx: number) => (
                       <div key={idx} className="p-2 bg-gray-50 rounded">
-                        <div className="font-medium text-xs">
-                          {result.url}
-                        </div>
+                        <div className="font-medium text-xs">{result.url}</div>
                         {result.error ? (
                           <div className="text-red-600 text-xs">
                             Error: {result.error}
@@ -394,8 +396,7 @@ export default function PlaudIngestPage() {
                         ) : (
                           <div className="space-y-1 text-xs mt-1">
                             <div>
-                              Status: {result.status}{' '}
-                              {result.ok ? '✅' : '❌'}
+                              Status: {result.status} {result.ok ? '✅' : '❌'}
                             </div>
                             <div>Content-Type: {result.contentType}</div>
                             {result.isJson && (

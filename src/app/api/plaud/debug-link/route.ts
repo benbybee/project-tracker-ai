@@ -76,7 +76,8 @@ export async function POST(req: Request) {
           });
 
           const apiContentType = apiResponse.headers.get('content-type');
-          const isJson = apiContentType && apiContentType.includes('application/json');
+          const isJson =
+            apiContentType && apiContentType.includes('application/json');
 
           let data = null;
           if (isJson) {
@@ -173,4 +174,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
