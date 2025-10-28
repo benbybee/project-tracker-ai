@@ -37,5 +37,6 @@ export type Task = {
   version?: number;
   priorityScore?: 1 | 2 | 3 | 4 | '1' | '2' | '3' | '4' | null;
   isDaily?: boolean;
+  archived?: boolean;
   subtasks?: Subtask[];
 };

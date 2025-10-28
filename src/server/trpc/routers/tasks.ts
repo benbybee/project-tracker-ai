@@ -133,6 +133,9 @@ export const tasksRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const conditions = [];
 
+      // Always exclude archived tasks from list view
+      conditions.push(eq(tasks.archived, false));
+
       if (input.projectId) {
         conditions.push(eq(tasks.projectId, input.projectId));
       }
@@ -673,7 +676,10 @@ export const tasksRouter = createTRPCRouter({
     .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       return ctx.db.query.tasks.findMany({
-        where: eq(tasks.projectId, input.projectId),
+        where: and(
+          eq(tasks.projectId, input.projectId),
+          eq(tasks.archived, false)
+        ),
         orderBy: [
           asc(tasks.status),
           asc(tasks.createdAt),

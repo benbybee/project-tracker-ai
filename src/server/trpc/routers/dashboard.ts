@@ -19,13 +19,14 @@ export const dashboardRouter = createTRPCRouter({
       nextWeek.setDate(nextWeek.getDate() + 7);
       const nextWeekStr = nextWeek.toISOString().split('T')[0];
 
-      // Build role filter conditions
-      const roleConditions = [];
+      // Build filter conditions - always start with non-archived tasks
+      const projectConditions = [];
       if (input.roleId) {
-        roleConditions.push(eq(projects.roleId, input.roleId));
+        projectConditions.push(eq(projects.roleId, input.roleId));
       }
 
       // Get projects with task counts (sorted by pinned DESC, then updatedAt DESC)
+      // Only count non-archived tasks
       const projectsWithCounts = await ctx.db
         .select({
           id: projects.id,
@@ -39,19 +40,24 @@ export const dashboardRouter = createTRPCRouter({
             name: roles.name,
             color: roles.color,
           },
-          totalTasks: sql<number>`count(${tasks.id})`.as('totalTasks'),
+          totalTasks:
+            sql<number>`count(case when ${tasks.archived} = false OR ${tasks.archived} IS NULL then ${tasks.id} end)`.as(
+              'totalTasks'
+            ),
           completedTasks: sql<number>`
-            count(case when ${tasks.status} = 'completed' then 1 end)
+            count(case when ${tasks.status} = 'completed' AND (${tasks.archived} = false OR ${tasks.archived} IS NULL) then 1 end)
           `.as('completedTasks'),
         })
         .from(projects)
         .leftJoin(tasks, eq(projects.id, tasks.projectId))
         .leftJoin(roles, eq(projects.roleId, roles.id))
-        .where(roleConditions.length > 0 ? and(...roleConditions) : undefined)
+        .where(
+          projectConditions.length > 0 ? and(...projectConditions) : sql`1=1`
+        )
         .groupBy(projects.id, roles.id)
         .orderBy(desc(projects.pinned), desc(projects.updatedAt));
 
-      // Get today's tasks count
+      // Get today's tasks count (exclude archived)
       const todayTasks = await ctx.db
         .select({ count: sql<number>`count(*)` })
         .from(tasks)
@@ -59,11 +65,12 @@ export const dashboardRouter = createTRPCRouter({
           and(
             eq(tasks.dueDate, todayStr),
             sql`${tasks.status} != 'completed'`,
-            input.roleId ? eq(tasks.roleId, input.roleId) : undefined
+            sql`(${tasks.archived} = false OR ${tasks.archived} IS NULL)`,
+            input.roleId ? eq(tasks.roleId, input.roleId) : sql`1=1`
           )
         );
 
-      // Get overdue tasks count
+      // Get overdue tasks count (exclude archived)
       const overdueTasks = await ctx.db
         .select({ count: sql<number>`count(*)` })
         .from(tasks)
@@ -72,11 +79,12 @@ export const dashboardRouter = createTRPCRouter({
             isNotNull(tasks.dueDate),
             lt(tasks.dueDate, todayStr),
             sql`${tasks.status} != 'completed'`,
-            input.roleId ? eq(tasks.roleId, input.roleId) : undefined
+            sql`(${tasks.archived} = false OR ${tasks.archived} IS NULL)`,
+            input.roleId ? eq(tasks.roleId, input.roleId) : sql`1=1`
           )
         );
 
-      // Get upcoming tasks (next 7 days, limit 5)
+      // Get upcoming tasks (next 7 days, limit 5, exclude archived)
       const upcomingTasks = await ctx.db
         .select({
           id: tasks.id,
@@ -107,7 +115,8 @@ export const dashboardRouter = createTRPCRouter({
             gte(tasks.dueDate, todayStr),
             lte(tasks.dueDate, nextWeekStr),
             sql`${tasks.status} != 'completed'`,
-            input.roleId ? eq(tasks.roleId, input.roleId) : undefined
+            sql`(${tasks.archived} = false OR ${tasks.archived} IS NULL)`,
+            input.roleId ? eq(tasks.roleId, input.roleId) : sql`1=1`
           )
         )
         .orderBy(tasks.dueDate)

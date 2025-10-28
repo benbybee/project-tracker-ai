@@ -150,6 +150,7 @@ export function KanbanBoard({
     // Apply filters
     const filtered = allTasks
       .filter((t) => !projectId || t.projectId === projectId)
+      .filter((t) => !t.archived) // Exclude archived tasks
       .filter((t) => {
         if (!roleFilter) return true;
         const taskRole = t.role;

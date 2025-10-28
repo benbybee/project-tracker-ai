@@ -14,6 +14,7 @@ import { QuickAddTask } from '@/components/projects/quick-add-task';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { useRealtime } from '@/app/providers';
 import { RealtimeTest } from '@/components/sync/RealtimeTest';
+import { ProjectNotesSection } from '@/components/projects/ProjectNotesSection';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -116,6 +117,9 @@ export default function ProjectDetailPage() {
 
         {/* Quick Add Task */}
         <QuickAddTask projectId={projectId} />
+
+        {/* Project Notes Section */}
+        <ProjectNotesSection projectId={projectId} projectName={project.name} />
 
         {/* Task Create Modal */}
         <TaskCreateModal

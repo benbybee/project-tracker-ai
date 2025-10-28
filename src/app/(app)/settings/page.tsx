@@ -25,23 +25,29 @@ export default function SettingsPage() {
   const utils = trpc.useUtils();
 
   const createRoleMutation = trpc.roles.create.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       setNewRoleName('');
       setNewRoleColor('#3B82F6');
-      utils.roles.list.invalidate();
+      // Refetch immediately to ensure consistency
+      await utils.roles.list.invalidate();
+      await utils.roles.list.refetch();
     },
   });
 
   const updateRoleMutation = trpc.roles.update.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       setEditingRole(null);
-      utils.roles.list.invalidate();
+      // Refetch immediately to ensure consistency
+      await utils.roles.list.invalidate();
+      await utils.roles.list.refetch();
     },
   });
 
   const deleteRoleMutation = trpc.roles.remove.useMutation({
-    onSuccess: () => {
-      utils.roles.list.invalidate();
+    onSuccess: async () => {
+      // Refetch immediately to ensure consistency
+      await utils.roles.list.invalidate();
+      await utils.roles.list.refetch();
     },
   });
 

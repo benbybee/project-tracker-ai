@@ -34,6 +34,12 @@ export default function PlaudIngestPage() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Import link states
+  const [importUrl, setImportUrl] = useState('');
+  const [importProjectId, setImportProjectId] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+
   const { data: projects } = trpc.projects.list.useQuery({});
 
   useEffect(() => {
@@ -178,6 +184,48 @@ export default function PlaudIngestPage() {
     }
   }
 
+  async function handleImportLink() {
+    if (!importUrl.trim()) {
+      setError('Please enter a Plaud share link');
+      return;
+    }
+
+    setImporting(true);
+    setError(null);
+    setImportSuccess(null);
+
+    try {
+      const res = await fetch('/api/plaud/import-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shareUrl: importUrl,
+          projectId: importProjectId || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to import link');
+      }
+
+      setImportSuccess(
+        `Successfully imported! ${data.tasksCreated} task(s) extracted and added to pending list.`
+      );
+      setImportUrl('');
+      setImportProjectId('');
+
+      // Refresh pending items
+      await fetchItems();
+    } catch (err: any) {
+      console.error('Failed to import link:', err);
+      setError(err.message || 'Failed to import Plaud link');
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <div className="px-2 py-6">
       <div className="max-w-7xl mx-auto space-y-4">
@@ -187,6 +235,63 @@ export default function PlaudIngestPage() {
           subtitle="Review and accept tasks extracted from voice notes via Plaud AI webhook"
         />
 
+        {/* Import from Link Section */}
+        <div className="rounded-xl border border-gray-200 bg-white/80 backdrop-blur p-4">
+          <h3 className="text-sm font-semibold mb-3">Import from Plaud Link</h3>
+          <p className="text-xs text-gray-600 mb-3">
+            Paste a Plaud share link to automatically transcribe and extract
+            tasks
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_200px_auto] gap-3">
+            <input
+              type="text"
+              placeholder="https://web.plaud.ai/share/..."
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={importing}
+            />
+
+            <select
+              value={importProjectId}
+              onChange={(e) => setImportProjectId(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={importing}
+            >
+              <option value="">No project (optional)</option>
+              {projects?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleImportLink}
+              disabled={importing || !importUrl.trim()}
+              className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {importing ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                'Import'
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Success Message */}
+        {importSuccess && (
+          <div className="rounded-lg bg-green-50 border border-green-200 p-4">
+            <p className="text-sm text-green-800">{importSuccess}</p>
+          </div>
+        )}
+
+        {/* Error Message */}
         {error && (
           <div className="rounded-lg bg-red-50 border border-red-200 p-4">
             <p className="text-sm text-red-800">{error}</p>
