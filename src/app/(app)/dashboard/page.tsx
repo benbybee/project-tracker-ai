@@ -37,9 +37,10 @@ export default function DashboardPage() {
   const { data: roles = [] } = trpc.roles.list.useQuery();
 
   // Fetch dashboard data with role filter
-  const { data: dashboardData, isLoading } = trpc.dashboard.get.useQuery({
+  const { data: dashboardData, isLoading, isFetching } = trpc.dashboard.get.useQuery({
     roleId: selectedRoleId || undefined,
   });
+  const isLoadingState = isLoading || isFetching || !dashboardData;
 
   const utils = trpc.useUtils();
 
@@ -166,7 +167,7 @@ export default function DashboardPage() {
             roles={roles}
             selectedRoleId={selectedRoleId}
             onRoleChange={handleRoleChange}
-            isLoading={isLoading}
+            isLoading={isLoadingState}
           />
         </motion.div>
 
@@ -183,7 +184,7 @@ export default function DashboardPage() {
             <GlassCard
               className="cursor-pointer group"
               onClick={() => router.push('/daily')}
-              aria-busy={isLoading}
+              aria-busy={isLoadingState}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -194,7 +195,7 @@ export default function DashboardPage() {
                     </h3>
                   </div>
                   <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                    {isLoading ? '...' : dashboardData?.today || 0}
+                    {isLoadingState ? '...' : dashboardData?.today || 0}
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     Due today
@@ -218,7 +219,7 @@ export default function DashboardPage() {
             <GlassCard
               className="cursor-pointer group"
               onClick={() => router.push('/board?filter=overdue')}
-              aria-busy={isLoading}
+              aria-busy={isLoadingState}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -229,7 +230,7 @@ export default function DashboardPage() {
                     </h3>
                   </div>
                   <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
-                    {isLoading ? '...' : dashboardData?.overdue || 0}
+                    {isLoadingState ? '...' : dashboardData?.overdue || 0}
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     Need attention
@@ -262,7 +263,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="min-h-[160px]" aria-busy={isLoading}>
-            {isLoading ? (
+            {isLoadingState ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(4)].map((_, i) => (
                   <SkeletonGlass key={i} className="p-6">
@@ -312,7 +313,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="min-h-[160px]" aria-busy={isLoading}>
-            {isLoading ? (
+            {isLoadingState ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
                   <SkeletonGlass key={i} className="p-4">

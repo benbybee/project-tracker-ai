@@ -19,7 +19,8 @@ export default function BoardPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const router = useRouter();
 
-  const { data: projects } = trpc.projects.list.useQuery({});
+  const { data: projects, isLoading, isFetching } = trpc.projects.list.useQuery({});
+  const isLoadingState = isLoading || isFetching || !projects;
 
   return (
     <div className="px-4 sm:px-6 md:px-2 py-6">
@@ -56,6 +57,7 @@ export default function BoardPage() {
             value={projectFilter}
             onChange={(e) => setProjectFilter(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoadingState}
           >
             <option value="all">All Projects</option>
             {projects?.map((project) => (

@@ -353,7 +353,27 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // Keep data fresh for 5 minutes to handle refreshes gracefully
+            staleTime: 5 * 60 * 1000,
+            // Cache data for 10 minutes
+            gcTime: 10 * 60 * 1000,
+            // Retry once on failure
+            retry: 1,
+            // Refetch on window focus only if data is stale
+            refetchOnWindowFocus: 'always',
+            // Refetch on mount only if data is stale
+            refetchOnMount: 'always',
+            // Don't refetch on reconnect to avoid unnecessary requests
+            refetchOnReconnect: false,
+          },
+        },
+      })
+  );
   const [trpcClient] = useState(() =>
     trpc.createClient({
       transformer: superjson,

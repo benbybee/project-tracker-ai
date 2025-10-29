@@ -19,10 +19,11 @@ export default function ProjectsPage() {
   );
   const router = useRouter();
 
-  const { data: projects, isLoading } = trpc.projects.list.useQuery({
+  const { data: projects, isLoading, isFetching } = trpc.projects.list.useQuery({
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
   });
+  const isLoadingState = isLoading || isFetching || !projects;
 
   const utils = trpc.useUtils();
 
@@ -72,8 +73,11 @@ export default function ProjectsPage() {
         </div>
 
         {/* Projects Table */}
-        {isLoading ? (
-          <div className="text-center py-8">Loading projects...</div>
+        {isLoadingState ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2"></div>
+            <p className="text-gray-600">Loading projects...</p>
+          </div>
         ) : projects && projects.length > 0 ? (
           <>
             <p className="text-xs text-gray-500 mb-4">

@@ -37,7 +37,8 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const { data: roles, isLoading } = trpc.roles.list.useQuery();
+  const { data: roles, isLoading, isFetching } = trpc.roles.list.useQuery();
+  const isLoadingState = isLoading || isFetching || !roles;
   const utils = trpc.useUtils();
 
   const createRoleMutation = trpc.roles.create.useMutation({
@@ -192,8 +193,11 @@ export default function SettingsPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-4">
               Existing Roles
             </h3>
-            {isLoading ? (
-              <div className="text-center py-4">Loading roles...</div>
+            {isLoadingState ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-2"></div>
+                <p className="text-gray-600">Loading roles...</p>
+              </div>
             ) : roles && roles.length > 0 ? (
               <>
                 {/* Mobile View */}
