@@ -18,8 +18,19 @@
  * @example
  * parseDateAsLocal("2025-10-31") // Returns Oct 31, 2025 in local timezone
  */
-export function parseDateAsLocal(dateStr: string): Date {
+export function parseDateAsLocal(dateStr: string | null | undefined): Date {
+  // Handle null, undefined, or empty string
+  if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') {
+    return new Date(); // Return current date as fallback
+  }
+  
   const [year, month, day] = dateStr.split('-').map(Number);
+  
+  // Validate parsed values
+  if (isNaN(year) || isNaN(month) || isNaN(day)) {
+    return new Date(); // Return current date as fallback
+  }
+  
   return new Date(year, month - 1, day);
 }
 
@@ -35,7 +46,7 @@ export function parseDateAsLocal(dateStr: string): Date {
  * formatDate("2025-10-31", { month: 'short', day: 'numeric' }) // "Oct 31"
  */
 export function formatDate(
-  dateStr: string,
+  dateStr: string | null | undefined,
   options?: Intl.DateTimeFormatOptions
 ): string {
   const date = parseDateAsLocal(dateStr);
@@ -51,7 +62,7 @@ export function formatDate(
  * @example
  * getRelativeDateText("2025-10-31") // { text: "In 2d", overdue: false }
  */
-export function getRelativeDateText(dateStr: string): {
+export function getRelativeDateText(dateStr: string | null | undefined): {
   text: string;
   overdue: boolean;
 } {
@@ -86,7 +97,8 @@ export function getRelativeDateText(dateStr: string): {
  * @param dateStr - Date string in YYYY-MM-DD format
  * @returns True if the date is today
  */
-export function isToday(dateStr: string): boolean {
+export function isToday(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
   const date = parseDateAsLocal(dateStr);
   const today = new Date();
   return date.toDateString() === today.toDateString();
@@ -98,7 +110,8 @@ export function isToday(dateStr: string): boolean {
  * @param dateStr - Date string in YYYY-MM-DD format
  * @returns True if the date is before today
  */
-export function isOverdue(dateStr: string): boolean {
+export function isOverdue(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
   const date = parseDateAsLocal(dateStr);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -115,7 +128,7 @@ export function isOverdue(dateStr: string): boolean {
  * @param dateStr - Date string in YYYY-MM-DD format
  * @returns Formatted date string
  */
-export function formatDateShort(dateStr: string): string {
+export function formatDateShort(dateStr: string | null | undefined): string {
   return formatDate(dateStr, { month: 'short', day: 'numeric' });
 }
 
@@ -125,7 +138,7 @@ export function formatDateShort(dateStr: string): string {
  * @param dateStr - Date string in YYYY-MM-DD format
  * @returns Formatted date string
  */
-export function formatDateLong(dateStr: string): string {
+export function formatDateLong(dateStr: string | null | undefined): string {
   return formatDate(dateStr, {
     month: 'long',
     day: 'numeric',
