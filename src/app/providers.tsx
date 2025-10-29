@@ -98,7 +98,7 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
   const [chatThreadListeners, setChatThreadListeners] = useState<
     Set<(thread: any) => void>
   >(new Set());
-  
+
   // Get tRPC utils for cache invalidation
   const utils = trpc.useUtils();
 
@@ -211,6 +211,7 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
     chatMessageListeners,
     chatTypingListeners,
     chatThreadListeners,
+    utils,
   ]);
 
   const updatePresence = (data: any) => {

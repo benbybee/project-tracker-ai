@@ -273,7 +273,7 @@ class WebSocketClient {
   /**
    * Broadcasts a cache invalidation event to all connected clients
    * This ensures that all tabs/devices invalidate their cache and fetch fresh data
-   * 
+   *
    * @param target - The type of data to invalidate (roles, projects, tasks, or all)
    */
   broadcastCacheInvalidation(

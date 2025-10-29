@@ -56,7 +56,7 @@ export default function SettingsPage() {
   const { data: roles, isLoading, isFetching } = trpc.roles.list.useQuery();
   const isLoadingState = isLoading || isFetching || !roles;
   const utils = trpc.useUtils();
-  
+
   // Get WebSocket client for broadcasting cache invalidation
   const realtime = useRealtime();
 
