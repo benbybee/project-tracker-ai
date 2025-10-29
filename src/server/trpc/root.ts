@@ -10,6 +10,7 @@ import { notificationsRouter } from './routers/notifications';
 import { activityRouter } from './routers/activity';
 import { chatRouter } from './routers/chat';
 import { analyticsRouter } from './routers/analytics';
+import { userRouter } from './routers/user';
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -23,6 +24,7 @@ export const appRouter = createTRPCRouter({
   activity: activityRouter,
   chat: chatRouter,
   analytics: analyticsRouter,
+  user: userRouter,
 });
 
 export type AppRouter = typeof appRouter;
