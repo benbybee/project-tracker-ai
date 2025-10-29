@@ -19,7 +19,11 @@ export default function BoardPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const router = useRouter();
 
-  const { data: projects, isLoading, isFetching } = trpc.projects.list.useQuery({});
+  const {
+    data: projects,
+    isLoading,
+    isFetching,
+  } = trpc.projects.list.useQuery({});
   const isLoadingState = isLoading || isFetching || !projects;
 
   return (

@@ -361,7 +361,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             // Keep data fresh for 5 minutes to handle refreshes gracefully
             staleTime: 5 * 60 * 1000,
             // Cache data for 10 minutes
-            gcTime: 10 * 60 * 1000,
+            cacheTime: 10 * 60 * 1000,
             // Retry once on failure
             retry: 1,
             // Refetch on window focus only if data is stale

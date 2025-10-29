@@ -37,7 +37,11 @@ export default function DashboardPage() {
   const { data: roles = [] } = trpc.roles.list.useQuery();
 
   // Fetch dashboard data with role filter
-  const { data: dashboardData, isLoading, isFetching } = trpc.dashboard.get.useQuery({
+  const {
+    data: dashboardData,
+    isLoading,
+    isFetching,
+  } = trpc.dashboard.get.useQuery({
     roleId: selectedRoleId || undefined,
   });
   const isLoadingState = isLoading || isFetching || !dashboardData;

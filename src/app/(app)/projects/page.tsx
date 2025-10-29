@@ -19,7 +19,11 @@ export default function ProjectsPage() {
   );
   const router = useRouter();
 
-  const { data: projects, isLoading, isFetching } = trpc.projects.list.useQuery({
+  const {
+    data: projects,
+    isLoading,
+    isFetching,
+  } = trpc.projects.list.useQuery({
     search: search || undefined,
     type: typeFilter === 'all' ? undefined : typeFilter,
   });
