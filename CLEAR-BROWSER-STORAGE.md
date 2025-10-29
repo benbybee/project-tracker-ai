@@ -1,11 +1,23 @@
 # 🧹 Clear Browser Storage Guide
 
-## Problem
+## ⚠️ UPDATE: Offline Storage Removed
 
-After resetting the database with `pnpm db:reset`, you may still see old tasks, projects, or other data in the UI. This happens because the application uses **IndexedDB** for offline storage, which persists in your browser even after:
+**As of the latest version, this application NO LONGER uses IndexedDB/Dexie for offline storage.**
+
+All data is now fetched directly from Supabase via tRPC with React Query caching. After a database reset, simply perform a hard refresh:
+
+- **Hard Refresh:** `Ctrl + Shift + R` (Windows) or `Cmd + Shift + R` (Mac)
+
+This guide is kept for historical reference only.
+
+---
+
+## Historical Information (No Longer Applicable)
+
+~~After resetting the database with `pnpm db:reset`, you may still see old tasks, projects, or other data in the UI. This happens because the application uses **IndexedDB** for offline storage, which persists in your browser even after:
 - Database reset
 - Hard refresh (Ctrl + Shift + R)
-- Clearing React Query cache
+- Clearing React Query cache~~
 
 ## Quick Fix (Recommended)
 

@@ -22,36 +22,78 @@ async function generateIcons() {
   try {
     console.log('🎨 Generating PWA icons from source image...\n');
 
-    // Generate 192x192 icon
-    console.log('📱 Generating 192x192 icon...');
-    await sharp(SOURCE_IMAGE)
-      .resize(192, 192, {
-        fit: 'contain',
-        background: { r: 109, g: 74, b: 255, alpha: 1 } // #6D4AFF
-      })
-      .png()
-      .toFile(path.join(ICONS_DIR, 'icon-192x192.png'));
-    console.log('✅ Created icon-192x192.png\n');
+    const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
+    const iosIconSizes = [120, 152, 180];
+    const splashSizes = [
+      { width: 2048, height: 2732, name: 'apple-splash-2048-2732.png' },
+      { width: 1668, height: 2388, name: 'apple-splash-1668-2388.png' },
+      { width: 1536, height: 2048, name: 'apple-splash-1536-2048.png' },
+      { width: 1125, height: 2436, name: 'apple-splash-1125-2436.png' },
+      { width: 1242, height: 2688, name: 'apple-splash-1242-2688.png' },
+      { width: 828, height: 1792, name: 'apple-splash-828-1792.png' },
+      { width: 1242, height: 2208, name: 'apple-splash-1242-2208.png' },
+      { width: 750, height: 1334, name: 'apple-splash-750-1334.png' },
+      { width: 640, height: 1136, name: 'apple-splash-640-1136.png' },
+    ];
 
-    // Generate 512x512 icon
-    console.log('📱 Generating 512x512 icon...');
+    // Generate standard PWA icons
+    console.log('📱 Generating standard PWA icons...');
+    for (const size of iconSizes) {
+      await sharp(SOURCE_IMAGE)
+        .resize(size, size, {
+          fit: 'contain',
+          background: { r: 109, g: 74, b: 255, alpha: 1 } // #6D4AFF
+        })
+        .png()
+        .toFile(path.join(ICONS_DIR, `icon-${size}x${size}.png`));
+      console.log(`✅ Created icon-${size}x${size}.png`);
+    }
+    console.log('');
+
+    // Generate iOS icons
+    console.log('🍎 Generating iOS icons...');
+    for (const size of iosIconSizes) {
+      await sharp(SOURCE_IMAGE)
+        .resize(size, size, {
+          fit: 'contain',
+          background: { r: 109, g: 74, b: 255, alpha: 1 }
+        })
+        .png()
+        .toFile(path.join(ICONS_DIR, `icon-${size}x${size}.png`));
+      console.log(`✅ Created icon-${size}x${size}.png`);
+    }
+    console.log('');
+
+    // Generate apple-touch-icon (180x180)
+    console.log('🍎 Generating apple-touch-icon...');
     await sharp(SOURCE_IMAGE)
-      .resize(512, 512, {
+      .resize(180, 180, {
         fit: 'contain',
-        background: { r: 109, g: 74, b: 255, alpha: 1 } // #6D4AFF
+        background: { r: 109, g: 74, b: 255, alpha: 1 }
       })
       .png()
-      .toFile(path.join(ICONS_DIR, 'icon-512x512.png'));
-    console.log('✅ Created icon-512x512.png\n');
+      .toFile(path.join(ICONS_DIR, 'apple-touch-icon.png'));
+    console.log('✅ Created apple-touch-icon.png\n');
+
+    // Generate iOS splash screens
+    console.log('🖼️  Generating iOS splash screens...');
+    for (const splash of splashSizes) {
+      await sharp(SOURCE_IMAGE)
+        .resize(splash.width, splash.height, {
+          fit: 'contain',
+          background: { r: 109, g: 74, b: 255, alpha: 1 }
+        })
+        .png()
+        .toFile(path.join(ICONS_DIR, splash.name));
+      console.log(`✅ Created ${splash.name}`);
+    }
+    console.log('');
 
     // Generate maskable icon (with safe zone)
-    // Maskable icons need content in the center 80% (safe zone)
-    // For this icon, we'll just use the full source image since it already
-    // has appropriate padding and a full-bleed gradient background
     console.log('📱 Generating maskable 512x512 icon...');
     await sharp(SOURCE_IMAGE)
       .resize(512, 512, {
-        fit: 'cover', // Use 'cover' to fill the entire canvas
+        fit: 'cover',
         position: 'center'
       })
       .png()
@@ -69,24 +111,14 @@ async function generateIcons() {
       .toFile(FAVICON_PATH);
     console.log('✅ Created favicon.ico\n');
 
-    // Also create apple-touch-icon
-    console.log('🍎 Generating apple-touch-icon...');
-    await sharp(SOURCE_IMAGE)
-      .resize(180, 180, {
-        fit: 'contain',
-        background: { r: 109, g: 74, b: 255, alpha: 1 }
-      })
-      .png()
-      .toFile(path.join(__dirname, '..', 'public', 'apple-touch-icon.png'));
-    console.log('✅ Created apple-touch-icon.png\n');
-
-    console.log('🎉 All PWA icons generated successfully!');
-    console.log('\n📋 Files created:');
-    console.log('  • public/icons/icon-192x192.png');
-    console.log('  • public/icons/icon-512x512.png');
-    console.log('  • public/icons/maskable-icon-512x512.png');
-    console.log('  • public/favicon.ico');
-    console.log('  • public/apple-touch-icon.png');
+    console.log('🎉 All PWA icons and splash screens generated successfully!');
+    console.log('\n📋 Summary:');
+    console.log(`  • ${iconSizes.length} standard PWA icons`);
+    console.log(`  • ${iosIconSizes.length} iOS icons`);
+    console.log(`  • ${splashSizes.length} iOS splash screens`);
+    console.log('  • 1 maskable icon');
+    console.log('  • 1 favicon');
+    console.log('  • 1 apple-touch-icon');
     
   } catch (error) {
     console.error('❌ Error generating icons:', error);

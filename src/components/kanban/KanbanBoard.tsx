@@ -12,16 +12,13 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
 import KanbanFilters from './KanbanFilters';
-import { getDB } from '@/lib/db.client';
-import { enqueueOp } from '@/lib/ops-helpers';
-import { getFreshBaseVersionForTask } from '@/lib/sync-manager';
-import { useTasksStore } from '@/lib/tasks-store';
 import { Task, TaskStatus } from '@/types/task';
 import { useRealtime } from '@/app/providers';
+import { trpc } from '@/lib/trpc-client';
 
 type BoardVariant = 'default' | 'website';
 
@@ -72,68 +69,25 @@ export function KanbanBoard({
     })
   );
 
-  const { byId, bulkUpsert, upsert } = useTasksStore();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
   const realtime = useRealtime();
 
-  // Load tasks from Dexie on mount
-  useEffect(() => {
-    (async () => {
-      try {
-        setIsLoading(true);
-        const db = await getDB();
-        const tasks = projectId
-          ? await db.tasks.where('projectId').equals(projectId).toArray()
-          : await db.tasks.toArray();
-        bulkUpsert(tasks);
-      } catch (error) {
-        console.error('Failed to load tasks:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
-
-  // Listen for real-time updates
-  useEffect(() => {
-    const unsubscribeActivity = realtime.onActivity((activity) => {
-      // Reload tasks when new tasks are created or updated
-      if (
-        activity.type === 'task_created' ||
-        activity.type === 'task_updated'
-      ) {
-        (async () => {
-          try {
-            // First trigger sync to get latest data from server
-            const { pullChanges } = await import('@/lib/sync-manager');
-            await pullChanges();
-
-            // Then reload tasks from local database
-            const db = await getDB();
-            const tasks = projectId
-              ? await db.tasks.where('projectId').equals(projectId).toArray()
-              : await db.tasks.toArray();
-            bulkUpsert(tasks);
-          } catch (error) {
-            console.error('Failed to reload tasks:', error);
-          }
-        })();
-      }
-    });
-
-    return () => {
-      unsubscribeActivity();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  const utils = trpc.useUtils();
+  const { data: tasks = [], isLoading } = trpc.tasks.list.useQuery(
+    projectId ? { projectId } : {}
+  );
+  const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
 
   // Derive unique roles from tasks
   const uniqueRoles = useMemo(() => {
     const roleSet = new Set<string>();
-    Object.values(byId).forEach((task) => {
+    tasks.forEach((task) => {
       if (task.role) {
         const roleName =
           typeof task.role === 'string' ? task.role : task.role.name;
@@ -141,15 +95,12 @@ export function KanbanBoard({
       }
     });
     return ['All', ...Array.from(roleSet).sort()];
-  }, [byId]);
+  }, [tasks]);
 
   // Group tasks by column
   const tasksByCol = useMemo(() => {
-    const allTasks = Object.values(byId);
-
     // Apply filters
-    const filtered = allTasks
-      .filter((t) => !projectId || t.projectId === projectId)
+    const filtered = tasks
       .filter((t) => !t.archived) // Exclude archived tasks
       .filter((t) => {
         if (!roleFilter) return true;
@@ -185,7 +136,7 @@ export function KanbanBoard({
     }
 
     return bucket;
-  }, [byId, projectId, roleFilter, columns]);
+  }, [tasks, roleFilter, columns]);
 
   const onDragStart = (event: DragStartEvent) => {
     const task: Task | undefined = event.active.data.current?.task;
@@ -206,32 +157,10 @@ export function KanbanBoard({
     if (!task || !toCol || task.status === toCol) return;
 
     try {
-      const now = new Date().toISOString();
-      const updatedTask: Task = {
-        ...task,
+      // Update via tRPC mutation
+      await updateTask.mutateAsync({
+        id: task.id,
         status: toCol,
-        updatedAt: now,
-        version: (task.version || 0) + 1,
-      };
-
-      // Optimistic update
-      upsert(updatedTask);
-
-      // Write to Dexie
-      const db = await getDB();
-      await db.tasks.put(updatedTask);
-
-      // Get fresh baseVersion to avoid false conflicts
-      const baseVersion = await getFreshBaseVersionForTask(task.id);
-
-      // Enqueue sync operation
-      await enqueueOp({
-        entityType: 'task',
-        entityId: task.id,
-        action: 'update',
-        payload: { status: toCol },
-        baseVersion,
-        projectId: task.projectId || undefined,
       });
 
       // Broadcast real-time update
@@ -248,8 +177,6 @@ export function KanbanBoard({
       });
     } catch (error) {
       console.error('Failed to update task:', error);
-      // Revert optimistic update on error
-      upsert(task);
     }
   };
 

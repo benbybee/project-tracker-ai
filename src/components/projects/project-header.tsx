@@ -20,8 +20,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc';
 import { EditProjectModal } from './edit-project-modal';
-import { useSync } from '@/hooks/useSync.client';
-import { RefreshCw } from 'lucide-react';
 import { useRealtime } from '@/app/providers';
 
 type Role = { id: string; name: string; color: string };
@@ -52,7 +50,6 @@ export function ProjectHeader({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const utils = trpc.useUtils();
-  const { startSync, isSyncing, isOnline } = useSync();
   const { onlineUsers, isConnected } = useRealtime();
 
   const convertToWebsiteMutation = trpc.projects.convertToWebsite.useMutation({
@@ -106,14 +103,6 @@ export function ProjectHeader({
       deleteProjectMutation.mutate({ id: project.id });
     }
     setIsDeleteModalOpen(false);
-  };
-
-  const handleSyncNow = async () => {
-    try {
-      await startSync();
-    } catch (error) {
-      console.error('Failed to sync:', error);
-    }
   };
 
   return (
@@ -217,23 +206,6 @@ export function ProjectHeader({
               <GradientButton onClick={onNewTask} className="w-full sm:w-auto">
                 New Task
               </GradientButton>
-
-              {/* Sync Button */}
-              {isOnline && (
-                <Button
-                  variant="outline"
-                  onClick={handleSyncNow}
-                  disabled={isSyncing}
-                  className="w-full sm:w-auto bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30"
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
-                  />
-                  <span className="ml-2">
-                    {isSyncing ? 'Syncing...' : 'Sync Now'}
-                  </span>
-                </Button>
-              )}
 
               {/* Project Type Conversion Buttons */}
               {!isWebsite ? (

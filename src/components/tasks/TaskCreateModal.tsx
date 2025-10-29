@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import { Task, TaskStatus } from '@/types/task';
-import { getDB } from '@/lib/db.client';
-import { enqueueOp } from '@/lib/ops-helpers';
-import { useTasksStore } from '@/lib/tasks-store';
+import { trpc } from '@/lib/trpc-client';
 import { useParams } from 'next/navigation';
 import {
   Dialog,
@@ -36,7 +34,6 @@ export function TaskCreateModal({
   projectId,
   defaultStatus,
 }: TaskCreateModalProps) {
-  const { upsert } = useTasksStore();
   const params = useParams<{ id?: string }>();
 
   const [form, setForm] = useState<Partial<Task>>({
@@ -50,6 +47,14 @@ export function TaskCreateModal({
 
   const [saving, setSaving] = useState(false);
 
+  const utils = trpc.useUtils();
+  const createTask = trpc.tasks.create.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
+
   const updateForm = (updates: Partial<Task>) => {
     setForm((prev) => ({ ...prev, ...updates }));
   };
@@ -60,40 +65,21 @@ export function TaskCreateModal({
       return;
     }
 
+    if (!form.projectId) {
+      alert('Please select a project');
+      return;
+    }
+
     setSaving(true);
 
     try {
-      const now = new Date().toISOString();
-      const task: Task = {
-        id: crypto.randomUUID(),
+      await createTask.mutateAsync({
+        projectId: form.projectId,
         title: form.title.trim(),
-        description: form.description || null,
+        description: form.description || undefined,
         status: form.status || 'not_started',
-        projectId: form.projectId || null,
-        roleId: form.roleId || null,
-        role: form.role || null,
-        dueDate: form.dueDate || null,
-        priorityScore: form.priorityScore || 2,
-        updatedAt: now,
-        createdAt: now,
-        version: 0,
-      };
-
-      // Optimistic update
-      upsert(task);
-
-      // Write to Dexie
-      const db = await getDB();
-      await db.tasks.put(task);
-
-      // Enqueue sync operation
-      await enqueueOp({
-        entityType: 'task',
-        entityId: task.id,
-        action: 'create',
-        payload: task,
-        baseVersion: 0,
-        projectId: task.projectId || undefined,
+        dueDate: form.dueDate || undefined,
+        priorityScore: form.priorityScore?.toString() as '1' | '2' | '3' | '4' | undefined,
       });
 
       // Reset form and close

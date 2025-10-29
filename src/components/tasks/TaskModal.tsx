@@ -22,12 +22,8 @@ import {
 } from '@/components/ui/select';
 import { useState } from 'react';
 import { Plus, X, GripVertical } from 'lucide-react';
-import { useOfflineOperations, useSync } from '@/hooks/useSync.client';
 import { useRealtime } from '@/app/providers';
 import { useParams } from 'next/navigation';
-import { getDB } from '@/lib/db.client';
-import { enqueueTaskDelete } from '@/lib/ops-helpers';
-import { useTasksStore } from '@/lib/tasks-store';
 
 const TaskSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
@@ -77,14 +73,28 @@ export function TaskModal({
   const [addToDaily, setAddToDaily] = useState(defaultValues?.isDaily || false);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const { createOffline, updateOffline } = useOfflineOperations();
-  const { isOnline } = useSync();
   const { startTyping, stopTyping, updatePresence } = useRealtime();
-  const { remove: removeTaskFromStore } = useTasksStore();
   const params = useParams<{ id?: string }>();
 
-  const createTask = trpc.tasks.create.useMutation();
-  const updateTask = trpc.tasks.update.useMutation();
+  const utils = trpc.useUtils();
+  const createTask = trpc.tasks.create.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
+  const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
+  const deleteTask = trpc.tasks.remove.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
   const { data: roles } = trpc.roles.list.useQuery();
   const { data: projects } = trpc.projects.list.useQuery({});
 
@@ -132,23 +142,14 @@ export function TaskModal({
         isDaily: addToDaily,
       };
 
-      if (isOnline) {
-        // Online: use tRPC mutations
-        if (defaultValues?.id) {
-          await updateTask.mutateAsync({
-            id: defaultValues.id,
-            ...taskData,
-          });
-        } else {
-          await createTask.mutateAsync(taskData);
-        }
+      // Use tRPC mutations for all operations
+      if (defaultValues?.id) {
+        await updateTask.mutateAsync({
+          id: defaultValues.id,
+          ...taskData,
+        });
       } else {
-        // Offline: save to local database
-        if (defaultValues?.id) {
-          await updateOffline('task', defaultValues.id, taskData);
-        } else {
-          await createOffline('task', taskData);
-        }
+        await createTask.mutateAsync(taskData);
       }
 
       // Close modal after successful save
@@ -174,16 +175,8 @@ export function TaskModal({
     setDeleting(true);
 
     try {
-      // Optimistic removal from store
-      removeTaskFromStore(defaultValues.id);
-
-      // Delete from Dexie
-      const db = await getDB();
-      await db.tasks.delete(defaultValues.id);
-
-      // Enqueue delete operation for sync
-      await enqueueTaskDelete(defaultValues.id, projectId);
-
+      // Delete using tRPC mutation
+      await deleteTask.mutateAsync({ id: defaultValues.id });
       onClose();
     } catch (error) {
       console.error('Failed to delete task:', error);

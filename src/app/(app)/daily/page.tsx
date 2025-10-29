@@ -3,8 +3,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import DailyTaskRow from '@/components/daily/DailyTaskRow';
 import { TaskEditModal } from '@/components/tasks/TaskEditModal';
-import { useTasksStore } from '@/lib/tasks-store';
-import { getDB } from '@/lib/db.client';
 import type { Task } from '@/types/task';
 import { Calendar } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
@@ -12,30 +10,22 @@ import { DailyPlanSuggestions } from '@/components/ai/DailyPlanSuggestions';
 import { SuggestionCard } from '@/components/ai/SuggestionCard';
 import { PlanActionBar } from '@/components/ai/PlanActionBar';
 import { useAiSuggestions } from '@/hooks/useAiSuggestions';
+import { trpc } from '@/lib/trpc-client';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
 
 export default function DailyPlannerPage() {
-  const { byId, bulkUpsert } = useTasksStore();
-  const tasks = Object.values(byId);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<Task | null>(null);
   const [showAiSuggestions] = useState(true);
   const [triggerGenerate, setTriggerGenerate] = useState(false);
 
+  // Fetch all tasks from tRPC (React Query handles caching)
+  const { data: tasks = [] } = trpc.tasks.list.useQuery({});
+
   const { suggestions, fetchSuggestions, acceptSuggestion, rejectSuggestion } =
     useAiSuggestions();
-
-  // Load tasks from Dexie on mount
-  useEffect(() => {
-    (async () => {
-      const db = await getDB();
-      const allTasks = await db.tasks.toArray();
-      bulkUpsert(allTasks);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Fetch AI suggestions when component mounts
   useEffect(() => {

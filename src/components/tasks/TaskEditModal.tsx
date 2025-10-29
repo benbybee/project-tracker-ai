@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Task, TaskStatus } from '@/types/task';
-import { getDB } from '@/lib/db.client';
-import { enqueueOp, enqueueTaskDelete } from '@/lib/ops-helpers';
-import { getFreshBaseVersionForTask } from '@/lib/sync-manager';
-import { useTasksStore } from '@/lib/tasks-store';
+import { trpc } from '@/lib/trpc-client';
 import {
   Dialog,
   DialogContent,
@@ -30,10 +27,23 @@ interface TaskEditModalProps {
 }
 
 export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
-  const { upsert, remove } = useTasksStore();
   const [form, setForm] = useState<Task>(task);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const utils = trpc.useUtils();
+  const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
+  const deleteTask = trpc.tasks.remove.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
 
   // Update form when task prop changes
   useEffect(() => {
@@ -55,32 +65,13 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     setSaving(true);
 
     try {
-      const now = new Date().toISOString();
-      const updatedTask: Task = {
-        ...form,
+      await updateTask.mutateAsync({
+        id: task.id,
         title: form.title.trim(),
-        updatedAt: now,
-        version: (form.version ?? 0) + 1,
-      };
-
-      // Optimistic update
-      upsert(updatedTask);
-
-      // Write to Dexie
-      const db = await getDB();
-      await db.tasks.put(updatedTask);
-
-      // Get fresh baseVersion to avoid false conflicts
-      const baseVersion = await getFreshBaseVersionForTask(updatedTask.id);
-
-      // Enqueue sync operation
-      await enqueueOp({
-        entityType: 'task',
-        entityId: updatedTask.id,
-        action: 'update',
-        payload: updatedTask,
-        baseVersion,
-        projectId: updatedTask.projectId || undefined,
+        description: form.description,
+        status: form.status,
+        dueDate: form.dueDate,
+        priorityScore: form.priorityScore?.toString() as '1' | '2' | '3' | '4',
       });
 
       onClose();
@@ -104,22 +95,11 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     setDeleting(true);
 
     try {
-      // Optimistic removal from store
-      remove(task.id);
-
-      // Delete from Dexie
-      const db = await getDB();
-      await db.tasks.delete(task.id);
-
-      // Enqueue delete operation for sync
-      await enqueueTaskDelete(task.id, task.projectId || '');
-
+      await deleteTask.mutateAsync({ id: task.id });
       onClose();
     } catch (error) {
       console.error('Failed to delete task:', error);
       alert('Failed to delete task. Please try again.');
-      // Revert optimistic update on error
-      upsert(task);
     } finally {
       setDeleting(false);
     }

@@ -1,10 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { getDB } from '@/lib/db.client';
-import { enqueueOp } from '@/lib/ops-helpers';
-import { useTasksStore } from '@/lib/tasks-store';
-import { getFreshBaseVersionForTask } from '@/lib/sync-manager';
+import { trpc } from '@/lib/trpc-client';
 import type { Task } from '@/types/task';
 
 interface DailyTaskRowProps {
@@ -20,7 +17,13 @@ export default function DailyTaskRow({
   onSelect,
   onOpen,
 }: DailyTaskRowProps) {
-  const upsert = useTasksStore((s) => s.upsert);
+  const utils = trpc.useUtils();
+  const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
 
   const due = task.dueDate ? new Date(task.dueDate) : null;
   const overdue = !!(due && due.getTime() < Date.now());
@@ -31,25 +34,9 @@ export default function DailyTaskRow({
   const stale = daysStale > 7;
 
   async function update(patch: Partial<Task>) {
-    const next: Task = {
-      ...task,
+    await updateTask.mutateAsync({
+      id: task.id,
       ...patch,
-      updatedAt: new Date().toISOString(),
-      version: (task.version ?? 0) + 1,
-    };
-    upsert(next);
-
-    const db = await getDB();
-    await db.tasks.put(next);
-
-    const baseVersion = await getFreshBaseVersionForTask(task.id);
-    await enqueueOp({
-      entityType: 'task',
-      entityId: task.id,
-      action: 'update',
-      payload: patch,
-      baseVersion,
-      projectId: task.projectId ?? undefined,
     });
   }
 
