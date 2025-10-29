@@ -27,7 +27,7 @@ Your Vercel deployment is failing because required environment variables are not
    Click "Add New" for each variable:
 
    **Required Variables:**
-
+   
    ```
    DATABASE_URL=postgresql://user:password@host:5432/database
    NEXTAUTH_SECRET=your-super-secret-key-here
@@ -35,7 +35,7 @@ Your Vercel deployment is failing because required environment variables are not
    ```
 
    **Optional (but recommended for full functionality):**
-
+   
    ```
    OPENAI_API_KEY=sk-your-openai-api-key
    GOOGLE_CLIENT_ID=your-google-oauth-id
@@ -68,31 +68,26 @@ vercel --prod
 ## 📝 How to Get Each Variable
 
 ### DATABASE_URL
-
 You need a PostgreSQL database. Options:
 
 **A. Vercel Postgres (Recommended):**
-
 1. Go to your Vercel project
 2. Click "Storage" tab
 3. Click "Create Database" → "Postgres"
 4. Copy the `POSTGRES_URL` and use it as `DATABASE_URL`
 
 **B. Supabase:**
-
 1. Go to https://supabase.com
 2. Create a new project
 3. Go to Settings → Database
 4. Copy the "Connection string" (use the pooler connection)
 
 **C. Neon (Serverless Postgres):**
-
 1. Go to https://neon.tech
 2. Create a new project
 3. Copy the connection string
 
 ### NEXTAUTH_SECRET
-
 Generate a secure random string:
 
 ```bash
@@ -107,7 +102,6 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 ### NEXTAUTH_URL
-
 This is your production URL:
 
 ```
@@ -117,7 +111,6 @@ https://your-app-name.vercel.app
 Replace with your actual Vercel deployment URL.
 
 ### OPENAI_API_KEY (Optional)
-
 Only needed for AI features:
 
 1. Go to https://platform.openai.com
@@ -210,3 +203,4 @@ Once your app deploys successfully:
 ---
 
 **TL;DR:** Go to Vercel Dashboard → Your Project → Settings → Environment Variables → Add `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` → Redeploy
+

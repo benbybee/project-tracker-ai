@@ -14,12 +14,10 @@ async function clearData() {
   try {
     // Get DATABASE_URL from environment
     const databaseUrl = process.env.DATABASE_URL;
-
+    
     if (!databaseUrl) {
       console.error('❌ DATABASE_URL environment variable is not set');
-      console.error(
-        '   Make sure you have a .env file with DATABASE_URL configured'
-      );
+      console.error('   Make sure you have a .env file with DATABASE_URL configured');
       process.exit(1);
     }
 
@@ -29,7 +27,7 @@ async function clearData() {
     console.log('🗑️  Starting data cleanup...\n');
 
     // Delete in order to respect foreign key constraints
-
+    
     console.log('  → Deleting subtasks...');
     await sql`DELETE FROM subtasks`;
     console.log('    ✓ Subtasks cleared');
@@ -82,3 +80,4 @@ async function clearData() {
 }
 
 clearData();
+

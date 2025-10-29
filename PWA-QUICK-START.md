@@ -29,13 +29,11 @@ npm run build && netlify deploy --prod
 ### Step 2: Clear Old PWA (If Previously Installed)
 
 **Android:**
-
 - Long press the TaskTracker AI icon
 - Tap "Uninstall" or "Remove"
 - Clear Chrome cache
 
 **iOS:**
-
 - Long press the TaskTracker AI icon
 - Tap "Remove App" → "Delete App"
 - Clear Safari cache (Settings → Safari → Clear History)
@@ -64,7 +62,6 @@ This checks that all PWA components are properly configured.
 See the detailed troubleshooting guide in `PWA-FIX-INSTRUCTIONS.md`.
 
 Common issues:
-
 - Not using HTTPS (production only)
 - Old service worker cached (clear cache)
 - Browser doesn't support PWA (use Chrome/Safari)
@@ -73,3 +70,4 @@ Common issues:
 
 - Detailed instructions: See `PWA-FIX-INSTRUCTIONS.md`
 - Original PWA docs: See `PWA-SETUP.md`
+

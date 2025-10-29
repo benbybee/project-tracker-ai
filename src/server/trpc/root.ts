@@ -1,6 +1,5 @@
 import { createTRPCRouter } from './trpc';
 import { authRouter } from './routers/auth';
-import { userRouter } from './routers/user';
 import { rolesRouter } from './routers/roles';
 import { projectsRouter } from './routers/projects';
 import { tasksRouter } from './routers/tasks';
@@ -14,7 +13,6 @@ import { analyticsRouter } from './routers/analytics';
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
-  user: userRouter,
   roles: rolesRouter,
   projects: projectsRouter,
   tasks: tasksRouter,

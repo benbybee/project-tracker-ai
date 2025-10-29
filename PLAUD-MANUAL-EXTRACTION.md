@@ -12,7 +12,6 @@ The Plaud share page uses **client-side rendering** to load audio dynamically vi
 ## Debug Results Summary
 
 From your debug output:
-
 - **HTML Length**: Only 2,162 bytes (very small - just a shell)
 - **Has Next.js Data**: ❌ No (not a Next.js app)
 - **Audio URLs Found**: 0
@@ -25,7 +24,6 @@ This confirms the page is a **Single Page Application (SPA)** that loads content
 ### Steps to Find the Audio URL
 
 1. **Open the Plaud share link** in your browser:
-
    ```
    https://web.plaud.ai/share/61071761620824397
    ```
@@ -72,13 +70,11 @@ npm install puppeteer
 
 Then modify `src/lib/plaud-import.ts` to use Puppeteer to render the page and extract the audio URL after JavaScript executes.
 
-**Pros**:
-
+**Pros**: 
 - Reliable
 - Works with any client-side rendered page
 
 **Cons**:
-
 - Adds ~300MB to deployment size
 - Slower (takes 5-10 seconds)
 - More expensive on Vercel
@@ -96,14 +92,12 @@ Similar to Puppeteer but more lightweight.
 If Plaud has an official API, we should use that instead of scraping.
 
 **Action**: Check Plaud's documentation for an official API endpoint:
-
 - https://plaud.ai/docs
 - https://developer.plaud.ai
 
 ## Solution 3: Browser Extension Approach
 
 Create a browser extension that:
-
 1. Runs on the Plaud share page
 2. Extracts the audio URL after page load
 3. Sends it to your API
@@ -129,19 +123,16 @@ This would work for personal use but requires installing an extension.
 Implement one of these approaches:
 
 **Option 1**: Puppeteer/Playwright for server-side rendering
-
 - Best for automation
 - Works with any Plaud link
 - More expensive
 
 **Option 2**: Official Plaud API integration
-
 - Best for reliability
 - Proper authentication
 - Dependent on Plaud providing API access
 
 **Option 3**: Create a browser extension
-
 - Works for personal use
 - No server-side changes needed
 - Requires manual installation
@@ -177,3 +168,4 @@ If the audio URL requires authentication or the share is private:
 - You may need to re-share with public access enabled
 
 Let me know what you find in the Network tab, and I can help implement the appropriate solution!
+
