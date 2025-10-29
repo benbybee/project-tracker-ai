@@ -64,7 +64,9 @@ export const rolesRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const [deletedRole] = await ctx.db
         .delete(roles)
-        .where(and(eq(roles.id, input.id), eq(roles.userId, ctx.session.user.id)))
+        .where(
+          and(eq(roles.id, input.id), eq(roles.userId, ctx.session.user.id))
+        )
         .returning();
 
       if (!deletedRole) {

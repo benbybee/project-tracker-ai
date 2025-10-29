@@ -241,7 +241,9 @@ export const tasksRouter = createTRPCRouter({
         .from(tasks)
         .leftJoin(projects, eq(tasks.projectId, projects.id))
         .leftJoin(roles, eq(tasks.roleId, roles.id))
-        .where(and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id)))
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
         .limit(1);
 
       if (!task) {
@@ -602,13 +604,17 @@ export const tasksRouter = createTRPCRouter({
       const [currentTask] = await ctx.db
         .select()
         .from(tasks)
-        .where(and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id)))
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
         .limit(1);
 
       const [row] = await ctx.db
         .update(tasks)
         .set({ status: 'completed' })
-        .where(and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id)))
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
         .returning();
 
       // Track completion time
@@ -645,7 +651,9 @@ export const tasksRouter = createTRPCRouter({
       const [row] = await ctx.db
         .update(tasks)
         .set({ dueDate: target.toISOString().split('T')[0], isDaily: false })
-        .where(and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id)))
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
         .returning();
       return row;
     }),
@@ -655,7 +663,9 @@ export const tasksRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const [row] = await ctx.db
         .delete(tasks)
-        .where(and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id)))
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
         .returning();
 
       // Log deletion activity
@@ -772,7 +782,9 @@ export const tasksRouter = createTRPCRouter({
       for (const taskId of input) {
         const [deleted] = await ctx.db
           .delete(tasks)
-          .where(and(eq(tasks.id, taskId), eq(tasks.userId, ctx.session.user.id)))
+          .where(
+            and(eq(tasks.id, taskId), eq(tasks.userId, ctx.session.user.id))
+          )
           .returning();
         results.push(deleted);
       }
@@ -848,7 +860,12 @@ export const tasksRouter = createTRPCRouter({
 
       // Apply updates
       for (const update of updates) {
-        await ctx.db.update(tasks).set(update).where(and(eq(tasks.id, update.id), eq(tasks.userId, ctx.session.user.id)));
+        await ctx.db
+          .update(tasks)
+          .set(update)
+          .where(
+            and(eq(tasks.id, update.id), eq(tasks.userId, ctx.session.user.id))
+          );
       }
 
       return {

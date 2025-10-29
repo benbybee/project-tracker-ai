@@ -108,7 +108,12 @@ export const projectsRouter = createTRPCRouter({
         })
         .from(projects)
         .leftJoin(roles, eq(projects.roleId, roles.id))
-        .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.session.user.id)))
+        .where(
+          and(
+            eq(projects.id, input.id),
+            eq(projects.userId, ctx.session.user.id)
+          )
+        )
         .limit(1);
 
       if (!project) {
@@ -201,13 +206,15 @@ export const projectsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { id, ...updateData } = input;
 
-      const [updatedProject] =       await ctx.db
+      const [updatedProject] = await ctx.db
         .update(projects)
         .set({
           ...updateData,
           updatedAt: new Date(),
         })
-        .where(and(eq(projects.id, id), eq(projects.userId, ctx.session.user.id)))
+        .where(
+          and(eq(projects.id, id), eq(projects.userId, ctx.session.user.id))
+        )
         .returning();
 
       if (!updatedProject) {
@@ -238,7 +245,12 @@ export const projectsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const [deletedProject] = await ctx.db
         .delete(projects)
-        .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.session.user.id)))
+        .where(
+          and(
+            eq(projects.id, input.id),
+            eq(projects.userId, ctx.session.user.id)
+          )
+        )
         .returning();
 
       if (!deletedProject) {
@@ -295,7 +307,12 @@ export const projectsRouter = createTRPCRouter({
           ...input.website,
           updatedAt: new Date(),
         })
-        .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.session.user.id)));
+        .where(
+          and(
+            eq(projects.id, input.id),
+            eq(projects.userId, ctx.session.user.id)
+          )
+        );
 
       // Log conversion activity
       if (project) {
@@ -337,7 +354,12 @@ export const projectsRouter = createTRPCRouter({
           websiteStatus: null,
           updatedAt: new Date(),
         })
-        .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.session.user.id)));
+        .where(
+          and(
+            eq(projects.id, input.id),
+            eq(projects.userId, ctx.session.user.id)
+          )
+        );
 
       // Log conversion activity
       if (project) {

@@ -9,7 +9,7 @@ import { logSyncActivity } from '@/lib/activity-logger';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -180,7 +180,9 @@ async function processTaskOp(
     }
   } else if (action === 'delete') {
     if (existingTask.length > 0) {
-      await db.delete(tasks).where(and(eq(tasks.id, entityId), eq(tasks.userId, userId)));
+      await db
+        .delete(tasks)
+        .where(and(eq(tasks.id, entityId), eq(tasks.userId, userId)));
       applied.push(entityId);
     }
   }
@@ -259,7 +261,9 @@ async function processProjectOp(
     }
   } else if (action === 'delete') {
     if (existingProject.length > 0) {
-      await db.delete(projects).where(and(eq(projects.id, entityId), eq(projects.userId, userId)));
+      await db
+        .delete(projects)
+        .where(and(eq(projects.id, entityId), eq(projects.userId, userId)));
       applied.push(entityId);
     }
   }

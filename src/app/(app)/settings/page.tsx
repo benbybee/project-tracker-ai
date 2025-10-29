@@ -4,7 +4,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
-import { Settings as SettingsIcon, Trash2, Edit2, Save, X, User } from 'lucide-react';
+import {
+  Settings as SettingsIcon,
+  Trash2,
+  Edit2,
+  Save,
+  X,
+  User,
+} from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { useSession } from 'next-auth/react';
 
@@ -598,7 +605,9 @@ export default function SettingsPage() {
                     // TODO: Implement password change API
                     alert('Password change will be available soon!');
                   }}
-                  disabled={!currentPassword || !newPassword || !confirmPassword}
+                  disabled={
+                    !currentPassword || !newPassword || !confirmPassword
+                  }
                 >
                   Change Password
                 </Button>

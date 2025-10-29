@@ -9,7 +9,7 @@ import { logSyncActivity } from '@/lib/activity-logger';
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
