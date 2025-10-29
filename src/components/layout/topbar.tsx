@@ -2,9 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import { GradientButton } from '@/components/ui/gradient-button';
-import SyncIndicator from '@/components/sync/SyncIndicator';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
-import { ConflictReviewButton } from '@/components/sync/ConflictModal';
 import { TaskModal } from '@/components/tasks/TaskModal';
 import { trpc } from '@/lib/trpc';
 
@@ -50,10 +48,6 @@ export function Topbar() {
           placeholder={isMobile ? 'Search...' : 'Search (Ctrl+K)'}
         />
         <div className="flex items-center gap-2 flex-shrink-0">
-          <SyncIndicator />
-          <div className="hidden sm:block">
-            <ConflictReviewButton />
-          </div>
           <NotificationBell />
           <GradientButton
             onClick={() => setTaskModalOpen(true)}

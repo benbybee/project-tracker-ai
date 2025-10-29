@@ -10,7 +10,7 @@ import { DailyPlanSuggestions } from '@/components/ai/DailyPlanSuggestions';
 import { SuggestionCard } from '@/components/ai/SuggestionCard';
 import { PlanActionBar } from '@/components/ai/PlanActionBar';
 import { useAiSuggestions } from '@/hooks/useAiSuggestions';
-import { trpc } from '@/lib/trpc-client';
+import { trpc } from '@/lib/trpc';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';

@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { trpc } from '@/lib/trpc-client';
+import { trpc } from '@/lib/trpc';
 import type { Task } from '@/types/task';
 
 interface DailyTaskRowProps {

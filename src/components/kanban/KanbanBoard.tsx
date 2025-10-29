@@ -18,7 +18,7 @@ import { KanbanTask } from './KanbanTask';
 import KanbanFilters from './KanbanFilters';
 import { Task, TaskStatus } from '@/types/task';
 import { useRealtime } from '@/app/providers';
-import { trpc } from '@/lib/trpc-client';
+import { trpc } from '@/lib/trpc';
 
 type BoardVariant = 'default' | 'website';
 

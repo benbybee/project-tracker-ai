@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Task, TaskStatus } from '@/types/task';
-import { trpc } from '@/lib/trpc-client';
+import { trpc } from '@/lib/trpc';
 import { useParams } from 'next/navigation';
 import {
   Dialog,
