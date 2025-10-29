@@ -1,0 +1,93 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Bell, BellRing } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
+import { NotificationDropdown } from './NotificationDropdown';
+
+interface NotificationBellProps {
+  className?: string;
+}
+
+export function NotificationBell({ className = '' }: NotificationBellProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+
+  const { data: unreadCount, refetch } =
+    trpc.notifications.getUnreadCount.useQuery(undefined, {
+      retry: 1,
+      retryDelay: 1000,
+      refetchOnWindowFocus: false,
+      onError: (error) => {
+        console.warn(
+          '[NotificationBell] Failed to fetch unread count (non-critical):',
+          error.message
+        );
+      },
+    });
+
+  const { data: notifications } = trpc.notifications.getNotifications.useQuery(
+    {
+      limit: 10,
+      unreadOnly: false,
+    },
+    {
+      retry: 1,
+      retryDelay: 1000,
+      refetchOnWindowFocus: false,
+      onError: (error) => {
+        console.warn(
+          '[NotificationBell] Failed to fetch notifications (non-critical):',
+          error.message
+        );
+      },
+    }
+  );
+
+  // Check for new notifications
+  useEffect(() => {
+    if (unreadCount && unreadCount > 0) {
+      setHasNewNotifications(true);
+    }
+  }, [unreadCount]);
+
+  const handleBellClick = () => {
+    setIsOpen(!isOpen);
+    if (hasNewNotifications) {
+      setHasNewNotifications(false);
+    }
+  };
+
+  const handleNotificationClick = async () => {
+    // Optimistic update - immediately update UI
+    setHasNewNotifications(false);
+
+    // Mark as read
+    // TODO: Implement markAsRead mutation
+    refetch();
+  };
+
+  return (
+    <div className={`relative ${className}`}>
+      <button
+        onClick={handleBellClick}
+        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        aria-label="Notifications"
+      >
+        {hasNewNotifications ? (
+          <BellRing className="h-5 w-5 text-blue-600" />
+        ) : (
+          <Bell className="h-5 w-5" />
+        )}
+      </button>
+
+      {isOpen && (
+        <NotificationDropdown
+          notifications={(notifications as any) || []}
+          onNotificationClick={handleNotificationClick}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
