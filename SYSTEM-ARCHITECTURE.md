@@ -1,6 +1,6 @@
 # Project Tracker AI - System Architecture & Documentation
 
-**Version:** 0.1.2  
+**Version:** 0.2.0  
 **Last Updated:** October 29, 2025  
 **Type:** Full-Stack Task Management Application with AI
 
@@ -53,10 +53,11 @@ An intelligent task and project management system that learns from user behavior
 - **Radix UI** - Headless accessible components
 - **Lucide React** - Icon library
 
-### State Management
-- **TanStack Query v4** (React Query) - Server state & caching
+### State Management & Caching
+- **TanStack Query v4** (React Query) - Server state with optimized 30s staleTime
 - **Zustand 4.4** - Client state (UI, planner)
 - **Dexie 4.2** - IndexedDB wrapper for offline storage
+- **Custom Cache Invalidation** - WebSocket-based cross-tab synchronization
 
 ### Forms & Validation
 - **react-hook-form 7.49** - Form state management
@@ -70,6 +71,85 @@ An intelligent task and project management system that learns from user behavior
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
 - **pnpm 8.15** - Package manager (required)
+
+---
+
+## 🔄 Caching Architecture
+
+### Multi-Layer Caching Strategy
+
+**Problem Solved:** Eliminated stale data issues where deleted items reappeared and different tabs/devices showed inconsistent state.
+
+#### 1. React Query Configuration (`src/app/providers.tsx`)
+```typescript
+{
+  queries: {
+    staleTime: 30 * 1000,           // 30 seconds (balanced approach)
+    cacheTime: 10 * 60 * 1000,      // 10 minutes for offline resilience
+    refetchOnWindowFocus: 'always',  // Always refetch on focus
+    refetchOnMount: 'always',        // Always refetch on mount
+    refetchOnReconnect: false,       // Don't refetch on reconnect
+  }
+}
+```
+
+**Rationale:** 30-second staleTime provides good performance while ensuring reasonable data freshness for a project management app.
+
+#### 2. Service Worker Strategy (`src/service-worker.ts`)
+- **Static Assets:** Cache-first with 30-day expiration
+- **API Routes:** No caching (removed to prevent stale data)
+- **App Routes:** Network-first with 24-hour cache
+- **Navigation:** Network-first with 24-hour cache
+
+**Critical Change:** API routes (`/api/*`) are no longer cached by the service worker. React Query handles all API caching with proper invalidation.
+
+#### 3. Cache Invalidation System (`src/lib/cache-invalidation.ts`)
+
+Centralized helpers for comprehensive query invalidation:
+
+```typescript
+// Invalidates all queries affected by role changes
+invalidateRoleQueries(utils) → roles, dashboard, tasks, projects
+
+// Invalidates all queries affected by project changes  
+invalidateProjectQueries(utils) → projects, dashboard, tasks
+
+// Invalidates all queries affected by task changes
+invalidateTaskQueries(utils) → tasks, dashboard, projects
+```
+
+**Why Comprehensive:** When a role is deleted, it affects:
+- Role list display
+- Dashboard filtering
+- Task role assignments
+- Project role assignments
+
+#### 4. Cross-Tab/Device Synchronization
+
+**WebSocket Integration:**
+- Added `cache_invalidation` event type to real-time system
+- Broadcasts cache invalidation events to all connected clients
+- Sub-second propagation of data changes across tabs/devices
+
+**Flow:**
+```
+User deletes role → Mutation success → Broadcast WS event → 
+All tabs/devices receive event → Invalidate affected queries → 
+Fresh data fetched automatically
+```
+
+**Implementation Files:**
+- `src/lib/ws-client.ts` - `broadcastCacheInvalidation()` method
+- `src/app/providers.tsx` - WebSocket listener for cache events
+- `src/app/(app)/settings/page.tsx` - Broadcasts on role mutations
+
+#### 5. Benefits
+
+✅ **Data Consistency:** All tabs/devices show identical data within 1-2 seconds  
+✅ **No Phantom Data:** Deleted items never reappear  
+✅ **Reduced Server Load:** 30s staleTime reduces unnecessary requests  
+✅ **Offline Resilience:** 10-minute cache allows offline viewing  
+✅ **Automatic Updates:** No manual refresh needed across tabs
 
 ---
 
@@ -1123,10 +1203,11 @@ Resolves sync conflicts.
 - Search & restore
 
 **settings/page.tsx**
-- Roles management (CRUD)
+- Roles management (CRUD) with real-time sync - **✅ Fully implemented**
 - Profile information (name, email) - **✅ Fully implemented**
 - Password change - **✅ Fully implemented**
 - **Logout button** - In settings page "Other Settings" section
+- **Cross-tab synchronization** - Role changes propagate to all tabs/devices
 
 #### Auth Pages (`app/(auth)/`)
 
@@ -1336,7 +1417,8 @@ project-tracker-ai/
 │   │   ├── (auth)/       # Auth pages
 │   │   ├── api/          # API routes
 │   │   ├── layout.tsx    # Root layout
-│   │   └── page.tsx      # Landing page
+│   │   ├── page.tsx      # Landing page
+│   │   └── providers.tsx # React Query + WebSocket providers
 │   ├── components/       # React components
 │   │   ├── kanban/       # Kanban board
 │   │   ├── tasks/        # Task components
@@ -1349,7 +1431,9 @@ project-tracker-ai/
 │   │   └── ui/           # shadcn/ui components
 │   ├── hooks/            # Custom React hooks
 │   ├── lib/              # Utilities
-│   │   └── ai/          # AI modules
+│   │   ├── ai/          # AI modules
+│   │   ├── cache-invalidation.ts  # Cache helpers
+│   │   └── ws-client.ts # WebSocket client
 │   ├── server/           # Server-side code
 │   │   ├── auth/        # Auth config
 │   │   ├── db/          # Database
@@ -1358,7 +1442,8 @@ project-tracker-ai/
 │   │   ├── search/      # Search utilities
 │   │   └── trpc/        # tRPC routers
 │   ├── store/            # Zustand stores
-│   └── types/            # TypeScript types
+│   ├── types/            # TypeScript types
+│   └── service-worker.ts # PWA service worker
 ├── scripts/              # Utility scripts
 ├── drizzle.config.ts     # Drizzle config
 ├── next.config.js        # Next.js config
@@ -1413,7 +1498,8 @@ project-tracker-ai/
 ✅ Message reactions  
 ✅ Mentions  
 ✅ Activity feed  
-✅ Notifications
+✅ Notifications  
+✅ Cross-tab cache synchronization (WebSocket-based)
 
 ### Advanced Features
 ✅ Offline-first sync (Dexie + IndexedDB)  
@@ -1427,10 +1513,11 @@ project-tracker-ai/
 ### Developer Experience
 ✅ End-to-end type safety (tRPC)  
 ✅ Type-safe database (Drizzle ORM)  
-✅ Automatic cache management  
+✅ Intelligent cache management with cross-tab sync  
 ✅ Optimistic updates  
 ✅ Error boundaries  
-✅ Form validation (Zod)
+✅ Form validation (Zod)  
+✅ Comprehensive cache invalidation helpers
 
 ---
 
@@ -1441,6 +1528,7 @@ project-tracker-ai/
 - **Two-Factor Authentication** - Could enhance security
 - **Email Verification** - Email change confirmation flow
 - **Profile Photo Upload** - User avatar support
+- **Service Worker Updates** - May need cache busting for old service workers after deployment
 
 ---
 
@@ -1502,7 +1590,8 @@ Perfect for rebuilding as a reference implementation or extending with new featu
 
 ---
 
-**Document Version:** 1.0  
+**Document Version:** 2.0  
 **Generated:** October 29, 2025  
+**Last Major Update:** Caching Architecture Overhaul (v0.2.0)  
 **Maintainers:** Development Team
 
