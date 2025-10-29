@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import PWAInit from '@/components/system/PWAInit';
+import ClearStorageInit from '@/components/system/ClearStorageInit';
 import SyncBootstrap from '@/components/sync/SyncBootstrap';
 import ConflictModal from '@/components/sync/ConflictModal';
 import { NotificationProvider } from '@/components/notifications/NotificationProvider';
@@ -80,6 +81,7 @@ export default function RootLayout({
           <NotificationProvider>
             {/* Ensure SW is registered on the client with **no toasts** */}
             <PWAInit />
+            <ClearStorageInit />
             <SyncBootstrap />
             {children}
             {/* Global conflict resolution modal */}

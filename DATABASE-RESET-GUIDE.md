@@ -134,11 +134,44 @@ You'll see output like this:
 ✨ SUCCESS! Database has been completely reset.
 ```
 
-### Step 3: Start fresh
+### Step 3: Clear Browser Storage
 
-After the reset:
+**IMPORTANT:** After resetting the database, you must also clear your browser's IndexedDB cache to prevent seeing old data.
 
-1. Start your development server:
+#### Option A: Using Browser Console (Recommended)
+
+1. Open your browser at http://localhost:3000
+2. Open Developer Tools (F12)
+3. Go to the **Console** tab
+4. Run this command:
+   ```javascript
+   window.clearAppStorage()
+   ```
+5. Wait for the confirmation message
+6. Hard refresh the page: `Ctrl + Shift + R` (Windows) or `Cmd + Shift + R` (Mac)
+
+#### Option B: Manual Browser Storage Clear
+
+**Chrome/Edge:**
+1. Open Developer Tools (F12)
+2. Go to **Application** tab
+3. Under **Storage**, click "Clear site data"
+4. Check all boxes
+5. Click "Clear site data"
+6. Hard refresh: `Ctrl + Shift + R`
+
+**Firefox:**
+1. Open Developer Tools (F12)
+2. Go to **Storage** tab
+3. Right-click on "IndexedDB" → Delete All
+4. Right-click on "Local Storage" → Delete All
+5. Hard refresh: `Ctrl + Shift + R`
+
+### Step 4: Start Fresh
+
+After clearing browser storage:
+
+1. Start your development server (if not running):
    ```bash
    pnpm dev
    ```
@@ -152,6 +185,16 @@ After the reset:
 ---
 
 ## 🔧 Troubleshooting
+
+### Issue: Still Seeing Old Tasks/Projects After Reset
+
+**Problem:** The browser's IndexedDB cache still contains old data.
+
+**Solution:** 
+1. Open browser console (F12)
+2. Run: `window.clearAppStorage()`
+3. Hard refresh: `Ctrl + Shift + R`
+4. If still seeing data, manually clear browser storage (see Step 3 above)
 
 ### Error: "DATABASE_URL environment variable is not set"
 
@@ -233,10 +276,12 @@ Before running the reset:
 - [ ] Ready to create a new user account after reset
 
 After running the reset:
-- [ ] Saw success message
+- [ ] Saw success message from database reset script
+- [ ] **CLEARED BROWSER STORAGE** (run `window.clearAppStorage()` in console)
+- [ ] Hard refreshed the page (Ctrl + Shift + R)
 - [ ] Can access the application (http://localhost:3000)
 - [ ] Created new user account
-- [ ] Application works correctly
+- [ ] Application shows NO old data (empty dashboard, no tasks)
 
 ---
 
