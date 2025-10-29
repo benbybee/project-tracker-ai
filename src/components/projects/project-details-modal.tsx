@@ -219,17 +219,7 @@ export function ProjectDetailsModal({
                           key={task.id}
                           task={task}
                           onClick={() => {
-                            setSelectedTask({
-                              ...task,
-                              createdAt:
-                                task.createdAt instanceof Date
-                                  ? task.createdAt.toISOString()
-                                  : task.createdAt,
-                              updatedAt:
-                                task.updatedAt instanceof Date
-                                  ? task.updatedAt.toISOString()
-                                  : task.updatedAt,
-                            } as Task);
+                            setSelectedTask(task as Task);
                             setEditTaskOpen(true);
                           }}
                         />

@@ -85,13 +85,13 @@ const PriorityEnum = z.enum(['1', '2', '3', '4']);
 const TaskCreateSchema = z.object({
   projectId: z.string(),
   title: z.string().min(2),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   // dueDate can be null if "Add to Daily" (no date)
   dueDate: z.string().nullable().optional(),
   isDaily: z.boolean().optional(),
   priorityScore: z.enum(['1', '2', '3', '4']).default('2'),
   status: StatusEnum.default('not_started'),
-  roleId: z.string().optional(), // inherit from project if missing
+  roleId: z.string().nullable().optional(), // inherit from project if missing
   subtasks: z
     .array(
       z.object({
@@ -103,8 +103,34 @@ const TaskCreateSchema = z.object({
     .optional(),
 });
 
-const TaskUpdateSchema = TaskCreateSchema.partial().extend({
+const TaskUpdateSchema = z.object({
   id: z.string(),
+  projectId: z.string().nullable().optional(),
+  title: z.string().min(2).optional(),
+  description: z.string().nullable().optional(),
+  dueDate: z.string().nullable().optional(),
+  isDaily: z.boolean().optional(),
+  priorityScore: z
+    .union([
+      z.enum(['1', '2', '3', '4']),
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+    ])
+    .nullable()
+    .optional(),
+  status: StatusEnum.optional(),
+  roleId: z.string().nullable().optional(),
+  subtasks: z
+    .array(
+      z.object({
+        title: z.string().min(1),
+        completed: z.boolean().default(false),
+        position: z.number().optional(),
+      })
+    )
+    .optional(),
 });
 
 export const tasksRouter = createTRPCRouter({
@@ -166,7 +192,7 @@ export const tasksRouter = createTRPCRouter({
       const whereClause =
         conditions.length > 0 ? and(...conditions) : undefined;
 
-      return await ctx.db
+      const results = await ctx.db
         .select({
           id: tasks.id,
           projectId: tasks.projectId,
@@ -181,6 +207,7 @@ export const tasksRouter = createTRPCRouter({
           blockedReason: tasks.blockedReason,
           blockedDetails: tasks.blockedDetails,
           blockedAt: tasks.blockedAt,
+          archived: tasks.archived,
           createdAt: tasks.createdAt,
           updatedAt: tasks.updatedAt,
           ticketId: tasks.ticketId,
@@ -205,6 +232,22 @@ export const tasksRouter = createTRPCRouter({
         .leftJoin(tickets, eq(tasks.ticketId, tickets.id))
         .where(whereClause || eq(tasks.id, tasks.id))
         .orderBy(tasks.createdAt);
+
+      // Convert Date objects to ISO strings for client compatibility
+      return results.map((task) => ({
+        ...task,
+        createdAt: task.createdAt?.toISOString() ?? null,
+        updatedAt: task.updatedAt?.toISOString() ?? null,
+        blockedAt: task.blockedAt?.toISOString() ?? null,
+        isDaily: task.isDaily ?? undefined,
+        archived: task.archived ?? undefined,
+        priorityScore: (task.priorityScore ?? undefined) as
+          | '1'
+          | '2'
+          | '3'
+          | '4'
+          | undefined,
+      }));
     }),
 
   get: protectedProcedure
@@ -253,7 +296,20 @@ export const tasksRouter = createTRPCRouter({
         });
       }
 
-      return task;
+      // Convert Date objects to ISO strings for client compatibility
+      return {
+        ...task,
+        createdAt: task.createdAt?.toISOString() ?? null,
+        updatedAt: task.updatedAt?.toISOString() ?? null,
+        blockedAt: task.blockedAt?.toISOString() ?? null,
+        isDaily: task.isDaily ?? undefined,
+        priorityScore: (task.priorityScore ?? undefined) as
+          | '1'
+          | '2'
+          | '3'
+          | '4'
+          | undefined,
+      };
     }),
 
   create: protectedProcedure
@@ -764,10 +820,25 @@ export const tasksRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const results = [];
       for (const taskData of input) {
-        const { id, ...updateData } = taskData;
+        const { id, ...patch } = taskData;
+        const updateData: any = { updatedAt: new Date() };
+
+        // Only add fields that are defined
+        if (patch.title !== undefined) updateData.title = patch.title;
+        if (patch.description !== undefined)
+          updateData.description = patch.description;
+        if (patch.status !== undefined) updateData.status = patch.status;
+        if (patch.priorityScore !== undefined)
+          updateData.priorityScore = patch.priorityScore;
+        if (patch.isDaily !== undefined) updateData.isDaily = patch.isDaily;
+        if (patch.dueDate !== undefined) updateData.dueDate = patch.dueDate;
+        if (patch.roleId !== undefined) updateData.roleId = patch.roleId;
+        if (patch.projectId !== undefined)
+          updateData.projectId = patch.projectId;
+
         const [updated] = await ctx.db
           .update(tasks)
-          .set({ ...updateData, updatedAt: new Date() })
+          .set(updateData)
           .where(and(eq(tasks.id, id), eq(tasks.userId, ctx.session.user.id)))
           .returning();
         results.push(updated);

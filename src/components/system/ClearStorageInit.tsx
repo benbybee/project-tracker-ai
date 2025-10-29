@@ -8,10 +8,8 @@ import { useEffect } from 'react';
  */
 export default function ClearStorageInit() {
   useEffect(() => {
-    // Dynamically import the clear storage utility
-    import('@/lib/clear-local-storage').catch((err) => {
-      console.error('Failed to load clear storage utility:', err);
-    });
+    // Clear storage utility intentionally disabled
+    // Can be re-enabled by creating @/lib/clear-local-storage
   }, []);
 
   return null; // This component renders nothing
