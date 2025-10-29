@@ -6,6 +6,7 @@ import { trpc } from '@/lib/trpc';
 import { Eye, Trash2, CheckCircle, Ticket as TicketIcon } from 'lucide-react';
 import { useRealtime } from '@/app/providers';
 import { PageHeader } from '@/components/layout/page-header';
+import { formatDate } from '@/lib/date-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -570,9 +571,7 @@ function TicketRow({
     fetchTaskData();
   }, [ticket.id]);
 
-  const completionDate = ticket.aiEta
-    ? new Date(ticket.aiEta).toLocaleDateString()
-    : '—';
+  const completionDate = ticket.aiEta ? formatDate(ticket.aiEta) : '—';
 
   async function assignProject(projectId: string) {
     try {
@@ -1017,9 +1016,7 @@ function MobileTicketCard({
   onOpen: () => void;
   onDelete: () => void;
 }) {
-  const completionDate = ticket.aiEta
-    ? new Date(ticket.aiEta).toLocaleDateString()
-    : '—';
+  const completionDate = ticket.aiEta ? formatDate(ticket.aiEta) : '—';
 
   return (
     <div className="rounded-xl border bg-white/80 backdrop-blur p-4 hover:shadow-md transition-shadow">

@@ -3,6 +3,7 @@
 import { format } from 'date-fns';
 import { trpc } from '@/lib/trpc';
 import type { Task } from '@/types/task';
+import { parseDateAsLocal } from '@/lib/date-utils';
 
 interface DailyTaskRowProps {
   task: Task;
@@ -25,13 +26,27 @@ export default function DailyTaskRow({
     },
   });
 
-  const due = task.dueDate ? new Date(task.dueDate) : null;
+  const due = task.dueDate ? parseDateAsLocal(task.dueDate) : null;
   const overdue = !!(due && due.getTime() < Date.now());
   const dueToday = !!(due && new Date().toDateString() === due.toDateString());
   const daysStale = task.updatedAt
     ? (Date.now() - new Date(task.updatedAt).getTime()) / 86400000
     : 0;
   const stale = daysStale > 7;
+
+  const p = task.priorityScore
+    ? (Number(task.priorityScore) as 1 | 2 | 3 | 4)
+    : 2;
+
+  const getPriorityColor = (priority: 1 | 2 | 3 | 4): string => {
+    const map: Record<1 | 2 | 3 | 4, string> = {
+      1: '#9CA3AF', // Gray
+      2: '#3B82F6', // Blue
+      3: '#F97316', // Orange
+      4: '#EF4444', // Red
+    };
+    return map[priority];
+  };
 
   async function update(patch: Partial<Task>) {
     await updateTask.mutateAsync({
@@ -49,7 +64,18 @@ export default function DailyTaskRow({
   }
 
   return (
-    <div className="group grid grid-cols-[28px_1fr_auto] items-center gap-3 rounded-xl border border-gray-200 bg-white/80 p-3 hover:shadow-md transition-all">
+    <div className="group relative grid grid-cols-[28px_1fr_auto] items-center gap-3 rounded-xl border border-gray-200 bg-white/80 p-3 hover:shadow-md transition-all overflow-hidden">
+      {/* Priority corner ribbon */}
+      <div
+        className="absolute top-0 right-0 w-0 h-0 pointer-events-none"
+        style={{
+          borderStyle: 'solid',
+          borderWidth: '0 28px 28px 0',
+          borderColor: `transparent ${getPriorityColor(p)} transparent transparent`,
+        }}
+        aria-label={`Priority ${p}`}
+      />
+
       <input
         aria-label="Select task"
         type="checkbox"
@@ -90,7 +116,7 @@ export default function DailyTaskRow({
         )}
         {task.dueDate && (
           <p className="text-xs text-gray-500 mt-1">
-            Due {format(new Date(task.dueDate), 'MMM d')}
+            Due {format(parseDateAsLocal(task.dueDate), 'MMM d')}
           </p>
         )}
       </button>

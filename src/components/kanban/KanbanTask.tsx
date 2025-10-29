@@ -7,6 +7,7 @@ import { Task } from '@/types/task';
 import { TaskEditModal } from '@/components/tasks/TaskEditModal';
 import { CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { parseDateAsLocal } from '@/lib/date-utils';
 
 interface KanbanTaskProps {
   task: Task;
@@ -33,7 +34,7 @@ export function KanbanTask({ task }: KanbanTaskProps) {
   };
 
   // Calculate status badges
-  const due = task.dueDate ? new Date(task.dueDate) : null;
+  const due = task.dueDate ? parseDateAsLocal(task.dueDate) : null;
   const daysStale = task.updatedAt
     ? (Date.now() - new Date(task.updatedAt).getTime()) / 86400000
     : 0;
@@ -41,11 +42,18 @@ export function KanbanTask({ task }: KanbanTaskProps) {
   const dueToday = !!(due && new Date().toDateString() === due.toDateString());
   const stale = daysStale > 7;
 
-  const priorityColors: Record<number, string> = {
-    1: 'bg-gray-200',
-    2: 'bg-blue-200',
-    3: 'bg-orange-200',
-    4: 'bg-red-200',
+  const p = task.priorityScore
+    ? (Number(task.priorityScore) as 1 | 2 | 3 | 4)
+    : 2;
+
+  const getPriorityColor = (priority: 1 | 2 | 3 | 4): string => {
+    const map: Record<1 | 2 | 3 | 4, string> = {
+      1: '#9CA3AF', // Gray
+      2: '#3B82F6', // Blue
+      3: '#F97316', // Orange
+      4: '#EF4444', // Red
+    };
+    return map[priority];
   };
 
   return (
@@ -68,17 +76,20 @@ export function KanbanTask({ task }: KanbanTaskProps) {
           }
         }}
       >
-        {/* Priority accent bar */}
+        {/* Priority corner ribbon */}
         <div
-          className={cn(
-            'absolute left-0 top-0 bottom-0 w-1 rounded-l-xl',
-            priorityColors[task.priorityScore || 2]
-          )}
+          className="absolute top-0 right-0 w-0 h-0 pointer-events-none"
+          style={{
+            borderStyle: 'solid',
+            borderWidth: '0 28px 28px 0',
+            borderColor: `transparent ${getPriorityColor(p)} transparent transparent`,
+          }}
+          aria-label={`Priority ${p}`}
         />
 
         {/* Header with title and badges */}
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 truncate pl-2">
+          <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 truncate">
             {task.title}
           </h4>
           <div className="flex gap-1 shrink-0 flex-wrap">
@@ -102,13 +113,13 @@ export function KanbanTask({ task }: KanbanTaskProps) {
 
         {/* Description */}
         {task.description && (
-          <p className="text-xs text-gray-600 line-clamp-2 pl-2">
+          <p className="text-xs text-gray-600 line-clamp-2">
             {task.description}
           </p>
         )}
 
         {/* Footer metadata */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 pl-2">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
           {task.projectName && (
             <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
               {task.projectName}
@@ -119,7 +130,7 @@ export function KanbanTask({ task }: KanbanTaskProps) {
               {typeof task.role === 'string' ? task.role : task.role.name}
             </span>
           )}
-          {due && (
+          {due && task.dueDate && (
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3 w-3" />
               {due.toLocaleDateString()}

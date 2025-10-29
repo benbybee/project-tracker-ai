@@ -99,17 +99,6 @@ function NavItem({
       )}
       aria-current={isActive ? 'page' : undefined}
     >
-      {/* Left accent bar for active state */}
-      {isActive && (
-        <motion.div
-          initial={{ opacity: 0, scaleY: 0 }}
-          animate={{ opacity: 1, scaleY: 1 }}
-          exit={{ opacity: 0, scaleY: 0 }}
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"
-          transition={{ duration: 0.2 }}
-        />
-      )}
-
       <Icon className="h-5 w-5 flex-shrink-0" />
 
       <AnimatePresence>

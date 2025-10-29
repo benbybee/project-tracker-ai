@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc';
 import { EditProjectModal } from './edit-project-modal';
 import { useRealtime } from '@/app/providers';
+import { formatDate as formatDateUtil } from '@/lib/date-utils';
 
 type Role = { id: string; name: string; color: string };
 type Project = {
@@ -382,8 +383,7 @@ function MetaCard({
 
 function formatDate(iso?: string | null) {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleDateString();
+  return formatDateUtil(iso);
 }
 function safeUrl(s?: string | null) {
   if (!s) return undefined;

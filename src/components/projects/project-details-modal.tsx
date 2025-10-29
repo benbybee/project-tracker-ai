@@ -26,6 +26,7 @@ import {
 import { GlassCard } from '@/components/ui/glass-card';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types/task';
+import { parseDateAsLocal, formatDateShort } from '@/lib/date-utils';
 
 interface ProjectDetailsModalProps {
   projectId: string | null;
@@ -342,7 +343,7 @@ export function ProjectDetailsModal({
 // Simple list-style task item component
 function TaskListItem({ task, onClick }: { task: any; onClick: () => void }) {
   const isCompleted = task.status === 'completed';
-  const due = task.dueDate ? new Date(task.dueDate) : null;
+  const due = task.dueDate ? parseDateAsLocal(task.dueDate) : null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const dueDate = due ? new Date(due) : null;
@@ -409,10 +410,7 @@ function TaskListItem({ task, onClick }: { task: any; onClick: () => void }) {
                 : 'text-gray-600 bg-gray-100'
             )}
           >
-            {new Date(task.dueDate).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-            })}
+            {formatDateShort(task.dueDate)}
           </span>
         )}
         {task.role && (

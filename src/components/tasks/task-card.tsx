@@ -10,6 +10,7 @@ import {
   AlarmClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { parseDateAsLocal, formatDate } from '@/lib/date-utils';
 
 export type Role = { id: string; name: string; color: string };
 export type Subtask = { id: number; title: string; completed: boolean };
@@ -88,14 +89,19 @@ export function TaskCard({
         className
       )}
     >
-      {/* priority accent */}
+      {/* Priority corner ribbon */}
       <div
-        aria-hidden
-        className="absolute left-0 top-0 h-full w-1.5"
-        style={{ backgroundImage: priorityGradient(p) }}
+        className="absolute top-0 right-0 w-0 h-0 pointer-events-none"
+        style={{
+          borderStyle: 'solid',
+          borderWidth: '0 32px 32px 0',
+          borderColor: `transparent ${getPriorityColor(p)} transparent transparent`,
+        }}
+        aria-label={`Priority ${p}`}
       />
+
       {/* content */}
-      <div className="px-4 py-3 pl-5">
+      <div className="px-4 py-3">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2 mb-1">
@@ -157,7 +163,7 @@ export function TaskCard({
             )}
             {task.dueDate && (
               <div className="text-xs text-gray-500 mt-1">
-                Due {new Date(task.dueDate).toLocaleDateString()}
+                Due {formatDate(task.dueDate)}
               </div>
             )}
           </div>
@@ -239,21 +245,15 @@ function IconBtn({
   );
 }
 
-function priorityGradient(p: 1 | 2 | 3 | 4) {
-  // Low → Urgent
+function getPriorityColor(p: 1 | 2 | 3 | 4): string {
+  // Priority colors: Low → Urgent
   const map: Record<1 | 2 | 3 | 4, string> = {
-    1: 'linear-gradient(180deg,#9CA3AF 0%,#6B7280 100%)',
-    2: 'linear-gradient(180deg,#60A5FA 0%,#3B82F6 100%)',
-    3: 'linear-gradient(180deg,#F59E0B 0%,#F97316 100%)',
-    4: 'linear-gradient(180deg,#F43F5E 0%,#EF4444 100%)',
+    1: '#9CA3AF', // Gray
+    2: '#3B82F6', // Blue
+    3: '#F97316', // Orange
+    4: '#EF4444', // Red
   };
   return map[p];
-}
-
-// Helper to parse date string as local date (avoiding UTC timezone issues)
-function parseDateAsLocal(dateStr: string): Date {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
 }
 
 function dueBadge(due: Date | null) {
