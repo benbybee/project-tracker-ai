@@ -1,15 +1,34 @@
 import { db } from '../src/server/db';
-import { roles, projects, tasks } from '../src/server/db/schema';
+import { roles, projects, tasks, users } from '../src/server/db/schema';
 import bcrypt from 'bcryptjs';
 
 async function seed() {
   try {
     console.log('🌱 Starting database seed...');
 
+    // Create a demo user first (or use existing)
+    const [demoUser] = await db
+      .insert(users)
+      .values({
+        email: 'demo@example.com',
+        name: 'Demo User',
+        passwordHash: await bcrypt.hash('demo123456', 10),
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    if (!demoUser) {
+      console.log('⚠️  Demo user already exists, skipping seed data creation');
+      return;
+    }
+
+    console.log('✅ Created demo user:', demoUser.email);
+
     // Create a default role
     const [defaultRole] = await db
       .insert(roles)
       .values({
+        userId: demoUser.id,
         name: 'Development',
         color: '#3B82F6',
       })
@@ -21,6 +40,7 @@ async function seed() {
     const [sampleProject] = await db
       .insert(projects)
       .values({
+        userId: demoUser.id,
         name: 'Sample Website Project',
         type: 'website',
         description: 'A sample website project to get you started',
@@ -46,6 +66,7 @@ async function seed() {
     // Create sample tasks
     const sampleTasks = [
       {
+        userId: demoUser.id,
         projectId: sampleProject.id,
         roleId: defaultRole.id,
         title: 'Set up project structure',
@@ -56,6 +77,7 @@ async function seed() {
         priorityScore: '1' as const,
       },
       {
+        userId: demoUser.id,
         projectId: sampleProject.id,
         roleId: defaultRole.id,
         title: 'Design homepage',
@@ -66,6 +88,7 @@ async function seed() {
         priorityScore: '2' as const,
       },
       {
+        userId: demoUser.id,
         projectId: sampleProject.id,
         roleId: defaultRole.id,
         title: 'Implement responsive layout',
@@ -76,6 +99,7 @@ async function seed() {
         priorityScore: '3' as const,
       },
       {
+        userId: demoUser.id,
         projectId: sampleProject.id,
         roleId: defaultRole.id,
         title: 'Set up analytics',
@@ -97,6 +121,7 @@ async function seed() {
     const [generalProject] = await db
       .insert(projects)
       .values({
+        userId: demoUser.id,
         name: 'Personal Tasks',
         type: 'general',
         description: 'A general project for personal tasks and todos',
@@ -111,6 +136,7 @@ async function seed() {
     // Add some tasks to the general project
     const generalTasks = [
       {
+        userId: demoUser.id,
         projectId: generalProject.id,
         roleId: defaultRole.id,
         title: 'Review project documentation',
@@ -122,6 +148,7 @@ async function seed() {
         isDaily: true,
       },
       {
+        userId: demoUser.id,
         projectId: generalProject.id,
         roleId: defaultRole.id,
         title: 'Plan next sprint',
