@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { tasks, projects } from '@/server/db/schema';
-import { gt } from 'drizzle-orm';
+import { gt, and, eq } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import { logSyncActivity } from '@/lib/activity-logger';
@@ -9,19 +9,34 @@ import { logSyncActivity } from '@/lib/activity-logger';
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const url = new URL(req.url);
     const since = Number(url.searchParams.get('since') || '0');
 
-    // Fetch all tasks and projects updated since the given timestamp
+    // Fetch tasks and projects for this user updated since the given timestamp
     const [taskChanges, projectChanges] = await Promise.all([
       db
         .select()
         .from(tasks)
-        .where(gt(tasks.updatedAt, new Date(since))),
+        .where(
+          and(
+            gt(tasks.updatedAt, new Date(since)),
+            eq(tasks.userId, session.user.id)
+          )
+        ),
       db
         .select()
         .from(projects)
-        .where(gt(projects.updatedAt, new Date(since))),
+        .where(
+          and(
+            gt(projects.updatedAt, new Date(since)),
+            eq(projects.userId, session.user.id)
+          )
+        ),
     ]);
 
     const changes = {
@@ -32,10 +47,7 @@ export async function GET(req: Request) {
     const serverVersion = Date.now();
 
     // Log sync activity
-    if (
-      session?.user?.id &&
-      (taskChanges.length > 0 || projectChanges.length > 0)
-    ) {
+    if (taskChanges.length > 0 || projectChanges.length > 0) {
       await logSyncActivity({
         userId: session.user.id,
         tasksCount: taskChanges.length,

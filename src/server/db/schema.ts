@@ -40,6 +40,7 @@ export const priorityScoreEnum = pgTable('priority_score_enum', {
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
+  name: text('name'),
   passwordHash: text('password_hash').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -48,7 +49,10 @@ export const users = pgTable('users', {
 // Roles table
 export const roles = pgTable('roles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').notNull().unique(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
   color: text('color').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -57,6 +61,9 @@ export const roles = pgTable('roles', {
 // Projects table
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   type: text('type', { enum: ['general', 'website'] }).notNull(),
   description: text('description'),
@@ -81,6 +88,9 @@ export const projects = pgTable('projects', {
 // Tasks table
 export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   projectId: uuid('project_id')
     .notNull()
     .references(() => projects.id),

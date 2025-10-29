@@ -62,14 +62,17 @@ export function TaskCard({
   const subTotal = task.subtasks?.length ?? 0;
   const hasSubs = subTotal > 0;
 
-  const due = task.dueDate ? new Date(task.dueDate) : null;
+  // Parse date as local date (not UTC) to avoid timezone issues
+  const due = task.dueDate ? parseDateAsLocal(task.dueDate) : null;
   const { dueText, overdue } = dueBadge(due);
 
   // Calculate status indicators
   const daysStale = task.updatedAt
     ? (Date.now() - new Date(task.updatedAt).getTime()) / 86400000
     : 0;
-  const dueToday = due && new Date().toDateString() === due.toDateString();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueToday = due && due.toDateString() === today.toDateString();
   const stale = daysStale > 7;
 
   return (
@@ -245,6 +248,12 @@ function priorityGradient(p: 1 | 2 | 3 | 4) {
     4: 'linear-gradient(180deg,#F43F5E 0%,#EF4444 100%)',
   };
   return map[p];
+}
+
+// Helper to parse date string as local date (avoiding UTC timezone issues)
+function parseDateAsLocal(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function dueBadge(due: Date | null) {

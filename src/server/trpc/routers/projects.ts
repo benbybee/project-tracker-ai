@@ -29,7 +29,7 @@ export const projectsRouter = createTRPCRouter({
       })
     )
     .query(async ({ input, ctx }) => {
-      const conditions = [];
+      const conditions = [eq(projects.userId, ctx.session.user.id)];
 
       if (input.search) {
         conditions.push(
@@ -47,9 +47,6 @@ export const projectsRouter = createTRPCRouter({
       if (input.roleId) {
         conditions.push(eq(projects.roleId, input.roleId));
       }
-
-      const whereClause =
-        conditions.length > 0 ? and(...conditions) : undefined;
 
       return await ctx.db
         .select({
@@ -78,7 +75,7 @@ export const projectsRouter = createTRPCRouter({
         })
         .from(projects)
         .leftJoin(roles, eq(projects.roleId, roles.id))
-        .where(whereClause || eq(projects.id, projects.id))
+        .where(and(...conditions))
         .orderBy(desc(projects.pinned), desc(projects.updatedAt));
     }),
 
@@ -111,7 +108,7 @@ export const projectsRouter = createTRPCRouter({
         })
         .from(projects)
         .leftJoin(roles, eq(projects.roleId, roles.id))
-        .where(eq(projects.id, input.id))
+        .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.session.user.id)))
         .limit(1);
 
       if (!project) {
@@ -130,6 +127,7 @@ export const projectsRouter = createTRPCRouter({
       const [row] = await ctx.db
         .insert(projects)
         .values({
+          userId: ctx.session.user.id,
           name: input.name,
           type: input.type,
           description: input.description ?? '',
@@ -203,13 +201,13 @@ export const projectsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { id, ...updateData } = input;
 
-      const [updatedProject] = await ctx.db
+      const [updatedProject] =       await ctx.db
         .update(projects)
         .set({
           ...updateData,
           updatedAt: new Date(),
         })
-        .where(eq(projects.id, id))
+        .where(and(eq(projects.id, id), eq(projects.userId, ctx.session.user.id)))
         .returning();
 
       if (!updatedProject) {
@@ -240,7 +238,7 @@ export const projectsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const [deletedProject] = await ctx.db
         .delete(projects)
-        .where(eq(projects.id, input.id))
+        .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.session.user.id)))
         .returning();
 
       if (!deletedProject) {
@@ -297,7 +295,7 @@ export const projectsRouter = createTRPCRouter({
           ...input.website,
           updatedAt: new Date(),
         })
-        .where(eq(projects.id, input.id));
+        .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.session.user.id)));
 
       // Log conversion activity
       if (project) {
@@ -339,7 +337,7 @@ export const projectsRouter = createTRPCRouter({
           websiteStatus: null,
           updatedAt: new Date(),
         })
-        .where(eq(projects.id, input.id));
+        .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.session.user.id)));
 
       // Log conversion activity
       if (project) {

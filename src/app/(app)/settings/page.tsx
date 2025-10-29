@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
-import { Settings as SettingsIcon, Trash2, Edit2, Save, X } from 'lucide-react';
+import { Settings as SettingsIcon, Trash2, Edit2, Save, X, User } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
+import { useSession } from 'next-auth/react';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -17,9 +18,17 @@ type EditingRole = {
 } | null;
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleColor, setNewRoleColor] = useState('#3B82F6');
   const [editingRole, setEditingRole] = useState<EditingRole>(null);
+
+  // Profile management state
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const { data: roles, isLoading } = trpc.roles.list.useQuery();
   const utils = trpc.useUtils();
@@ -468,13 +477,133 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Other Settings */}
-        <div className="bg-white rounded-lg shadow p-6 mt-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            Other Settings
-          </h2>
-          <div className="text-center py-8 text-gray-500">
-            Additional settings will be available in future updates.
+        {/* Profile Management */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <User className="h-6 w-6 text-gray-700" />
+            <h2 className="text-xl font-semibold text-gray-900">
+              Profile Settings
+            </h2>
+          </div>
+
+          <div className="space-y-6">
+            {/* Profile Information */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Profile Information
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="profileName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Name
+                  </label>
+                  <Input
+                    id="profileName"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    placeholder={session?.user?.name || 'Enter your name'}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="profileEmail"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Email
+                  </label>
+                  <Input
+                    id="profileEmail"
+                    type="email"
+                    value={profileEmail}
+                    onChange={(e) => setProfileEmail(e.target.value)}
+                    placeholder={session?.user?.email || 'your@email.com'}
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    // TODO: Implement profile update API
+                    alert('Profile update will be available soon!');
+                  }}
+                >
+                  Update Profile
+                </Button>
+              </div>
+            </div>
+
+            {/* Password Change */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Change Password
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="currentPassword"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Current Password
+                  </label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="newPassword"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    New Password
+                  </label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Confirm New Password
+                  </label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (newPassword !== confirmPassword) {
+                      alert('Passwords do not match!');
+                      return;
+                    }
+                    if (newPassword.length < 8) {
+                      alert('Password must be at least 8 characters!');
+                      return;
+                    }
+                    // TODO: Implement password change API
+                    alert('Password change will be available soon!');
+                  }}
+                  disabled={!currentPassword || !newPassword || !confirmPassword}
+                >
+                  Change Password
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

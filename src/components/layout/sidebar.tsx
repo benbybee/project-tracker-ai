@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import { signOut } from 'next-auth/react';
 import {
   Home,
   FolderKanban,
@@ -18,6 +19,7 @@ import {
   Bot,
   MessagesSquare,
   FileText,
+  LogOut,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -270,8 +272,8 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Command Palette Button */}
-        <div className="mt-auto p-3 border-t border-white/10">
+        {/* Command Palette & Logout Buttons */}
+        <div className="mt-auto p-3 border-t border-white/10 space-y-1">
           <button
             onClick={triggerCommandPalette}
             className={cn(
@@ -295,6 +297,31 @@ export function Sidebar() {
                     Ctrl+K
                   </kbd>
                 </motion.div>
+              )}
+            </AnimatePresence>
+          </button>
+
+          <button
+            onClick={() => signOut({ callbackUrl: '/sign-in' })}
+            className={cn(
+              'group flex items-center gap-3 rounded-xl px-4 py-3 w-full transition-all duration-200',
+              'text-slate-500 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400',
+              'hover:bg-red-50/50 dark:hover:bg-red-500/10 focus:bg-red-50/50 focus:outline-none focus:ring-2 focus:ring-red-500/50'
+            )}
+            aria-label="Logout"
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            <AnimatePresence>
+              {!isMobile && isCompact ? null : (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="font-medium overflow-hidden whitespace-nowrap"
+                >
+                  Logout
+                </motion.span>
               )}
             </AnimatePresence>
           </button>

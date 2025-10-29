@@ -1,12 +1,16 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { roles } from '@/server/db';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
 export const rolesRouter = createTRPCRouter({
   list: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.db.select().from(roles).orderBy(roles.name);
+    return await ctx.db
+      .select()
+      .from(roles)
+      .where(eq(roles.userId, ctx.session.user.id))
+      .orderBy(roles.name);
   }),
 
   create: protectedProcedure
@@ -17,7 +21,13 @@ export const rolesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const [newRole] = await ctx.db.insert(roles).values(input).returning();
+      const [newRole] = await ctx.db
+        .insert(roles)
+        .values({
+          ...input,
+          userId: ctx.session.user.id,
+        })
+        .returning();
 
       return newRole;
     }),
@@ -36,7 +46,7 @@ export const rolesRouter = createTRPCRouter({
       const [updatedRole] = await ctx.db
         .update(roles)
         .set(updateData)
-        .where(eq(roles.id, id))
+        .where(and(eq(roles.id, id), eq(roles.userId, ctx.session.user.id)))
         .returning();
 
       if (!updatedRole) {
@@ -54,7 +64,7 @@ export const rolesRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const [deletedRole] = await ctx.db
         .delete(roles)
-        .where(eq(roles.id, input.id))
+        .where(and(eq(roles.id, input.id), eq(roles.userId, ctx.session.user.id)))
         .returning();
 
       if (!deletedRole) {

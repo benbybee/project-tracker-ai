@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { tasks, projects } from '@/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import { logSyncActivity } from '@/lib/activity-logger';
@@ -9,6 +9,11 @@ import { logSyncActivity } from '@/lib/activity-logger';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { ops } = await req.json();
 
     if (!Array.isArray(ops) || ops.length === 0) {
@@ -38,7 +43,8 @@ export async function POST(req: Request) {
             payload,
             baseVersion,
             applied,
-            conflicts
+            conflicts,
+            session.user.id
           );
           tasksProcessed++;
         } else if (entityType === 'project') {
@@ -48,7 +54,8 @@ export async function POST(req: Request) {
             payload,
             baseVersion,
             applied,
-            conflicts
+            conflicts,
+            session.user.id
           );
           projectsProcessed++;
         }
@@ -65,19 +72,17 @@ export async function POST(req: Request) {
     }
 
     // Log sync activity
-    if (session?.user?.id) {
-      await logSyncActivity({
-        userId: session.user.id,
-        tasksCount: tasksProcessed,
-        projectsCount: projectsProcessed,
-        conflictsCount: conflicts.length,
-        payload: {
-          direction: 'push',
-          appliedCount: applied.length,
-          timestamp: new Date().toISOString(),
-        },
-      });
-    }
+    await logSyncActivity({
+      userId: session.user.id,
+      tasksCount: tasksProcessed,
+      projectsCount: projectsProcessed,
+      conflictsCount: conflicts.length,
+      payload: {
+        direction: 'push',
+        appliedCount: applied.length,
+        timestamp: new Date().toISOString(),
+      },
+    });
 
     return NextResponse.json({ applied, conflicts, serverVersion });
   } catch (e) {
@@ -92,12 +97,13 @@ async function processTaskOp(
   payload: any,
   baseVersion: number | undefined,
   applied: string[],
-  conflicts: any[]
+  conflicts: any[],
+  userId: string
 ) {
   const existingTask = await db
     .select()
     .from(tasks)
-    .where(eq(tasks.id, entityId))
+    .where(and(eq(tasks.id, entityId), eq(tasks.userId, userId)))
     .limit(1);
 
   if (action === 'create') {
@@ -114,6 +120,7 @@ async function processTaskOp(
       // Create new task
       await db.insert(tasks).values({
         id: entityId,
+        userId,
         ...payload,
         updatedAt: new Date(),
       });
@@ -121,7 +128,7 @@ async function processTaskOp(
     }
   } else if (action === 'update') {
     if (existingTask.length === 0) {
-      // Conflict: task doesn't exist
+      // Conflict: task doesn't exist or doesn't belong to user
       conflicts.push({
         entityType: 'task',
         entityId,
@@ -151,7 +158,7 @@ async function processTaskOp(
             ...payload,
             updatedAt: new Date(),
           })
-          .where(eq(tasks.id, entityId));
+          .where(and(eq(tasks.id, entityId), eq(tasks.userId, userId)));
         applied.push(entityId);
 
         // Check if this task is associated with a ticket and trigger completion check
@@ -173,7 +180,7 @@ async function processTaskOp(
     }
   } else if (action === 'delete') {
     if (existingTask.length > 0) {
-      await db.delete(tasks).where(eq(tasks.id, entityId));
+      await db.delete(tasks).where(and(eq(tasks.id, entityId), eq(tasks.userId, userId)));
       applied.push(entityId);
     }
   }
@@ -185,12 +192,13 @@ async function processProjectOp(
   payload: any,
   baseVersion: number | undefined,
   applied: string[],
-  conflicts: any[]
+  conflicts: any[],
+  userId: string
 ) {
   const existingProject = await db
     .select()
     .from(projects)
-    .where(eq(projects.id, entityId))
+    .where(and(eq(projects.id, entityId), eq(projects.userId, userId)))
     .limit(1);
 
   if (action === 'create') {
@@ -207,6 +215,7 @@ async function processProjectOp(
       // Create new project
       await db.insert(projects).values({
         id: entityId,
+        userId,
         ...payload,
         updatedAt: new Date(),
       });
@@ -214,7 +223,7 @@ async function processProjectOp(
     }
   } else if (action === 'update') {
     if (existingProject.length === 0) {
-      // Conflict: project doesn't exist
+      // Conflict: project doesn't exist or doesn't belong to user
       conflicts.push({
         entityType: 'project',
         entityId,
@@ -244,13 +253,13 @@ async function processProjectOp(
             ...payload,
             updatedAt: new Date(),
           })
-          .where(eq(projects.id, entityId));
+          .where(and(eq(projects.id, entityId), eq(projects.userId, userId)));
         applied.push(entityId);
       }
     }
   } else if (action === 'delete') {
     if (existingProject.length > 0) {
-      await db.delete(projects).where(eq(projects.id, entityId));
+      await db.delete(projects).where(and(eq(projects.id, entityId), eq(projects.userId, userId)));
       applied.push(entityId);
     }
   }
