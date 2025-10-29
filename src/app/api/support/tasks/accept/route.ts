@@ -38,6 +38,7 @@ export async function POST(req: Request) {
         const [newProject] = await db
           .insert(projects)
           .values({
+            userId: session.user.id,
             name: task.projectNameNew.trim(),
             type: 'general',
             description: `Created from support ticket ${ticketId}`,
@@ -58,6 +59,7 @@ export async function POST(req: Request) {
         const [newTask] = await db
           .insert(tasks)
           .values({
+            userId: session.user.id,
             title: task.title,
             description: task.description || '',
             projectId,

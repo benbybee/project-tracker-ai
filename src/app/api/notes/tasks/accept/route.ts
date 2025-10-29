@@ -44,6 +44,7 @@ export async function POST(req: Request) {
       const [newTask] = await db
         .insert(tasks)
         .values({
+          userId: session.user.id,
           projectId: task.projectId,
           title: task.title,
           description: task.description || '',
