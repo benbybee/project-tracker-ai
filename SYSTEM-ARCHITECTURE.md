@@ -1,6 +1,6 @@
 # Project Tracker AI - System Architecture & Documentation
 
-**Version:** 0.1.1  
+**Version:** 0.1.2  
 **Last Updated:** October 29, 2025  
 **Type:** Full-Stack Task Management Application with AI
 
@@ -433,6 +433,20 @@ Plaud AI voice recorder integration staging.
 
 All API communication uses tRPC for end-to-end type safety. The main router (`src/server/trpc/root.ts`) exposes these sub-routers:
 
+**Registered Routers:**
+- `auth` - Authentication (login, register)
+- `user` - User profile management
+- `roles` - Role CRUD operations
+- `projects` - Project management
+- `tasks` - Task management with analytics
+- `search` - Semantic search
+- `dashboard` - Dashboard aggregations
+- `notifications` - User notifications
+- `activity` - Activity logging and feed
+- `chat` - Real-time messaging
+- `analytics` - Performance metrics
+- `realtime` - Presence and subscriptions
+
 ### 1. Auth Router (`routers/auth.ts`)
 
 #### `auth.register` (public)
@@ -461,7 +475,36 @@ Logic: Returns current user from session
 Returns: User | null
 ```
 
-### 2. Roles Router (`routers/roles.ts`)
+### 2. User Router (`routers/user.ts`)
+
+#### `user.getProfile` (protected)
+```typescript
+Logic: Fetches current user profile (id, email, name, createdAt, updatedAt)
+Returns: User profile object
+```
+
+#### `user.updateProfile` (protected)
+```typescript
+Input: { name?: string, email?: string }
+Logic:
+  1. Validates email uniqueness if provided
+  2. Updates user profile fields
+  3. Returns updated user
+Returns: Updated user profile
+```
+
+#### `user.changePassword` (protected)
+```typescript
+Input: { currentPassword: string, newPassword: string (min 8) }
+Logic:
+  1. Fetches user with password hash
+  2. Verifies current password with bcrypt
+  3. Hashes new password (12 rounds)
+  4. Updates password in database
+Returns: { success: true }
+```
+
+### 3. Roles Router (`routers/roles.ts`)
 
 #### `roles.list` (protected)
 ```typescript
@@ -487,7 +530,7 @@ Input: { id: string }
 Returns: Role
 ```
 
-### 3. Projects Router (`routers/projects.ts`)
+### 4. Projects Router (`routers/projects.ts`)
 
 #### `projects.list` (protected)
 ```typescript
@@ -564,7 +607,7 @@ Logic:
 Returns: { ok: true }
 ```
 
-### 4. Tasks Router (`routers/tasks.ts`)
+### 5. Tasks Router (`routers/tasks.ts`)
 
 **Key Helper Function:**
 ```typescript
@@ -680,7 +723,7 @@ Returns: {
 }
 ```
 
-### 5. Search Router (`routers/search.ts`)
+### 6. Search Router (`routers/search.ts`)
 
 #### `search.query` (protected)
 ```typescript
@@ -697,7 +740,7 @@ Returns: Array<{
 }>
 ```
 
-### 6. Dashboard Router (`routers/dashboard.ts`)
+### 7. Dashboard Router (`routers/dashboard.ts`)
 
 #### `dashboard.get` (protected)
 ```typescript
@@ -720,7 +763,7 @@ Returns: {
 }
 ```
 
-### 7. Notifications Router (`routers/notifications.ts`)
+### 8. Notifications Router (`routers/notifications.ts`)
 
 ```typescript
 notifications.list() // Returns all user notifications
@@ -729,14 +772,14 @@ notifications.markAllRead()
 notifications.delete({ id })
 ```
 
-### 8. Activity Router (`routers/activity.ts`)
+### 9. Activity Router (`routers/activity.ts`)
 
 ```typescript
 activity.list({ projectId?, taskId?, limit?: 50 })
 activity.feed({ cursor?: string, limit?: 20 }) // Paginated
 ```
 
-### 9. Chat Router (`routers/chat.ts`)
+### 10. Chat Router (`routers/chat.ts`)
 
 ```typescript
 chat.threads({ projectId?, taskId? })
@@ -746,7 +789,7 @@ chat.react({ messageId, emoji })
 chat.createThread({ projectId, taskId?, title, description? })
 ```
 
-### 10. Analytics Router (`routers/analytics.ts`)
+### 11. Analytics Router (`routers/analytics.ts`)
 
 ```typescript
 analytics.taskCompletion({ days?: 30 })
@@ -754,7 +797,7 @@ analytics.productivity({ days?: 30 })
 analytics.projectStats({ projectId })
 ```
 
-### 11. Realtime Router (`routers/realtime.ts`)
+### 12. Realtime Router (`routers/realtime.ts`)
 
 ```typescript
 realtime.presence({ projectId })
@@ -1081,9 +1124,9 @@ Resolves sync conflicts.
 
 **settings/page.tsx**
 - Roles management (CRUD)
-- Profile information (name, email) - **UI only, TODO API**
-- Password change - **UI only, TODO API**
-- **Logout button** - In sidebar
+- Profile information (name, email) - **✅ Fully implemented**
+- Password change - **✅ Fully implemented**
+- **Logout button** - In settings page "Other Settings" section
 
 #### Auth Pages (`app/(auth)/`)
 
@@ -1252,15 +1295,17 @@ BLOB_READ_WRITE_TOKEN="<Vercel Blob token>"
 # 1. Enable pgvector
 psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
-# 2. Generate migrations
-pnpm db:generate
+# 2. Run all migrations (includes 0018_add_user_name_column)
+pnpm db:push
 
-# 3. Run migrations
+# Or manually run migrations
 pnpm db:migrate
 
-# 4. (Optional) Seed data
+# 3. (Optional) Seed data
 pnpm db:seed
 ```
+
+**Latest Migration (0018):** Adds `name` column to users table for profile management.
 
 ### Local Development
 
@@ -1391,77 +1436,11 @@ project-tracker-ai/
 
 ## 🐛 Known TODOs
 
-### Settings Page
-- **Profile Update API** - UI exists but backend not implemented (line 538)
-- **Password Change API** - UI exists but backend not implemented (line 610)
-- **Phone Field** - Not currently in schema or UI
-
-### Suggested Implementations
-
-```typescript
-// Add to src/server/trpc/routers/auth.ts
-
-updateProfile: protectedProcedure
-  .input(z.object({
-    name: z.string().optional(),
-    email: z.string().email().optional(),
-    phone: z.string().optional(),
-  }))
-  .mutation(async ({ input, ctx }) => {
-    const [updated] = await ctx.db
-      .update(users)
-      .set({
-        name: input.name,
-        email: input.email,
-        // phone: input.phone, // Add to schema first
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, ctx.session.user.id))
-      .returning();
-    return updated;
-  }),
-
-changePassword: protectedProcedure
-  .input(z.object({
-    currentPassword: z.string(),
-    newPassword: z.string().min(8),
-  }))
-  .mutation(async ({ input, ctx }) => {
-    // 1. Fetch user with password
-    const [user] = await ctx.db
-      .select()
-      .from(users)
-      .where(eq(users.id, ctx.session.user.id))
-      .limit(1);
-    
-    // 2. Verify current password
-    const isValid = await bcrypt.compare(
-      input.currentPassword,
-      user.passwordHash
-    );
-    
-    if (!isValid) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Current password is incorrect',
-      });
-    }
-    
-    // 3. Hash new password
-    const newHash = await bcrypt.hash(input.newPassword, 12);
-    
-    // 4. Update database
-    await ctx.db
-      .update(users)
-      .set({
-        passwordHash: newHash,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, ctx.session.user.id));
-    
-    return { success: true };
-  }),
-```
+### Future Enhancements
+- **Phone Field** - Not currently in schema or UI (can be added to user profile if needed)
+- **Two-Factor Authentication** - Could enhance security
+- **Email Verification** - Email change confirmation flow
+- **Profile Photo Upload** - User avatar support
 
 ---
 
