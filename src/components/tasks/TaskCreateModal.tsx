@@ -79,7 +79,12 @@ export function TaskCreateModal({
         description: form.description || undefined,
         status: form.status || 'not_started',
         dueDate: form.dueDate || undefined,
-        priorityScore: form.priorityScore?.toString() as '1' | '2' | '3' | '4' | undefined,
+        priorityScore: form.priorityScore?.toString() as
+          | '1'
+          | '2'
+          | '3'
+          | '4'
+          | undefined,
       });
 
       // Reset form and close

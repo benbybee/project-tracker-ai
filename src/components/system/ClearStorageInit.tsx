@@ -16,4 +16,3 @@ export default function ClearStorageInit() {
 
   return null; // This component renders nothing
 }
-

@@ -126,14 +126,6 @@ export default function TicketsPage() {
         data: { ticketId: active.id, count: selected.length },
       });
 
-      // Trigger sync to update local database
-      try {
-        const { pullChanges } = await import('@/lib/sync-manager');
-        await pullChanges();
-      } catch (syncError) {
-        console.error('Failed to trigger sync:', syncError);
-      }
-
       // Refresh tickets list
       await refresh();
       setSummary('');

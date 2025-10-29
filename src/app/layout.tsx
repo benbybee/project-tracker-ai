@@ -40,7 +40,11 @@ export const metadata: Metadata = {
       { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      {
+        url: '/icons/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
       { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
       { url: '/icons/icon-120x120.png', sizes: '120x120', type: 'image/png' },
     ],
@@ -71,15 +75,51 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="theme-color" content="#6D4AFF" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-2048-2732.png" sizes="2048x2732" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-1668-2388.png" sizes="1668x2388" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-1536-2048.png" sizes="1536x2048" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-1125-2436.png" sizes="1125x2436" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-1242-2688.png" sizes="1242x2688" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-828-1792.png" sizes="828x1792" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-1242-2208.png" sizes="1242x2208" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-750-1334.png" sizes="750x1334" />
-        <link rel="apple-touch-startup-image" href="/icons/apple-splash-640-1136.png" sizes="640x1136" />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-2048-2732.png"
+          sizes="2048x2732"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-1668-2388.png"
+          sizes="1668x2388"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-1536-2048.png"
+          sizes="1536x2048"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-1125-2436.png"
+          sizes="1125x2436"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-1242-2688.png"
+          sizes="1242x2688"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-828-1792.png"
+          sizes="828x1792"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-1242-2208.png"
+          sizes="1242x2208"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-750-1334.png"
+          sizes="750x1334"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href="/icons/apple-splash-640-1136.png"
+          sizes="640x1136"
+        />
       </head>
       <body>
         <Providers>
