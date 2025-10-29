@@ -98,6 +98,9 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
   const [chatThreadListeners, setChatThreadListeners] = useState<
     Set<(thread: any) => void>
   >(new Set());
+  
+  // Get tRPC utils for cache invalidation
+  const utils = trpc.useUtils();
 
   useEffect(() => {
     try {
@@ -139,6 +142,27 @@ function RealtimeProvider({ children }: { children: ReactNode }) {
           } else if (event.type === 'chat_thread') {
             // Broadcast chat thread to listeners
             chatThreadListeners.forEach((callback) => callback(event.data));
+          } else if (event.type === 'cache_invalidation') {
+            // Handle cache invalidation events from other tabs/devices
+            const { target } = event.data || {};
+            if (target === 'roles') {
+              utils.roles.list.invalidate();
+              utils.dashboard.get.invalidate();
+              utils.tasks.list.invalidate();
+              utils.projects.list.invalidate();
+            } else if (target === 'projects') {
+              utils.projects.list.invalidate();
+              utils.projects.get.invalidate();
+              utils.dashboard.get.invalidate();
+              utils.tasks.list.invalidate();
+            } else if (target === 'tasks') {
+              utils.tasks.list.invalidate();
+              utils.tasks.get.invalidate();
+              utils.dashboard.get.invalidate();
+              utils.projects.get.invalidate();
+            } else if (target === 'all') {
+              utils.invalidate();
+            }
           }
         } catch (error) {
           console.warn(

@@ -16,6 +16,8 @@ import {
 import { PageHeader } from '@/components/layout/page-header';
 import { useSession, signOut } from 'next-auth/react';
 import { usePWAToast } from '@/components/ui/toast-pwa';
+import { invalidateRoleQueries } from '@/lib/cache-invalidation';
+import { useRealtime } from '@/app/providers';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -54,31 +56,37 @@ export default function SettingsPage() {
   const { data: roles, isLoading, isFetching } = trpc.roles.list.useQuery();
   const isLoadingState = isLoading || isFetching || !roles;
   const utils = trpc.useUtils();
+  
+  // Get WebSocket client for broadcasting cache invalidation
+  const realtime = useRealtime();
 
   const createRoleMutation = trpc.roles.create.useMutation({
     onSuccess: async () => {
       setNewRoleName('');
       setNewRoleColor('#3B82F6');
-      // Refetch immediately to ensure consistency
-      await utils.roles.list.invalidate();
-      await utils.roles.list.refetch();
+      // Comprehensive cache invalidation for all role-dependent queries
+      await invalidateRoleQueries(utils);
+      // Broadcast to other tabs/devices via WebSocket
+      realtime.broadcastUpdate('project', 'roles', { action: 'create' });
     },
   });
 
   const updateRoleMutation = trpc.roles.update.useMutation({
     onSuccess: async () => {
       setEditingRole(null);
-      // Refetch immediately to ensure consistency
-      await utils.roles.list.invalidate();
-      await utils.roles.list.refetch();
+      // Comprehensive cache invalidation for all role-dependent queries
+      await invalidateRoleQueries(utils);
+      // Broadcast to other tabs/devices via WebSocket
+      realtime.broadcastUpdate('project', 'roles', { action: 'update' });
     },
   });
 
   const deleteRoleMutation = trpc.roles.remove.useMutation({
     onSuccess: async () => {
-      // Refetch immediately to ensure consistency
-      await utils.roles.list.invalidate();
-      await utils.roles.list.refetch();
+      // Comprehensive cache invalidation for all role-dependent queries
+      await invalidateRoleQueries(utils);
+      // Broadcast to other tabs/devices via WebSocket
+      realtime.broadcastUpdate('project', 'roles', { action: 'delete' });
     },
   });
 
