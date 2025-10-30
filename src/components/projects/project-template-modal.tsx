@@ -75,9 +75,8 @@ export function ProjectTemplateModal({
         name: projectData.name,
         type: projectData.type,
         description: projectData.description,
-        roleId: projectData.roleId,
+        tasks: projectData.tasks || [],
       },
-      tasks: projectData.tasks || [],
     });
   };
 
@@ -102,7 +101,7 @@ export function ProjectTemplateModal({
         type: projectDataFromTemplate.type,
         description: substitutedDescription,
         roleId: projectDataFromTemplate.roleId,
-        tasks: (template.tasks as any[])?.map((task) => ({
+        tasks: (projectDataFromTemplate.tasks as any[])?.map((task) => ({
           ...task,
           title: substituteVariables(task.title, variables),
           description: task.description
@@ -134,7 +133,7 @@ export function ProjectTemplateModal({
 
   const extractVariables = (text: string): string[] => {
     const regex = /{{(\w+)}}/g;
-    const matches = [];
+    const matches: string[] = [];
     let match;
     while ((match = regex.exec(text)) !== null) {
       if (!matches.includes(match[1])) {
@@ -165,7 +164,7 @@ export function ProjectTemplateModal({
             );
           }
           // Also extract from task titles
-          (template.tasks as any[])?.forEach((task) => {
+          (projectData.tasks as any[])?.forEach((task) => {
             extractVariables(task.title).forEach((v) => vars.add(v));
             if (task.description) {
               extractVariables(task.description).forEach((v) => vars.add(v));
@@ -322,7 +321,8 @@ export function ProjectTemplateModal({
                       );
                       if (!template) return null;
                       const projectData = template.projectData as any;
-                      const taskCount = (template.tasks as any[])?.length || 0;
+                      const taskCount =
+                        (projectData.tasks as any[])?.length || 0;
                       return (
                         <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
                           <p className="text-sm font-medium mb-2">

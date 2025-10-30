@@ -141,10 +141,9 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
         <div className="flex items-start justify-between gap-2">
           <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 truncate flex items-center gap-1">
             {task.isRecurring && (
-              <Repeat
-                className="h-3 w-3 text-blue-600 shrink-0"
-                title="Recurring task"
-              />
+              <span title="Recurring task">
+                <Repeat className="h-3 w-3 text-blue-600 shrink-0" />
+              </span>
             )}
             {task.title}
           </h4>
