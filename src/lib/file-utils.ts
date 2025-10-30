@@ -5,7 +5,14 @@
 
 // Supported file types and their configurations
 export const FILE_TYPES = {
-  IMAGES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
+  IMAGES: [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+  ],
   DOCUMENTS: [
     'application/pdf',
     'application/msword',
@@ -27,7 +34,11 @@ export const FILE_TYPES = {
     'text/html',
     'text/css',
   ],
-  ARCHIVES: ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'],
+  ARCHIVES: [
+    'application/zip',
+    'application/x-rar-compressed',
+    'application/x-7z-compressed',
+  ],
 } as const;
 
 export const FILE_SIZE_LIMITS = {
@@ -37,7 +48,13 @@ export const FILE_SIZE_LIMITS = {
 } as const;
 
 // File type categories for UI
-export type FileCategory = 'image' | 'pdf' | 'document' | 'code' | 'archive' | 'other';
+export type FileCategory =
+  | 'image'
+  | 'pdf'
+  | 'document'
+  | 'code'
+  | 'archive'
+  | 'other';
 
 /**
  * Get file category from MIME type
@@ -64,11 +81,11 @@ export function canPreview(mimeType: string): boolean {
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
@@ -85,7 +102,7 @@ export function getFileExtension(filename: string): string {
  */
 export function getFileIcon(mimeType: string): string {
   const category = getFileCategory(mimeType);
-  
+
   switch (category) {
     case 'image':
       return 'Image';
@@ -168,7 +185,7 @@ export function getThumbnailPath(originalPath: string): string {
   const filename = parts[parts.length - 1];
   const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
   const ext = filename.substring(filename.lastIndexOf('.'));
-  
+
   parts[parts.length - 1] = `${nameWithoutExt}_thumb${ext}`;
   return parts.join('/');
 }
@@ -207,4 +224,3 @@ export function sanitizeFilename(filename: string): string {
   // Remove special characters but keep extension
   return filename.replace(/[^a-zA-Z0-9._-]/g, '_');
 }
-

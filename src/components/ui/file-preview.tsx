@@ -6,7 +6,14 @@
  */
 
 import { useState, useEffect } from 'react';
-import { X, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import {
+  X,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { getFileCategory, formatFileSize } from '@/lib/file-utils';
 import { cn } from '@/lib/utils';
@@ -28,7 +35,13 @@ interface FilePreviewProps {
   onNavigate?: (direction: 'prev' | 'next') => void;
 }
 
-export function FilePreview({ file, files = [], open, onOpenChange, onNavigate }: FilePreviewProps) {
+export function FilePreview({
+  file,
+  files = [],
+  open,
+  onOpenChange,
+  onNavigate,
+}: FilePreviewProps) {
   const [zoom, setZoom] = useState(100);
   const [imageError, setImageError] = useState(false);
 
@@ -72,8 +85,12 @@ export function FilePreview({ file, files = [], open, onOpenChange, onNavigate }
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gray-800 border-b border-gray-700">
           <div className="flex-1 min-w-0 mr-4">
-            <h3 className="text-lg font-semibold text-white truncate">{file.fileName}</h3>
-            <p className="text-sm text-gray-400">{formatFileSize(file.fileSize)}</p>
+            <h3 className="text-lg font-semibold text-white truncate">
+              {file.fileName}
+            </h3>
+            <p className="text-sm text-gray-400">
+              {formatFileSize(file.fileSize)}
+            </p>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -206,21 +223,22 @@ export function FilePreview({ file, files = [], open, onOpenChange, onNavigate }
           )}
 
           {/* Other files - download only */}
-          {category !== 'image' && category !== 'pdf' && category !== 'code' && (
-            <div className="text-center text-gray-400">
-              <p className="mb-4">Preview not available for this file type</p>
-              <button
-                onClick={handleDownload}
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors text-white font-medium"
-              >
-                <Download className="w-5 h-5 inline mr-2" />
-                Download File
-              </button>
-            </div>
-          )}
+          {category !== 'image' &&
+            category !== 'pdf' &&
+            category !== 'code' && (
+              <div className="text-center text-gray-400">
+                <p className="mb-4">Preview not available for this file type</p>
+                <button
+                  onClick={handleDownload}
+                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors text-white font-medium"
+                >
+                  <Download className="w-5 h-5 inline mr-2" />
+                  Download File
+                </button>
+              </div>
+            )}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

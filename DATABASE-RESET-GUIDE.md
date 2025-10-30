@@ -9,6 +9,7 @@ This guide will help you **completely reset your database** to start fresh with 
 ## ⚠️ What Gets Deleted
 
 **EVERYTHING:**
+
 - ✗ All users (including your account)
 - ✗ All roles
 - ✗ All projects
@@ -99,6 +100,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 ```
 
 **Generate NEXTAUTH_SECRET:**
+
 ```bash
 # On Windows PowerShell
 [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
@@ -145,7 +147,7 @@ You'll see output like this:
 3. Go to the **Console** tab
 4. Run this command:
    ```javascript
-   window.clearAppStorage()
+   window.clearAppStorage();
    ```
 5. Wait for the confirmation message
 6. Hard refresh the page: `Ctrl + Shift + R` (Windows) or `Cmd + Shift + R` (Mac)
@@ -153,6 +155,7 @@ You'll see output like this:
 #### Option B: Manual Browser Storage Clear
 
 **Chrome/Edge:**
+
 1. Open Developer Tools (F12)
 2. Go to **Application** tab
 3. Under **Storage**, click "Clear site data"
@@ -161,6 +164,7 @@ You'll see output like this:
 6. Hard refresh: `Ctrl + Shift + R`
 
 **Firefox:**
+
 1. Open Developer Tools (F12)
 2. Go to **Storage** tab
 3. Right-click on "IndexedDB" → Delete All
@@ -172,6 +176,7 @@ You'll see output like this:
 After clearing browser storage:
 
 1. Start your development server (if not running):
+
    ```bash
    pnpm dev
    ```
@@ -190,7 +195,8 @@ After clearing browser storage:
 
 **Problem:** The browser's IndexedDB cache still contains old data.
 
-**Solution:** 
+**Solution:**
+
 1. Open browser console (F12)
 2. Run: `window.clearAppStorage()`
 3. Hard refresh: `Ctrl + Shift + R`
@@ -203,13 +209,15 @@ After clearing browser storage:
 ### Error: "Cannot find module 'postgres'"
 
 **Solution:** Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 ### Error: Connection timeout or "cannot connect to database"
 
-**Solution:** 
+**Solution:**
+
 - Verify your DATABASE_URL is correct
 - Check if your database is running
 - Check firewall/network settings
@@ -217,7 +225,8 @@ pnpm install
 
 ### Error: Permission denied
 
-**Solution:** 
+**Solution:**
+
 - Make sure your database user has DELETE permissions
 - Check that you're using the correct credentials
 
@@ -232,6 +241,7 @@ pnpm db:clear
 ```
 
 This will delete:
+
 - ✗ Projects
 - ✗ Tasks & subtasks
 - ✗ Tickets
@@ -239,6 +249,7 @@ This will delete:
 - ✗ Embeddings
 
 But **keep**:
+
 - ✓ Users
 - ✓ Roles
 
@@ -246,11 +257,11 @@ But **keep**:
 
 ## 📊 Scripts Summary
 
-| Script | Command | What it does |
-|--------|---------|--------------|
-| **Complete Reset** | `pnpm db:reset` | Deletes EVERYTHING including users |
-| **Partial Clear** | `pnpm db:clear` | Deletes projects/tasks but keeps users |
-| **Seed Data** | `pnpm db:seed` | Adds sample data (after reset) |
+| Script              | Command          | What it does                           |
+| ------------------- | ---------------- | -------------------------------------- |
+| **Complete Reset**  | `pnpm db:reset`  | Deletes EVERYTHING including users     |
+| **Partial Clear**   | `pnpm db:clear`  | Deletes projects/tasks but keeps users |
+| **Seed Data**       | `pnpm db:seed`   | Adds sample data (after reset)         |
 | **Database Studio** | `pnpm db:studio` | Opens Drizzle Studio to view/edit data |
 
 ---
@@ -269,6 +280,7 @@ If you encounter any issues:
 ## ✅ Success Checklist
 
 Before running the reset:
+
 - [ ] Backed up any important data (if needed)
 - [ ] Created `.env` file with `DATABASE_URL`
 - [ ] Verified database connection works
@@ -276,6 +288,7 @@ Before running the reset:
 - [ ] Ready to create a new user account after reset
 
 After running the reset:
+
 - [ ] Saw success message from database reset script
 - [ ] **CLEARED BROWSER STORAGE** (run `window.clearAppStorage()` in console)
 - [ ] Hard refreshed the page (Ctrl + Shift + R)
@@ -286,4 +299,3 @@ After running the reset:
 ---
 
 **Ready to proceed?** Run `pnpm db:reset` when you're ready!
-

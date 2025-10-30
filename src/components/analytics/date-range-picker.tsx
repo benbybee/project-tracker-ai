@@ -3,10 +3,7 @@
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { format } from 'date-fns';
-import {
-  DATE_RANGE_PRESETS,
-  type DateRange,
-} from '@/lib/analytics-utils';
+import { DATE_RANGE_PRESETS, type DateRange } from '@/lib/analytics-utils';
 
 interface DateRangePickerProps {
   value: DateRange;
@@ -62,4 +59,3 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
     </div>
   );
 }
-

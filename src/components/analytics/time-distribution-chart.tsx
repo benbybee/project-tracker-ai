@@ -1,14 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-} from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Clock } from 'lucide-react';
 import { formatDuration } from '@/lib/analytics-utils';
 
@@ -59,7 +52,9 @@ export function TimeDistributionChart({
         <div className="flex flex-col items-center justify-center h-64 text-slate-500 dark:text-slate-400">
           <Clock className="h-12 w-12 mb-3 opacity-30" />
           <p className="text-sm">No time tracking data available</p>
-          <p className="text-xs mt-1">Complete tasks with tracked time to see distribution</p>
+          <p className="text-xs mt-1">
+            Complete tasks with tracked time to see distribution
+          </p>
         </div>
       </div>
     );
@@ -102,7 +97,10 @@ export function TimeDistributionChart({
           {title}
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-          Total: <span className="font-semibold text-slate-900 dark:text-slate-100">{formatDuration(totalMinutes)}</span>
+          Total:{' '}
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            {formatDuration(totalMinutes)}
+          </span>
         </p>
       </div>
 
@@ -142,10 +140,7 @@ export function TimeDistributionChart({
         {chartData.map((entry, index) => {
           const percentage = ((entry.value / totalMinutes) * 100).toFixed(1);
           return (
-            <div
-              key={index}
-              className="flex items-center gap-2 text-sm"
-            >
+            <div key={index} className="flex items-center gap-2 text-sm">
               <div
                 className="w-3 h-3 rounded-sm flex-shrink-0"
                 style={{ backgroundColor: entry.color }}
@@ -163,4 +158,3 @@ export function TimeDistributionChart({
     </div>
   );
 }
-

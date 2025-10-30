@@ -34,7 +34,7 @@ export function ProductiveHoursHeatmap({
   // Create a map for quick lookup
   const dataMap = React.useMemo(() => {
     const map = new Map<string, HeatmapData>();
-    data.forEach(item => {
+    data.forEach((item) => {
       const key = `${item.day}-${item.hour}`;
       map.set(key, item);
     });
@@ -67,7 +67,9 @@ export function ProductiveHoursHeatmap({
         <div className="flex flex-col items-center justify-center h-64 text-slate-500 dark:text-slate-400">
           <Clock className="h-12 w-12 mb-3 opacity-30" />
           <p className="text-sm">No productivity data available</p>
-          <p className="text-xs mt-1">Complete tasks to discover your most productive hours</p>
+          <p className="text-xs mt-1">
+            Complete tasks to discover your most productive hours
+          </p>
         </div>
       </div>
     );
@@ -82,9 +84,11 @@ export function ProductiveHoursHeatmap({
         </h3>
         {peakTime && (
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Peak productivity: <span className="font-semibold text-slate-900 dark:text-slate-100">
+            Peak productivity:{' '}
+            <span className="font-semibold text-slate-900 dark:text-slate-100">
               {peakTime.day} at {peakTime.hour}:00
-            </span> ({peakTime.count} tasks)
+            </span>{' '}
+            ({peakTime.count} tasks)
           </p>
         )}
       </div>
@@ -96,7 +100,7 @@ export function ProductiveHoursHeatmap({
           <div className="flex mb-1">
             <div className="w-12 flex-shrink-0"></div>
             <div className="flex gap-0.5">
-              {HOURS.map(hour => (
+              {HOURS.map((hour) => (
                 <div
                   key={hour}
                   className="w-6 text-[10px] text-center text-slate-500 dark:text-slate-400"
@@ -108,16 +112,17 @@ export function ProductiveHoursHeatmap({
           </div>
 
           {/* Heatmap grid */}
-          {DAYS.map(day => (
+          {DAYS.map((day) => (
             <div key={day} className="flex items-center mb-0.5">
               <div className="w-12 text-xs text-slate-600 dark:text-slate-400 font-medium pr-2 text-right flex-shrink-0">
                 {day}
               </div>
               <div className="flex gap-0.5">
-                {HOURS.map(hour => {
+                {HOURS.map((hour) => {
                   const cellData = getCellData(day, hour);
-                  const colorClass = LEVEL_COLORS[cellData.level as keyof typeof LEVEL_COLORS];
-                  
+                  const colorClass =
+                    LEVEL_COLORS[cellData.level as keyof typeof LEVEL_COLORS];
+
                   return (
                     <div
                       key={hour}
@@ -140,7 +145,7 @@ export function ProductiveHoursHeatmap({
       {/* Legend */}
       <div className="flex items-center justify-center gap-2 mt-4">
         <span className="text-xs text-slate-600 dark:text-slate-400">Less</span>
-        {[0, 1, 2, 3, 4].map(level => (
+        {[0, 1, 2, 3, 4].map((level) => (
           <div
             key={level}
             className={`w-4 h-4 rounded-sm border border-slate-200 dark:border-slate-700 ${LEVEL_COLORS[level as keyof typeof LEVEL_COLORS]}`}
@@ -151,4 +156,3 @@ export function ProductiveHoursHeatmap({
     </div>
   );
 }
-

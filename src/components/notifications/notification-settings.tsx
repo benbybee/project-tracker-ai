@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { GlassCard } from '@/components/ui/glass-card';
-import { Bell, Mail, Moon, Volume2, Clock, Check, Loader2 } from 'lucide-react';
+import { Bell, Mail, Moon, Volume2, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function NotificationSettings() {
@@ -47,7 +47,8 @@ export function NotificationSettings() {
   useEffect(() => {
     if (settings) {
       setLocalSettings({
-        typePreferences: (settings.typePreferences as Record<string, boolean>) || {},
+        typePreferences:
+          (settings.typePreferences as Record<string, boolean>) || {},
         emailEnabled: settings.emailEnabled || false,
         emailFrequency: settings.emailFrequency || 'never',
         emailDigestTime: settings.emailDigestTime || 8,
@@ -67,17 +68,61 @@ export function NotificationSettings() {
   };
 
   const notificationTypes = [
-    { key: 'task_reminder', label: 'Task Reminders', description: 'Reminders for tasks you need to complete' },
-    { key: 'due_date_approaching', label: 'Due Date Alerts', description: 'Notifications when tasks are due soon' },
-    { key: 'task_assigned', label: 'Task Assignments', description: 'When a task is assigned to you' },
-    { key: 'task_updated', label: 'Task Updates', description: 'When a task you\'re watching is updated' },
-    { key: 'task_completed', label: 'Task Completions', description: 'When a task is marked as complete' },
-    { key: 'project_updated', label: 'Project Updates', description: 'When a project you\'re watching is updated' },
-    { key: 'comment_added', label: 'Comments', description: 'When someone comments on a task' },
-    { key: 'mention', label: 'Mentions', description: 'When someone mentions you' },
-    { key: 'sync_conflict', label: 'Sync Conflicts', description: 'When data sync conflicts occur' },
-    { key: 'collaboration', label: 'Collaboration', description: 'Collaboration activity notifications' },
-    { key: 'ai_suggestion', label: 'AI Suggestions', description: 'AI-powered task and schedule suggestions' },
+    {
+      key: 'task_reminder',
+      label: 'Task Reminders',
+      description: 'Reminders for tasks you need to complete',
+    },
+    {
+      key: 'due_date_approaching',
+      label: 'Due Date Alerts',
+      description: 'Notifications when tasks are due soon',
+    },
+    {
+      key: 'task_assigned',
+      label: 'Task Assignments',
+      description: 'When a task is assigned to you',
+    },
+    {
+      key: 'task_updated',
+      label: 'Task Updates',
+      description: "When a task you're watching is updated",
+    },
+    {
+      key: 'task_completed',
+      label: 'Task Completions',
+      description: 'When a task is marked as complete',
+    },
+    {
+      key: 'project_updated',
+      label: 'Project Updates',
+      description: "When a project you're watching is updated",
+    },
+    {
+      key: 'comment_added',
+      label: 'Comments',
+      description: 'When someone comments on a task',
+    },
+    {
+      key: 'mention',
+      label: 'Mentions',
+      description: 'When someone mentions you',
+    },
+    {
+      key: 'sync_conflict',
+      label: 'Sync Conflicts',
+      description: 'When data sync conflicts occur',
+    },
+    {
+      key: 'collaboration',
+      label: 'Collaboration',
+      description: 'Collaboration activity notifications',
+    },
+    {
+      key: 'ai_suggestion',
+      label: 'AI Suggestions',
+      description: 'AI-powered task and schedule suggestions',
+    },
   ];
 
   return (
@@ -99,7 +144,10 @@ export function NotificationSettings() {
               className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
             >
               <div className="flex-1">
-                <Label htmlFor={type.key} className="text-sm font-medium cursor-pointer">
+                <Label
+                  htmlFor={type.key}
+                  className="text-sm font-medium cursor-pointer"
+                >
                   {type.label}
                 </Label>
                 <p className="text-xs text-gray-500 mt-1">{type.description}</p>
@@ -154,15 +202,22 @@ export function NotificationSettings() {
                 </Label>
                 <Select
                   value={localSettings.emailFrequency}
-                  onValueChange={(value: 'realtime' | 'daily' | 'weekly' | 'never') =>
-                    setLocalSettings({ ...localSettings, emailFrequency: value })
+                  onValueChange={(
+                    value: 'realtime' | 'daily' | 'weekly' | 'never'
+                  ) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      emailFrequency: value,
+                    })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="realtime">Real-time (immediate)</SelectItem>
+                    <SelectItem value="realtime">
+                      Real-time (immediate)
+                    </SelectItem>
                     <SelectItem value="daily">Daily Digest</SelectItem>
                     <SelectItem value="weekly">Weekly Digest</SelectItem>
                     <SelectItem value="never">Never</SelectItem>
@@ -170,15 +225,22 @@ export function NotificationSettings() {
                 </Select>
               </div>
 
-              {(localSettings.emailFrequency === 'daily' || localSettings.emailFrequency === 'weekly') && (
+              {(localSettings.emailFrequency === 'daily' ||
+                localSettings.emailFrequency === 'weekly') && (
                 <div className="space-y-2">
-                  <Label htmlFor="emailDigestTime" className="text-sm font-medium">
+                  <Label
+                    htmlFor="emailDigestTime"
+                    className="text-sm font-medium"
+                  >
                     Digest Time (Hour of day: 0-23)
                   </Label>
                   <Select
                     value={localSettings.emailDigestTime.toString()}
                     onValueChange={(value) =>
-                      setLocalSettings({ ...localSettings, emailDigestTime: parseInt(value) })
+                      setLocalSettings({
+                        ...localSettings,
+                        emailDigestTime: parseInt(value),
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -187,7 +249,13 @@ export function NotificationSettings() {
                     <SelectContent>
                       {Array.from({ length: 24 }, (_, i) => (
                         <SelectItem key={i} value={i.toString()}>
-                          {i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}
+                          {i === 0
+                            ? '12 AM'
+                            : i < 12
+                              ? `${i} AM`
+                              : i === 12
+                                ? '12 PM'
+                                : `${i - 12} PM`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -257,7 +325,10 @@ export function NotificationSettings() {
               id="quietHoursEnabled"
               checked={localSettings.quietHoursEnabled}
               onCheckedChange={(checked) =>
-                setLocalSettings({ ...localSettings, quietHoursEnabled: checked })
+                setLocalSettings({
+                  ...localSettings,
+                  quietHoursEnabled: checked,
+                })
               }
             />
           </div>
@@ -265,13 +336,19 @@ export function NotificationSettings() {
           {localSettings.quietHoursEnabled && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="quietHoursStart" className="text-sm font-medium">
+                <Label
+                  htmlFor="quietHoursStart"
+                  className="text-sm font-medium"
+                >
                   Start Time
                 </Label>
                 <Select
                   value={localSettings.quietHoursStart.toString()}
                   onValueChange={(value) =>
-                    setLocalSettings({ ...localSettings, quietHoursStart: parseInt(value) })
+                    setLocalSettings({
+                      ...localSettings,
+                      quietHoursStart: parseInt(value),
+                    })
                   }
                 >
                   <SelectTrigger>
@@ -280,7 +357,13 @@ export function NotificationSettings() {
                   <SelectContent>
                     {Array.from({ length: 24 }, (_, i) => (
                       <SelectItem key={i} value={i.toString()}>
-                        {i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}
+                        {i === 0
+                          ? '12 AM'
+                          : i < 12
+                            ? `${i} AM`
+                            : i === 12
+                              ? '12 PM'
+                              : `${i - 12} PM`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -294,7 +377,10 @@ export function NotificationSettings() {
                 <Select
                   value={localSettings.quietHoursEnd.toString()}
                   onValueChange={(value) =>
-                    setLocalSettings({ ...localSettings, quietHoursEnd: parseInt(value) })
+                    setLocalSettings({
+                      ...localSettings,
+                      quietHoursEnd: parseInt(value),
+                    })
                   }
                 >
                   <SelectTrigger>
@@ -303,7 +389,13 @@ export function NotificationSettings() {
                   <SelectContent>
                     {Array.from({ length: 24 }, (_, i) => (
                       <SelectItem key={i} value={i.toString()}>
-                        {i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}
+                        {i === 0
+                          ? '12 AM'
+                          : i < 12
+                            ? `${i} AM`
+                            : i === 12
+                              ? '12 PM'
+                              : `${i - 12} PM`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -337,4 +429,3 @@ export function NotificationSettings() {
     </div>
   );
 }
-

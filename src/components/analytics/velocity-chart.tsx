@@ -2,7 +2,6 @@
 
 import React from 'react';
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -40,7 +39,7 @@ export function VelocityChart({
     if (data.length < 2) return 'stable';
     const recent = data[data.length - 1].tasksPerWeek;
     const previous = data[0].tasksPerWeek;
-    
+
     if (recent > previous * 1.1) return 'increasing';
     if (recent < previous * 0.9) return 'decreasing';
     return 'stable';
@@ -55,7 +54,9 @@ export function VelocityChart({
         <div className="flex flex-col items-center justify-center h-64 text-slate-500 dark:text-slate-400">
           <Activity className="h-12 w-12 mb-3 opacity-30" />
           <p className="text-sm">Not enough data to calculate velocity</p>
-          <p className="text-xs mt-1">Complete tasks over several weeks to see trends</p>
+          <p className="text-xs mt-1">
+            Complete tasks over several weeks to see trends
+          </p>
         </div>
       </div>
     );
@@ -70,7 +71,11 @@ export function VelocityChart({
             {title}
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Average: <span className="font-semibold text-slate-900 dark:text-slate-100">{averageVelocity}</span> tasks/week
+            Average:{' '}
+            <span className="font-semibold text-slate-900 dark:text-slate-100">
+              {averageVelocity}
+            </span>{' '}
+            tasks/week
           </p>
         </div>
 
@@ -82,8 +87,8 @@ export function VelocityChart({
               trend === 'increasing'
                 ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
                 : trend === 'decreasing'
-                ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
-                : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600'
+                  ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
+                  : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600'
             }
           `}
         >
@@ -107,11 +112,17 @@ export function VelocityChart({
           <XAxis
             dataKey="period"
             className="text-xs"
-            tick={{ fill: 'currentColor', className: 'fill-slate-600 dark:fill-slate-400' }}
+            tick={{
+              fill: 'currentColor',
+              className: 'fill-slate-600 dark:fill-slate-400',
+            }}
           />
           <YAxis
             className="text-xs"
-            tick={{ fill: 'currentColor', className: 'fill-slate-600 dark:fill-slate-400' }}
+            tick={{
+              fill: 'currentColor',
+              className: 'fill-slate-600 dark:fill-slate-400',
+            }}
           />
           <Tooltip
             contentStyle={{
@@ -121,9 +132,7 @@ export function VelocityChart({
               fontSize: '12px',
             }}
           />
-          <Legend
-            wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-          />
+          <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
           <Area
             type="monotone"
             dataKey="tasksPerWeek"
@@ -153,4 +162,3 @@ export function VelocityChart({
     </div>
   );
 }
-

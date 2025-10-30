@@ -2,7 +2,17 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Check, CheckCheck, ExternalLink, X, CheckCircle, Clock, Eye, Trash2, Bell } from 'lucide-react';
+import {
+  Check,
+  CheckCheck,
+  ExternalLink,
+  X,
+  CheckCircle,
+  Clock,
+  Eye,
+  Trash2,
+  Bell,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
@@ -65,13 +75,14 @@ export function NotificationDropdown({
     },
   });
 
-  const deleteNotificationMutation = trpc.notifications.deleteNotification.useMutation({
-    onSuccess: () => {
-      utils.notifications.getNotifications.invalidate();
-      utils.notifications.getUnreadCount.invalidate();
-      toast.success('Notification deleted');
-    },
-  });
+  const deleteNotificationMutation =
+    trpc.notifications.deleteNotification.useMutation({
+      onSuccess: () => {
+        utils.notifications.getNotifications.invalidate();
+        utils.notifications.getUnreadCount.invalidate();
+        toast.success('Notification deleted');
+      },
+    });
 
   const handleMarkAllAsRead = async () => {
     setIsMarkingAll(true);
@@ -191,7 +202,12 @@ export function NotificationDropdown({
               Mark all read
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={onClose} className="p-1 hover:bg-white/50">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="p-1 hover:bg-white/50"
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -208,28 +224,37 @@ export function NotificationDropdown({
         ) : (
           <>
             {/* Grouped notifications */}
-            {Array.from(groupedNotifications.entries()).map(([groupKey, items]) => (
-              <div key={groupKey} className="border-b border-gray-100">
-                <div className="p-4 bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">{getNotificationIcon(items[0].type)}</span>
-                      <span className="text-sm font-medium text-gray-700">
-                        {items.length} {items[0].type.replace('_', ' ')} notifications
-                      </span>
+            {Array.from(groupedNotifications.entries()).map(
+              ([groupKey, items]) => (
+                <div key={groupKey} className="border-b border-gray-100">
+                  <div className="p-4 bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">
+                          {getNotificationIcon(items[0].type)}
+                        </span>
+                        <span className="text-sm font-medium text-gray-700">
+                          {items.length} {items[0].type.replace('_', ' ')}{' '}
+                          notifications
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          items.forEach((item) =>
+                            handleDelete({} as any, item.id)
+                          )
+                        }
+                        className="text-xs"
+                      >
+                        Clear all
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => items.forEach(item => handleDelete({} as any, item.id))}
-                      className="text-xs"
-                    >
-                      Clear all
-                    </Button>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
 
             {/* Individual notifications */}
             {ungroupedNotifications.map((notification) => (
@@ -250,7 +275,9 @@ export function NotificationDropdown({
                         <div className="flex items-center space-x-2">
                           <p
                             className={`text-sm font-medium ${
-                              !notification.read ? 'text-gray-900' : 'text-gray-700'
+                              !notification.read
+                                ? 'text-gray-900'
+                                : 'text-gray-700'
                             }`}
                           >
                             {notification.title}
@@ -270,7 +297,9 @@ export function NotificationDropdown({
                           </time>
                           {notification.link && (
                             <button
-                              onClick={() => handleNotificationClick(notification)}
+                              onClick={() =>
+                                handleNotificationClick(notification)
+                              }
                               className="text-xs text-blue-600 hover:text-blue-700 flex items-center space-x-1"
                             >
                               <ExternalLink className="h-3 w-3" />
@@ -280,26 +309,31 @@ export function NotificationDropdown({
                         </div>
 
                         {/* Action Buttons */}
-                        {notification.actions && notification.actions.length > 0 && (
-                          <div className="flex items-center space-x-2 mt-3">
-                            {notification.actions.map((action, idx) => {
-                              const Icon = getActionIcon(action.type);
-                              return (
-                                <Button
-                                  key={idx}
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => handleAction(e, notification, action)}
-                                  disabled={processingAction === notification.id}
-                                  className="h-7 text-xs"
-                                >
-                                  <Icon className="h-3 w-3 mr-1" />
-                                  {action.label}
-                                </Button>
-                              );
-                            })}
-                          </div>
-                        )}
+                        {notification.actions &&
+                          notification.actions.length > 0 && (
+                            <div className="flex items-center space-x-2 mt-3">
+                              {notification.actions.map((action, idx) => {
+                                const Icon = getActionIcon(action.type);
+                                return (
+                                  <Button
+                                    key={idx}
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) =>
+                                      handleAction(e, notification, action)
+                                    }
+                                    disabled={
+                                      processingAction === notification.id
+                                    }
+                                    className="h-7 text-xs"
+                                  >
+                                    <Icon className="h-3 w-3 mr-1" />
+                                    {action.label}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          )}
                       </div>
 
                       {/* Delete button */}

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * COMPLETE DATABASE RESET
- * 
+ *
  * This script deletes ALL data from ALL tables in the database.
  * Use this to start completely fresh with a clean slate.
- * 
- * WARNING: This is irreversible! All users, projects, tasks, notes, 
+ *
+ * WARNING: This is irreversible! All users, projects, tasks, notes,
  * tickets, chat history, analytics - everything will be deleted.
  */
 
@@ -19,10 +19,12 @@ async function resetDatabase() {
   try {
     // Get DATABASE_URL from environment
     const databaseUrl = process.env.DATABASE_URL;
-    
+
     if (!databaseUrl) {
       console.error('❌ DATABASE_URL environment variable is not set');
-      console.error('   Make sure you have a .env file with DATABASE_URL configured');
+      console.error(
+        '   Make sure you have a .env file with DATABASE_URL configured'
+      );
       process.exit(1);
     }
 
@@ -30,7 +32,9 @@ async function resetDatabase() {
     const sql = postgres(databaseUrl);
 
     console.log('\n⚠️  WARNING: This will DELETE ALL DATA from the database!');
-    console.log('   All users, projects, tasks, notes, tickets, chat, analytics, etc.');
+    console.log(
+      '   All users, projects, tasks, notes, tickets, chat, analytics, etc.'
+    );
     console.log('   This operation is IRREVERSIBLE!\n');
 
     console.log('🗑️  Starting COMPLETE database reset...\n');
@@ -39,7 +43,7 @@ async function resetDatabase() {
     // Start with most dependent tables and work back to core tables
 
     console.log('📊 Deleting Analytics & AI Data...');
-    
+
     console.log('  → Deleting AI suggestions...');
     await sql`DELETE FROM ai_suggestions`;
     console.log('    ✓ AI suggestions cleared');
@@ -161,7 +165,9 @@ async function resetDatabase() {
     console.log('   • All notifications deleted');
     console.log('   • All activity logs deleted');
     console.log('   • All embeddings deleted');
-    console.log('\n🎯 You can now create a fresh user account and start from scratch!');
+    console.log(
+      '\n🎯 You can now create a fresh user account and start from scratch!'
+    );
 
     await sql.end();
     process.exit(0);
@@ -173,4 +179,3 @@ async function resetDatabase() {
 }
 
 resetDatabase();
-

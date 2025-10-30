@@ -50,7 +50,9 @@ export function CompletionRateChart({
         <div className="flex flex-col items-center justify-center h-64 text-slate-500 dark:text-slate-400">
           <FolderKanban className="h-12 w-12 mb-3 opacity-30" />
           <p className="text-sm">No projects with tasks</p>
-          <p className="text-xs mt-1">Create projects and tasks to see completion rates</p>
+          <p className="text-xs mt-1">
+            Create projects and tasks to see completion rates
+          </p>
         </div>
       </div>
     );
@@ -69,7 +71,10 @@ export function CompletionRateChart({
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={Math.max(300, data.length * 50)}>
+      <ResponsiveContainer
+        width="100%"
+        height={Math.max(300, data.length * 50)}
+      >
         <BarChart
           data={sortedData}
           layout="vertical"
@@ -84,14 +89,20 @@ export function CompletionRateChart({
             type="number"
             domain={[0, 100]}
             className="text-xs"
-            tick={{ fill: 'currentColor', className: 'fill-slate-600 dark:fill-slate-400' }}
+            tick={{
+              fill: 'currentColor',
+              className: 'fill-slate-600 dark:fill-slate-400',
+            }}
             tickFormatter={(value) => `${value}%`}
           />
           <YAxis
             type="category"
             dataKey="name"
             className="text-xs"
-            tick={{ fill: 'currentColor', className: 'fill-slate-600 dark:fill-slate-400' }}
+            tick={{
+              fill: 'currentColor',
+              className: 'fill-slate-600 dark:fill-slate-400',
+            }}
             width={120}
           />
           <Tooltip
@@ -135,4 +146,3 @@ export function CompletionRateChart({
     </div>
   );
 }
-

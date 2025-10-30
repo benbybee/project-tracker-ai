@@ -7,7 +7,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import { put } from '@vercel/blob';
-import { FILE_SIZE_LIMITS, validateFile, sanitizeFilename, isImage } from '@/lib/file-utils';
+import {
+  FILE_SIZE_LIMITS,
+  validateFile,
+  sanitizeFilename,
+  isImage,
+} from '@/lib/file-utils';
 
 export async function POST(req: Request) {
   try {
@@ -22,7 +27,10 @@ export async function POST(req: Request) {
     const file = form.get('file') as File | null;
 
     if (!taskId) {
-      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Task ID is required' },
+        { status: 400 }
+      );
     }
 
     if (!file || file.size === 0) {
@@ -56,7 +64,7 @@ export async function POST(req: Request) {
 
     // Handle thumbnail generation for images (client-side for now)
     let thumbnailUrl: string | undefined;
-    
+
     // For images, we'll let the client handle thumbnail generation
     // In production, you might want to use a service like Cloudinary or imgix
     if (isImage(file.type)) {
@@ -77,7 +85,8 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: 'Failed to upload file',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
+        details:
+          process.env.NODE_ENV === 'development' ? error?.message : undefined,
       },
       { status: 500 }
     );
@@ -92,4 +101,3 @@ export const config = {
     },
   },
 };
-

@@ -179,7 +179,7 @@ export const attachmentsRouter = createTRPCRouter({
       // Delete from Vercel Blob
       try {
         await del(attachment.url);
-        
+
         // Delete thumbnail if exists
         if (attachment.thumbnailUrl) {
           await del(attachment.thumbnailUrl);
@@ -224,7 +224,10 @@ export const attachmentsRouter = createTRPCRouter({
         .from(taskAttachments)
         .where(eq(taskAttachments.taskId, input.taskId));
 
-      const totalSize = attachmentList.reduce((sum, att) => sum + Number(att.fileSize), 0);
+      const totalSize = attachmentList.reduce(
+        (sum, att) => sum + Number(att.fileSize),
+        0
+      );
 
       return {
         count: attachmentList.length,
@@ -232,4 +235,3 @@ export const attachmentsRouter = createTRPCRouter({
       };
     }),
 });
-

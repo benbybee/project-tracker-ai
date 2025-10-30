@@ -1,5 +1,5 @@
 // ⚠️ DEPRECATED: This script has been replaced by generate-pwa-icons.js
-// 
+//
 // The new script uses the Sharp library to generate proper PNG icons
 // from a source image (public/app-icon-source.png).
 //

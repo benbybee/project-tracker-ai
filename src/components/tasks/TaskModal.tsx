@@ -21,9 +21,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useState } from 'react';
-import { Plus, X, GripVertical } from 'lucide-react';
+import { Plus, X, GripVertical, Paperclip } from 'lucide-react';
 import { useRealtime } from '@/app/providers';
 import { useParams } from 'next/navigation';
+import { TaskAttachments } from './task-attachments';
+import { TaskComments } from './task-comments';
 
 const TaskSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
@@ -456,6 +458,26 @@ export function TaskModal({
               )}
             </div>
           </div>
+
+          {/* Attachments - only show for existing tasks */}
+          {defaultValues?.id && (
+            <div className="border-t pt-6">
+              <div className="flex items-center mb-4">
+                <Paperclip className="h-5 w-5 text-gray-500 mr-2" />
+                <label className="block text-sm font-medium text-gray-700">
+                  Attachments
+                </label>
+              </div>
+              <TaskAttachments taskId={defaultValues.id} />
+            </div>
+          )}
+
+          {/* Comments - only show for existing tasks */}
+          {defaultValues?.id && (
+            <div className="border-t pt-6">
+              <TaskComments taskId={defaultValues.id} />
+            </div>
+          )}
 
           <DialogFooter
             className={defaultValues?.id ? 'flex justify-between' : ''}

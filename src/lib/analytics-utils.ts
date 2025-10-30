@@ -1,11 +1,17 @@
 /**
  * Analytics Utilities
- * 
+ *
  * Helper functions for data aggregation, calculations, and formatting
  * for the analytics dashboard.
  */
 
-import { format, startOfDay, endOfDay, subDays, eachDayOfInterval } from 'date-fns';
+import {
+  format,
+  startOfDay,
+  endOfDay,
+  subDays,
+  eachDayOfInterval,
+} from 'date-fns';
 
 export interface DateRange {
   start: Date;
@@ -52,14 +58,14 @@ export function calculateMovingAverage(
   windowSize: number = 7
 ): number[] {
   const result: number[] = [];
-  
+
   for (let i = 0; i < data.length; i++) {
     const start = Math.max(0, i - windowSize + 1);
     const window = data.slice(start, i + 1);
     const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
     result.push(Math.round(avg * 100) / 100);
   }
-  
+
   return result;
 }
 
@@ -76,7 +82,7 @@ export function calculateCompletionRate(
 
 /**
  * Calculate project health score (0-100)
- * 
+ *
  * Algorithm:
  * - Start with 100 points
  * - Deduct 10 points per overdue task
@@ -177,7 +183,7 @@ export function calculateStreak(completionDates: Date[]): {
 
   // Sort dates ascending
   const sorted = completionDates
-    .map(d => startOfDay(d).getTime())
+    .map((d) => startOfDay(d).getTime())
     .sort((a, b) => a - b);
 
   // Remove duplicates
@@ -232,16 +238,19 @@ export function generateHeatmapData(
   });
 
   const dataMap = new Map(
-    completionData.map(d => [format(startOfDay(d.date), 'yyyy-MM-dd'), d.count])
+    completionData.map((d) => [
+      format(startOfDay(d.date), 'yyyy-MM-dd'),
+      d.count,
+    ])
   );
 
   // Calculate levels based on max count (0-4 scale like GitHub)
-  const maxCount = Math.max(...completionData.map(d => d.count), 1);
+  const maxCount = Math.max(...completionData.map((d) => d.count), 1);
 
-  return days.map(date => {
+  return days.map((date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const count = dataMap.get(dateStr) || 0;
-    
+
     let level = 0;
     if (count > 0) {
       if (count >= maxCount * 0.75) level = 4;
@@ -301,7 +310,7 @@ export function groupByTimePeriod<T extends { date: Date }>(
 ): Map<string, T[]> {
   const grouped = new Map<string, T[]>();
 
-  data.forEach(item => {
+  data.forEach((item) => {
     let key: string;
     if (period === 'day') {
       key = format(item.date, 'yyyy-MM-dd');
@@ -319,4 +328,3 @@ export function groupByTimePeriod<T extends { date: Date }>(
 
   return grouped;
 }
-

@@ -153,4 +153,86 @@ export const activityRouter = createTRPCRouter({
 
       return activity[0];
     }),
+
+  // Undo recent action (5-min window)
+  undoAction: protectedProcedure
+    .input(
+      z.object({
+        activityId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get the activity
+      const activities = await db
+        .select()
+        .from(activityLog)
+        .where(
+          and(
+            eq(activityLog.id, input.activityId),
+            eq(activityLog.actorId, ctx.session.user.id)
+          )
+        )
+        .limit(1);
+
+      if (activities.length === 0) {
+        throw new Error('Activity not found');
+      }
+
+      const activity = activities[0];
+
+      // Check if within 5-minute window
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (new Date(activity.createdAt) < fiveMinutesAgo) {
+        throw new Error('Undo window expired (5 minutes)');
+      }
+
+      // Undo based on action type
+      if (activity.action === 'deleted' && activity.targetType === 'task') {
+        // Restore deleted task from payload
+        if (activity.payload && activity.payload.task) {
+          const { tasks } = await import('@/server/db/schema');
+          await db
+            .update(tasks)
+            .set({
+              archived: false,
+              archivedAt: null,
+              updatedAt: new Date(),
+            })
+            .where(eq(tasks.id, activity.targetId!));
+        }
+      } else if (
+        activity.action === 'updated' &&
+        activity.targetType === 'task'
+      ) {
+        // Restore previous values from payload
+        if (activity.payload && activity.payload.oldValues) {
+          const { tasks } = await import('@/server/db/schema');
+          await db
+            .update(tasks)
+            .set({
+              ...activity.payload.oldValues,
+              updatedAt: new Date(),
+            })
+            .where(eq(tasks.id, activity.targetId!));
+        }
+      } else if (
+        activity.action === 'completed' &&
+        activity.targetType === 'task'
+      ) {
+        // Mark task as not completed
+        const { tasks } = await import('@/server/db/schema');
+        await db
+          .update(tasks)
+          .set({
+            status: activity.payload?.previousStatus || 'in_progress',
+            updatedAt: new Date(),
+          })
+          .where(eq(tasks.id, activity.targetId!));
+      }
+
+      // Delete the activity log entry
+      await db.delete(activityLog).where(eq(activityLog.id, input.activityId));
+
+      return { success: true };
+    }),
 });

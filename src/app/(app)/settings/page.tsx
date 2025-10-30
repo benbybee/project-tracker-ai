@@ -12,12 +12,14 @@ import {
   X,
   User,
   LogOut,
+  Bell,
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { useSession, signOut } from 'next-auth/react';
 import { usePWAToast } from '@/components/ui/toast-pwa';
 import { invalidateRoleQueries } from '@/lib/cache-invalidation';
 import { useRealtime } from '@/app/providers';
+import { NotificationSettings } from '@/components/notifications/notification-settings';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -705,6 +707,18 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Notification Settings */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Bell className="h-6 w-6 text-purple-600" />
+            <h2 className="text-xl font-semibold text-gray-900">
+              Notification Settings
+            </h2>
+          </div>
+
+          <NotificationSettings />
         </div>
 
         {/* Other Settings */}

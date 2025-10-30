@@ -14,6 +14,9 @@ import { userRouter } from './routers/user';
 import { templatesRouter } from './routers/templates';
 import { recurringRouter } from './routers/recurring';
 import { attachmentsRouter } from './routers/attachments';
+import { commentsRouter } from './routers/comments';
+import { viewsRouter } from './routers/views';
+import { slackRouter } from './routers/slack';
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -31,6 +34,9 @@ export const appRouter = createTRPCRouter({
   templates: templatesRouter,
   recurring: recurringRouter,
   attachments: attachmentsRouter,
+  comments: commentsRouter,
+  views: viewsRouter,
+  slack: slackRouter,
 });
 
 export type AppRouter = typeof appRouter;

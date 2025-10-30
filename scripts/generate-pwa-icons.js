@@ -2,7 +2,12 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const SOURCE_IMAGE = path.join(__dirname, '..', 'public', 'app-icon-source.png');
+const SOURCE_IMAGE = path.join(
+  __dirname,
+  '..',
+  'public',
+  'app-icon-source.png'
+);
 const ICONS_DIR = path.join(__dirname, '..', 'public', 'icons');
 const FAVICON_PATH = path.join(__dirname, '..', 'public', 'favicon.ico');
 
@@ -42,7 +47,7 @@ async function generateIcons() {
       await sharp(SOURCE_IMAGE)
         .resize(size, size, {
           fit: 'contain',
-          background: { r: 109, g: 74, b: 255, alpha: 1 } // #6D4AFF
+          background: { r: 109, g: 74, b: 255, alpha: 1 }, // #6D4AFF
         })
         .png()
         .toFile(path.join(ICONS_DIR, `icon-${size}x${size}.png`));
@@ -56,7 +61,7 @@ async function generateIcons() {
       await sharp(SOURCE_IMAGE)
         .resize(size, size, {
           fit: 'contain',
-          background: { r: 109, g: 74, b: 255, alpha: 1 }
+          background: { r: 109, g: 74, b: 255, alpha: 1 },
         })
         .png()
         .toFile(path.join(ICONS_DIR, `icon-${size}x${size}.png`));
@@ -69,7 +74,7 @@ async function generateIcons() {
     await sharp(SOURCE_IMAGE)
       .resize(180, 180, {
         fit: 'contain',
-        background: { r: 109, g: 74, b: 255, alpha: 1 }
+        background: { r: 109, g: 74, b: 255, alpha: 1 },
       })
       .png()
       .toFile(path.join(ICONS_DIR, 'apple-touch-icon.png'));
@@ -81,7 +86,7 @@ async function generateIcons() {
       await sharp(SOURCE_IMAGE)
         .resize(splash.width, splash.height, {
           fit: 'contain',
-          background: { r: 109, g: 74, b: 255, alpha: 1 }
+          background: { r: 109, g: 74, b: 255, alpha: 1 },
         })
         .png()
         .toFile(path.join(ICONS_DIR, splash.name));
@@ -94,7 +99,7 @@ async function generateIcons() {
     await sharp(SOURCE_IMAGE)
       .resize(512, 512, {
         fit: 'cover',
-        position: 'center'
+        position: 'center',
       })
       .png()
       .toFile(path.join(ICONS_DIR, 'maskable-icon-512x512.png'));
@@ -105,7 +110,7 @@ async function generateIcons() {
     await sharp(SOURCE_IMAGE)
       .resize(32, 32, {
         fit: 'contain',
-        background: { r: 109, g: 74, b: 255, alpha: 1 }
+        background: { r: 109, g: 74, b: 255, alpha: 1 },
       })
       .png()
       .toFile(FAVICON_PATH);
@@ -119,7 +124,6 @@ async function generateIcons() {
     console.log('  • 1 maskable icon');
     console.log('  • 1 favicon');
     console.log('  • 1 apple-touch-icon');
-    
   } catch (error) {
     console.error('❌ Error generating icons:', error);
     process.exit(1);
@@ -127,4 +131,3 @@ async function generateIcons() {
 }
 
 generateIcons();
-

@@ -29,17 +29,20 @@ git push -u origin master
 ## After Pushing
 
 Once pushed to GitHub, Vercel will automatically:
+
 1. Detect the new commit
 2. Build your application
 3. Deploy to production
 
 **IMPORTANT:** Before Vercel deploys successfully, you must:
+
 1. Run the database migration on your production database (see SETTINGS-DEPLOYMENT-GUIDE.md)
 2. Ensure all environment variables are set in Vercel
 
 ## Verify Deployment
 
 After Vercel deploys:
+
 1. Go to your app's settings page
 2. Test profile editing (name and email)
 3. Test password change
@@ -52,4 +55,3 @@ After Vercel deploys:
 ✅ All files committed locally  
 ✅ Ready to push to GitHub  
 ⏳ Waiting for remote repository setup
-

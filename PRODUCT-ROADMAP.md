@@ -11,6 +11,7 @@
 This roadmap outlines comprehensive UI/UX improvements and feature additions to transform Project Tracker AI into a premium, AI-powered personal productivity platform. Designed for individual power users who demand seamless mobile experiences, intelligent automation, and deep integrations.
 
 ### Key Focus Areas
+
 - Premium UI/UX polish with dark mode and enhanced animations
 - Mobile-first experience with bottom navigation and easy status changes
 - Windows/Linux keyboard shortcuts (Mac alternatives included)
@@ -24,9 +25,11 @@ This roadmap outlines comprehensive UI/UX improvements and feature additions to 
 ## Phase 1: Premium UI/UX Polish
 
 ### Sprint 1.1 - Dark Mode & Theme System
+
 **Priority:** High | **Complexity:** Low | **Duration:** 2-3 days
 
 #### Features
+
 1. **Theme Toggle Component**
    - Add theme switcher in settings page and topbar
    - Persist preference in localStorage
@@ -47,12 +50,14 @@ This roadmap outlines comprehensive UI/UX improvements and feature additions to 
    - Export/import theme configurations
 
 #### Files to Update
+
 - `src/components/layout/topbar.tsx` - Add theme toggle button
 - `src/app/(app)/settings/page.tsx` - Add theme settings section
 - `src/store/ui.ts` - Add theme state management
 - `src/app/globals.css` - Verify dark mode CSS variables
 
 #### Success Criteria
+
 - [ ] Theme toggle works instantly with smooth transitions
 - [ ] All components render correctly in dark mode
 - [ ] Theme preference persists across sessions
@@ -61,9 +66,11 @@ This roadmap outlines comprehensive UI/UX improvements and feature additions to 
 ---
 
 ### Sprint 1.2 - Enhanced Animations & Micro-interactions
+
 **Priority:** High | **Complexity:** Low-Medium | **Duration:** 2-3 days
 
 #### Features
+
 1. **Loading States**
    - Skeleton loaders with shimmer effects (enhance existing)
    - Progress bars for long operations (AI calls, file uploads)
@@ -92,12 +99,14 @@ This roadmap outlines comprehensive UI/UX improvements and feature additions to 
    - Activity feed real-time insertion animations
 
 #### Files to Create/Update
+
 - Create `src/components/ui/confetti.tsx` - Confetti celebration component
 - Enhance `src/components/tasks/task-card.tsx` - Better hover states
 - Update `src/components/kanban/KanbanTask.tsx` - Improved drag feedback
 - Update `src/components/ui/toast.tsx` - Enhanced toast animations
 
 #### Success Criteria
+
 - [ ] Confetti triggers on task completion
 - [ ] All interactive elements have visual feedback
 - [ ] Page transitions feel smooth and polished
@@ -106,11 +115,13 @@ This roadmap outlines comprehensive UI/UX improvements and feature additions to 
 ---
 
 ### Sprint 1.3 - Advanced Keyboard Shortcuts
+
 **Priority:** High | **Complexity:** Low-Medium | **Duration:** 2-3 days
 
 #### Features
 
 **Global Shortcuts** (Windows/Linux primary, Mac in parentheses)
+
 - `Ctrl + N` (`Cmd + N`) - Quick create task
 - `Ctrl + Shift + P` (`Cmd + Shift + P`) - Quick create project
 - `Ctrl + K` (`Cmd + K`) - Open command palette (existing)
@@ -125,6 +136,7 @@ This roadmap outlines comprehensive UI/UX improvements and feature additions to 
 - `G then T` - Go to Tickets
 
 **Context-Specific Shortcuts** (when task/project is focused)
+
 - `E` - Edit selected task/project
 - `Del` or `Backspace` - Archive selected task
 - `C` - Mark task as complete
@@ -141,6 +153,7 @@ This roadmap outlines comprehensive UI/UX improvements and feature additions to 
 - `D` - Duplicate task
 
 **Shortcuts Help Modal**
+
 - Searchable keyboard shortcuts reference
 - Visual key combinations display (dynamically shows Ctrl or Cmd based on OS)
 - Categorized by context: Global, Tasks, Projects, Navigation
@@ -149,25 +162,30 @@ This roadmap outlines comprehensive UI/UX improvements and feature additions to 
 - Print-friendly layout
 
 #### OS Detection Implementation
+
 ```typescript
 // Detect OS for keyboard shortcuts
-const isMac = typeof navigator !== 'undefined' && 
+const isMac =
+  typeof navigator !== 'undefined' &&
   navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 const modKey = isMac ? '⌘' : 'Ctrl';
 const altModKey = isMac ? '⌥' : 'Alt';
 ```
 
 #### Files to Create
+
 - `src/hooks/useKeyboardShortcuts.ts` - Main keyboard shortcuts hook with OS detection
 - `src/components/ui/keyboard-shortcuts-modal.tsx` - Help modal with dynamic key display
 - `src/lib/keyboard-utils.ts` - Utility functions for key detection and formatting
 
 #### Files to Update
+
 - `src/app/providers.tsx` - Include global shortcut provider
 - `src/components/layout/topbar.tsx` - Add keyboard shortcut hint in footer or help icon
 - `src/components/layout/sidebar.tsx` - Show keyboard shortcuts in tooltips
 
 #### Success Criteria
+
 - [ ] All shortcuts work on both Windows and Mac
 - [ ] Shortcuts modal shows correct keys for user's OS
 - [ ] Vim-style navigation (G then X) works reliably
@@ -177,6 +195,7 @@ const altModKey = isMac ? '⌥' : 'Alt';
 ---
 
 ### Sprint 1.4 - Mobile Experience Overhaul ⭐ CRITICAL
+
 **Priority:** HIGHEST | **Complexity:** Medium | **Duration:** 3-5 days
 
 #### Feature 1: Mobile Status Picker (PRIMARY FEATURE)
@@ -186,6 +205,7 @@ const altModKey = isMac ? '⌥' : 'Alt';
 **Solution:** One-tap status change via bottom sheet modal.
 
 **Implementation:**
+
 1. **Disable Drag-and-Drop on Mobile**
    - Detect touch devices via CSS media query `@media (pointer: coarse)`
    - Disable `@dnd-kit` drag handlers on touch devices
@@ -226,31 +246,32 @@ const altModKey = isMac ? '⌥' : 'Alt';
 **Solution:** Fixed bottom footer with quick access icons.
 
 **Implementation:**
+
 ```tsx
 // Mobile Footer Navigation (visible only on screens < 1024px)
 <footer className="lg:hidden fixed bottom-0 inset-x-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/20 pb-safe z-40">
   <nav className="flex justify-around items-center h-16 safe-area-inset-bottom">
-    <IconButton 
-      icon={Menu} 
-      onClick={openSidebar} 
+    <IconButton
+      icon={Menu}
+      onClick={openSidebar}
       label="Menu"
       active={sidebarOpen}
     />
-    <IconButton 
-      icon={FolderKanban} 
-      href="/projects" 
+    <IconButton
+      icon={FolderKanban}
+      href="/projects"
       label="Projects"
       active={pathname === '/projects'}
     />
-    <IconButton 
-      icon={CalendarDays} 
-      href="/daily" 
+    <IconButton
+      icon={CalendarDays}
+      href="/daily"
       label="Daily"
       active={pathname === '/daily'}
     />
-    <IconButton 
-      icon={MessagesSquare} 
-      href="/tickets" 
+    <IconButton
+      icon={MessagesSquare}
+      href="/tickets"
       label="Tickets"
       active={pathname === '/tickets'}
     />
@@ -259,12 +280,14 @@ const altModKey = isMac ? '⌥' : 'Alt';
 ```
 
 **Footer Menu Items:**
+
 1. **Hamburger Menu (☰)** - Opens full sidebar menu
 2. **Projects (folder icon)** - Navigate to `/projects`
 3. **Daily (calendar icon)** - Navigate to `/daily`
 4. **Tickets (message icon)** - Navigate to `/tickets`
 
 **Features:**
+
 - Fixed position at bottom (always visible while scrolling)
 - Glass morphism styling to match app aesthetic
 - Active state highlighting (icon and text color change)
@@ -273,35 +296,41 @@ const altModKey = isMac ? '⌥' : 'Alt';
 - Hidden on desktop (≥1024px)
 
 **Remove from Mobile:**
+
 - Hamburger icon from topbar (move entirely to footer)
 - Mobile sidebar trigger from top-left
 
 #### Feature 3: Additional Mobile Improvements
 
 **Touch Gestures:**
+
 - Swipe left on task card to quickly mark complete
 - Swipe right on task card to snooze (move to tomorrow)
 - Long press on task for context menu
 - Pull-to-refresh on task lists
 
 **Mobile UI Optimizations:**
+
 - Bottom sheet modals instead of center modals (native feel)
 - Larger touch targets (minimum 44x44px per Apple/Google guidelines)
 - Simplified navigation patterns
 - Reduced cognitive load
 
 **Platform-Specific:**
+
 - **iOS:** Safari toolbar color matching via meta tags
 - **Android:** Material Design haptic feedback
 - **Both:** Native share sheet integration
 - **PWA:** Add to home screen prompts with custom splash screens
 
 #### Files to Create
+
 - `src/components/mobile/task-status-picker.tsx` ⭐ NEW - Bottom sheet status selector
 - `src/components/mobile/mobile-footer-nav.tsx` ⭐ NEW - Fixed footer navigation
 - `src/hooks/useTouchDevice.ts` - Device detection hook
 
 #### Files to Update
+
 - `src/components/kanban/KanbanBoard.tsx` - Disable drag-and-drop on mobile
 - `src/components/kanban/KanbanTask.tsx` - Add status change button for mobile
 - `src/components/layout/topbar.tsx` - Hide hamburger menu on mobile
@@ -309,6 +338,7 @@ const altModKey = isMac ? '⌥' : 'Alt';
 - `src/components/layout/sidebar.tsx` - Remove mobile open trigger from top
 
 #### Success Criteria
+
 - [ ] Drag-and-drop disabled on mobile (verified on iOS and Android)
 - [ ] Status picker opens smoothly with one tap
 - [ ] All statuses visible and selectable in bottom sheet
@@ -322,11 +352,13 @@ const altModKey = isMac ? '⌥' : 'Alt';
 ---
 
 ### Sprint 1.5 - Inline Editing & Quick Actions
+
 **Priority:** High | **Complexity:** Low-Medium | **Duration:** 2-3 days
 
 #### Features
 
 **1. Inline Editing**
+
 - Double-click task title to edit in place (no modal needed)
 - Click task description to edit inline
 - Inline due date picker with calendar dropdown
@@ -340,6 +372,7 @@ const altModKey = isMac ? '⌥' : 'Alt';
 - Escape key to cancel edit
 
 **2. Context Menus**
+
 - Right-click context menus for tasks and projects
 - Quick actions:
   - Complete Task
@@ -354,6 +387,7 @@ const altModKey = isMac ? '⌥' : 'Alt';
 - Keyboard shortcut hints shown in menu items
 
 **3. Drag & Drop Enhancements**
+
 - Drag tasks between projects in sidebar
 - Drag files onto tasks for attachment
 - Drag subtasks to reorder within task
@@ -362,15 +396,18 @@ const altModKey = isMac ? '⌥' : 'Alt';
 - Snap-to-grid for cleaner alignment
 
 #### Files to Create
+
 - `src/components/ui/inline-edit.tsx` - Reusable inline edit component
 - `src/components/ui/context-menu.tsx` - Context menu component (or use Radix UI)
 
 #### Files to Update
+
 - `src/components/tasks/task-card.tsx` - Add inline edit capabilities
 - `src/components/tasks/TaskDetailsModal.tsx` - Inline editing for description
 - `src/components/projects/ProjectTile.tsx` - Quick edit for project name
 
 #### Success Criteria
+
 - [ ] Double-click triggers inline edit mode
 - [ ] Auto-save works reliably with debouncing
 - [ ] Context menu appears on right-click
@@ -382,6 +419,7 @@ const altModKey = isMac ? '⌥' : 'Alt';
 ## Phase 2: Productivity & Time Management
 
 ### Sprint 2.1 - Recurring Tasks & Templates
+
 **Priority:** High | **Complexity:** Medium-High | **Duration:** 4-5 days
 
 #### Features
@@ -391,20 +429,23 @@ const altModKey = isMac ? '⌥' : 'Alt';
 Create tasks that automatically repeat on a schedule.
 
 **Recurrence Patterns:**
+
 - **Daily:** Every day, every X days
 - **Weekly:** Specific days of week (Mon/Wed/Fri)
-- **Monthly:** 
+- **Monthly:**
   - Specific date (e.g., 15th of every month)
   - Relative (e.g., first Monday, last Friday)
 - **Yearly:** Annual tasks (birthdays, renewals)
 - **Custom:** Every X days/weeks/months
 
 **End Conditions:**
+
 - Never (infinite recurrence)
 - After X occurrences (e.g., repeat 10 times)
 - By specific date (e.g., end on Dec 31, 2025)
 
 **Features:**
+
 - Skip weekends option
 - Auto-generation of next occurrence on completion
 - Edit future occurrences:
@@ -418,6 +459,7 @@ Create tasks that automatically repeat on a schedule.
 Save common tasks as reusable templates.
 
 **Features:**
+
 - Save any task as template (with subtasks)
 - Personal template library
 - Template categories/tags for organization
@@ -439,6 +481,7 @@ Save common tasks as reusable templates.
 Save entire project structures as templates.
 
 **Features:**
+
 - Save project with all tasks as template
 - Include task hierarchy and default statuses
 - Adjust dates automatically when creating from template
@@ -452,6 +495,7 @@ Save entire project structures as templates.
 #### Database Changes
 
 **Add to `tasks` table:**
+
 ```sql
 ALTER TABLE tasks ADD COLUMN is_recurring BOOLEAN DEFAULT FALSE;
 ALTER TABLE tasks ADD COLUMN recurrence_rule JSONB; -- RRULE format (RFC 5545)
@@ -460,6 +504,7 @@ ALTER TABLE tasks ADD COLUMN next_occurrence DATE;
 ```
 
 **Create `task_templates` table:**
+
 ```sql
 CREATE TABLE task_templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -475,6 +520,7 @@ CREATE TABLE task_templates (
 ```
 
 **Create `project_templates` table:**
+
 ```sql
 CREATE TABLE project_templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -489,6 +535,7 @@ CREATE TABLE project_templates (
 ```
 
 #### Files to Create
+
 - `src/components/tasks/recurring-task-modal.tsx` - Recurrence rule editor UI
 - `src/components/tasks/task-template-modal.tsx` - Template creation/editing
 - `src/components/projects/project-template-modal.tsx` - Project template UI
@@ -497,6 +544,7 @@ CREATE TABLE project_templates (
 - `src/server/trpc/routers/recurring.ts` - Recurring task logic
 
 #### Success Criteria
+
 - [ ] Create recurring task with daily/weekly/monthly patterns
 - [ ] Next occurrence auto-generates on task completion
 - [ ] Save task as template with subtasks
@@ -507,6 +555,7 @@ CREATE TABLE project_templates (
 ---
 
 ### Sprint 2.2 - Calendar View & Scheduling
+
 **Priority:** Very High | **Complexity:** High | **Duration:** 5-7 days
 
 #### Features
@@ -570,11 +619,10 @@ Intuitive scheduling via drag-and-drop:
 
 **5. External Calendar Integration**
 
-- **Google Calendar Import:** 
+- **Google Calendar Import:**
   - Import iCal (.ics) file
   - One-way sync (read-only)
   - Map Google Calendar events to all-day tasks
-  
 - **Export to .ics:**
   - Export tasks to iCal format
   - Subscribe to feed in external calendar apps
@@ -583,6 +631,7 @@ Intuitive scheduling via drag-and-drop:
 #### Libraries Consideration
 
 Evaluate these calendar libraries:
+
 - `react-big-calendar` - Most popular, good feature set
 - `fullcalendar` - Feature-rich but heavier
 - `react-calendar` - Lightweight, good for custom builds
@@ -591,6 +640,7 @@ Evaluate these calendar libraries:
 **Recommendation:** Start with `react-big-calendar` for rapid development, customize as needed.
 
 #### Files to Create
+
 - `src/app/(app)/calendar/page.tsx` - Main calendar page
 - `src/components/calendar/calendar-view.tsx` - Calendar component wrapper
 - `src/components/calendar/month-view.tsx` - Month grid view
@@ -602,6 +652,7 @@ Evaluate these calendar libraries:
 - `src/server/trpc/routers/calendar.ts` - Calendar-specific queries
 
 #### Success Criteria
+
 - [ ] Month view displays all tasks on correct dates
 - [ ] Week view shows time-blocked tasks
 - [ ] Drag tasks from sidebar onto dates
@@ -616,11 +667,13 @@ Evaluate these calendar libraries:
 ## Phase 3: Enhanced Collaboration Features (Single User)
 
 ### Sprint 3.1 - Enhanced Notifications & Activity Feed
+
 **Priority:** Medium | **Complexity:** Low-Medium | **Duration:** 2-3 days
 
 #### Features
 
 **1. Notification Preferences**
+
 - Granular settings per notification type:
   - Task reminders
   - Due date approaching
@@ -636,6 +689,7 @@ Evaluate these calendar libraries:
 - Custom notification sounds (select from library)
 
 **2. Rich Notifications**
+
 - Action buttons in notifications:
   - Complete Task
   - Snooze (reschedule)
@@ -650,6 +704,7 @@ Evaluate these calendar libraries:
 - Notification history (last 30 days)
 
 **3. Activity Feed Improvements**
+
 - Real-time updates with smooth animations
 - Filter by activity type:
   - Created
@@ -662,12 +717,14 @@ Evaluate these calendar libraries:
 - Undo recent actions from activity feed (5-minute window)
 
 #### Files to Update
+
 - `src/components/notifications/NotificationPanel.tsx` - Add action buttons
 - Create `src/components/notifications/notification-settings.tsx`
 - `src/app/(app)/settings/page.tsx` - Add notification preferences section
 - `src/components/activity/ActivityFeed.tsx` - Enhanced filtering
 
 #### Success Criteria
+
 - [ ] Notification preferences saved and respected
 - [ ] Action buttons in notifications work
 - [ ] Activity feed shows real-time updates
@@ -676,6 +733,7 @@ Evaluate these calendar libraries:
 ---
 
 ### Sprint 3.2 - Task Comments & Rich Notes
+
 **Priority:** Medium | **Complexity:** Low-Medium | **Duration:** 2-3 days
 
 #### Features
@@ -722,6 +780,7 @@ Similar to GitHub issue comments:
 #### Database Changes
 
 **Create `task_comments` table:**
+
 ```sql
 CREATE TABLE task_comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -740,15 +799,18 @@ CREATE INDEX idx_task_comments_created_at ON task_comments(created_at DESC);
 ```
 
 #### Files to Create
+
 - `src/components/tasks/task-comments.tsx` - Comments list and thread
 - `src/components/tasks/comment-editor.tsx` - Rich text editor with markdown
 - `src/components/tasks/comment-item.tsx` - Individual comment display
 
 #### Files to Update
+
 - `src/components/tasks/TaskDetailsModal.tsx` - Add comments section at bottom
 - `src/server/trpc/routers/comments.ts` - Comment CRUD operations
 
 #### Success Criteria
+
 - [ ] Add comment with markdown formatting
 - [ ] Attach files to comments
 - [ ] Pin important comments
@@ -760,6 +822,7 @@ CREATE INDEX idx_task_comments_created_at ON task_comments(created_at DESC);
 ## Phase 4: Advanced Features & Integrations
 
 ### Sprint 4.1 - File Attachments for Tasks
+
 **Priority:** Medium | **Complexity:** Low-Medium | **Duration:** 2-3 days
 
 #### Features
@@ -804,6 +867,7 @@ CREATE INDEX idx_task_comments_created_at ON task_comments(created_at DESC);
 #### Database Changes
 
 **Create `task_attachments` table:**
+
 ```sql
 CREATE TABLE task_attachments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -821,17 +885,20 @@ CREATE INDEX idx_task_attachments_task_id ON task_attachments(task_id);
 ```
 
 #### Files to Create
+
 - `src/components/tasks/task-attachments.tsx` - Attachments grid display
 - `src/components/tasks/file-uploader.tsx` - Drag-and-drop upload component
 - `src/components/ui/file-preview.tsx` - File preview modal with lightbox
 - `src/lib/file-utils.ts` - File type detection and formatting utilities
 
 #### Files to Update
+
 - `src/components/tasks/TaskDetailsModal.tsx` - Add attachments section
 - `src/server/trpc/routers/attachments.ts` - Create new router for file operations
 - `src/app/api/upload/route.ts` - File upload endpoint (Vercel Blob)
 
 #### Success Criteria
+
 - [ ] Drag and drop files onto task modal
 - [ ] Image previews load with thumbnails
 - [ ] PDF inline preview works
@@ -842,6 +909,7 @@ CREATE INDEX idx_task_attachments_task_id ON task_attachments(task_id);
 ---
 
 ### Sprint 4.2 - Advanced Search & Saved Views
+
 **Priority:** High | **Complexity:** Medium | **Duration:** 3-4 days
 
 #### Features
@@ -934,6 +1002,7 @@ Create and manage custom views:
 #### Database Changes
 
 **Create `saved_views` table:**
+
 ```sql
 CREATE TABLE saved_views (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -953,6 +1022,7 @@ CREATE INDEX idx_saved_views_view_type ON saved_views(view_type);
 ```
 
 #### Files to Create
+
 - `src/components/search/advanced-search-builder.tsx` - Filter builder UI
 - `src/components/search/saved-views-manager.tsx` - Saved views CRUD
 - `src/components/search/quick-filters.tsx` - Smart view buttons
@@ -960,11 +1030,13 @@ CREATE INDEX idx_saved_views_view_type ON saved_views(view_type);
 - `src/lib/search-utils.ts` - Search query parsing and formatting
 
 #### Files to Update
+
 - `src/components/search/CommandPalette.tsx` - Enhanced search with filters
 - `src/server/trpc/routers/search.ts` - Add advanced search endpoint
 - `src/server/trpc/routers/views.ts` - Create new router for saved views
 
 #### Success Criteria
+
 - [ ] Build multi-criteria search query
 - [ ] Save custom view with name
 - [ ] Set default view for board page
@@ -975,6 +1047,7 @@ CREATE INDEX idx_saved_views_view_type ON saved_views(view_type);
 ---
 
 ### Sprint 4.3 - Slack Integration (Simplified)
+
 **Priority:** High | **Complexity:** Medium | **Duration:** 3-4 days
 
 #### Features
@@ -1015,6 +1088,7 @@ Bot commands for task management:
 Rich task cards in Slack with action buttons:
 
 **Task Card Format:**
+
 ```
 📋 Task: Fix login bug
 Project: Website | Priority: P1 | Due: Oct 31
@@ -1027,6 +1101,7 @@ Users reporting login issues on mobile devices...
 ```
 
 **Features:**
+
 - Task title with emoji based on status
 - Project name, priority, due date
 - Truncated description (first 100 chars)
@@ -1041,6 +1116,7 @@ Users reporting login issues on mobile devices...
 Convert Slack messages into tasks:
 
 **Method 1: Emoji Reaction**
+
 - React with :memo: emoji to any message
 - Bot sends ephemeral message: "Create task from this message?"
 - Confirm to create task with message content
@@ -1050,12 +1126,14 @@ Convert Slack messages into tasks:
   - Link back to Slack message (deep link)
 
 **Method 2: Message Action**
+
 - Right-click message → Apps → TaskTracker → Create Task
 - Opens modal with pre-filled content
 - Select project, priority, due date
 - Submit to create
 
 **Features:**
+
 - Preserve message formatting (markdown)
 - Include message author as note
 - Link back to original Slack thread
@@ -1064,6 +1142,7 @@ Convert Slack messages into tasks:
 #### Implementation
 
 **OAuth Flow:**
+
 1. User clicks "Connect Slack" in settings
 2. Redirects to Slack OAuth page
 3. User authorizes workspace access
@@ -1071,6 +1150,7 @@ Convert Slack messages into tasks:
 5. Tokens stored encrypted in database
 
 **Slash Command Handling:**
+
 1. Slack sends POST to webhook endpoint
 2. Validate request signature
 3. Parse command and parameters
@@ -1078,6 +1158,7 @@ Convert Slack messages into tasks:
 5. Return formatted response to Slack
 
 **Interactive Button Handling:**
+
 1. User clicks button in Slack
 2. Slack sends interaction payload
 3. Validate and parse payload
@@ -1085,6 +1166,7 @@ Convert Slack messages into tasks:
 5. Update message in Slack
 
 **Security:**
+
 - Validate Slack request signatures
 - Encrypt tokens at rest (AES-256)
 - Rate limiting: 60 requests/minute per user
@@ -1094,6 +1176,7 @@ Convert Slack messages into tasks:
 #### Database Changes
 
 **Create `slack_integrations` table:**
+
 ```sql
 CREATE TABLE slack_integrations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1111,6 +1194,7 @@ CREATE INDEX idx_slack_integrations_user_id ON slack_integrations(user_id);
 ```
 
 **Add to `tasks` table:**
+
 ```sql
 ALTER TABLE tasks ADD COLUMN slack_message_id TEXT;
 ALTER TABLE tasks ADD COLUMN slack_channel_id TEXT;
@@ -1120,6 +1204,7 @@ ALTER TABLE tasks ADD COLUMN slack_thread_ts TEXT;
 #### Files to Create
 
 **Server-side:**
+
 - `src/server/integrations/slack/commands.ts` - Slash command handlers
 - `src/server/integrations/slack/actions.ts` - Interactive button handlers
 - `src/server/integrations/slack/events.ts` - Event handlers (message reactions)
@@ -1128,17 +1213,20 @@ ALTER TABLE tasks ADD COLUMN slack_thread_ts TEXT;
 - `src/lib/encryption.ts` - Token encryption/decryption
 
 **API Routes:**
+
 - `src/app/api/integrations/slack/oauth/route.ts` - OAuth callback
 - `src/app/api/integrations/slack/commands/route.ts` - Slash command webhook
 - `src/app/api/integrations/slack/interactions/route.ts` - Button interactions
 - `src/app/api/integrations/slack/events/route.ts` - Event subscriptions
 
 **Client-side:**
+
 - `src/app/(app)/settings/integrations/page.tsx` - Slack connection UI
 - `src/components/integrations/slack-connect.tsx` - OAuth button
 - `src/components/integrations/slack-status.tsx` - Connection status display
 
 **tRPC Router:**
+
 - `src/server/trpc/routers/integrations.ts` - Integration management endpoints
 
 #### Libraries/Dependencies
@@ -1151,6 +1239,7 @@ ALTER TABLE tasks ADD COLUMN slack_thread_ts TEXT;
 ```
 
 #### Success Criteria
+
 - [ ] Connect Slack workspace via OAuth
 - [ ] `/task create` command works
 - [ ] `/task list` shows tasks from project
@@ -1166,6 +1255,7 @@ ALTER TABLE tasks ADD COLUMN slack_thread_ts TEXT;
 ## Phase 5: Data Visualization & AI
 
 ### Sprint 5.1 - Advanced Analytics Dashboard
+
 **Priority:** Medium-High | **Complexity:** Medium-High | **Duration:** 5-7 days
 
 #### Features
@@ -1215,7 +1305,7 @@ Charts and insights for personal productivity:
 Per-project insights:
 
 - **Project Health Scores**
-  - Algorithm: 
+  - Algorithm:
     - Overdue tasks: -10 points each
     - Blocked tasks: -5 points each
     - Velocity vs target: ±20 points
@@ -1224,8 +1314,8 @@ Per-project insights:
 
 - **At-Risk Projects**
   - Auto-detection criteria:
-    - >20% tasks overdue
-    - >3 tasks blocked for >5 days
+    - > 20% tasks overdue
+    - > 3 tasks blocked for >5 days
     - Velocity declining for 2+ weeks
   - Alert badge with warning icon
   - Recommended actions from AI
@@ -1334,6 +1424,7 @@ Use Recharts library (built on D3):
 ```
 
 #### Success Criteria
+
 - [ ] Tasks completed chart shows accurate data
 - [ ] Project health scores calculated correctly
 - [ ] Heatmap shows productivity patterns
@@ -1345,6 +1436,7 @@ Use Recharts library (built on D3):
 ---
 
 ### Sprint 5.2 - AI Insights & Recommendations
+
 **Priority:** Very High | **Complexity:** High | **Duration:** 7-10 days
 
 #### Features
@@ -1354,27 +1446,32 @@ Use Recharts library (built on D3):
 AI-powered productivity insights:
 
 **Pattern Detection:**
+
 - "You complete most tasks on Wednesday mornings (9-11am)"
 - "Your productivity peaks at 10am, drops after 2pm"
 - "You're 40% more productive on tasks tagged 'bug fix'"
 - "Monday mornings are your least productive time"
 
 **Bottleneck Identification:**
+
 - "Tasks in 'QA' status take 2x longer than expected"
 - "You have 5 tasks blocked for >5 days - time to unblock?"
 - "'Design' tasks average 3 days longer than estimated"
 
 **Project Completion Prediction:**
+
 - "Project X likely to finish 3 days late based on current velocity"
 - "At current pace, you'll complete 8 tasks this week (goal: 10)"
 - "Project Y is ahead of schedule - consider starting next phase"
 
 **Risk Assessment:**
+
 - "5 high-priority tasks due tomorrow - consider rescheduling"
 - "You have 12 tasks 'In Progress' - focus on completing existing work?"
 - "3 projects have no activity for 7+ days - archive or resume?"
 
 **Anomaly Detection:**
+
 - "Task ABC is taking unusually long (5 days vs 2-hour average for similar tasks)"
 - "You completed only 2 tasks this week (average: 8)"
 - "Unusual spike in task creation - are you overwhelmed?"
@@ -1384,26 +1481,31 @@ AI-powered productivity insights:
 AI suggests actionable improvements:
 
 **Estimation Accuracy:**
+
 - "You tend to overestimate 'bug fix' tasks by 40% - adjust estimates"
 - "Your 'feature' tasks consistently take 2x longer than estimated"
 - "Consider using smaller time blocks for better accuracy"
 
 **Task Management:**
+
 - "Consider breaking this task into subtasks (high complexity detected)"
 - "This task has been 'In Progress' for 14 days - set a deadline?"
 - "5 tasks have no due date - schedule them to prevent forgetting"
 
 **Project Health:**
+
 - "Project X is at risk of missing deadline - prioritize these 3 critical tasks"
 - "Project Y has 8 blocked tasks - hold a meeting to unblock"
 - "Consider archiving Project Z (no activity in 30 days)"
 
 **Scheduling Optimization:**
+
 - "You're most productive 9am-11am - schedule hard tasks then"
 - "You haven't taken a break in 3 hours - time for a pomodoro break"
 - "Friday afternoons are low-productivity - schedule light tasks"
 
 **Work-Life Balance:**
+
 - "You've worked 12 hours today - consider calling it a day"
 - "You haven't taken a day off in 3 weeks - schedule rest"
 - "Average work session: 4 hours - consider shorter, more frequent breaks"
@@ -1433,6 +1535,7 @@ AI-powered chat for asking questions:
   - AI: Lists all blocked tasks with reasons and durations
 
 **Chat Features:**
+
 - Persistent chat history
 - Context-aware (remembers conversation)
 - Quick action buttons in responses
@@ -1444,6 +1547,7 @@ AI-powered chat for asking questions:
 Machine learning for forecasting:
 
 **Task Completion Time Prediction:**
+
 - Train ML model on user's historical task data
 - Features: title length, description length, priority, role, subtask count, similar tasks
 - Predict completion time with confidence interval
@@ -1451,6 +1555,7 @@ Machine learning for forecasting:
 - Show prediction when creating new tasks
 
 **Project End Date Forecast:**
+
 - Based on current velocity
 - Factor in holidays, weekends
 - Multiple scenarios:
@@ -1460,6 +1565,7 @@ Machine learning for forecasting:
 - Confidence intervals (±X days)
 
 **Delay Prediction:**
+
 - Predict which tasks likely to be delayed
 - Risk factors:
   - Complexity indicators (long description, many subtasks)
@@ -1469,6 +1575,7 @@ Machine learning for forecasting:
 - Suggest mitigation strategies
 
 **Similar Task Identification:**
+
 - Find tasks similar to current task
 - Show actual completion time for similar tasks
 - Use for better estimation
@@ -1520,6 +1627,7 @@ Continuous improvement through user feedback:
    - Cosine similarity scoring
 
 **Data Pipeline:**
+
 1. Aggregate historical task data
 2. Feature engineering (extract signals)
 3. Train/update models weekly
@@ -1529,6 +1637,7 @@ Continuous improvement through user feedback:
 #### Database Changes
 
 **Create `ai_insights` table:**
+
 ```sql
 CREATE TABLE ai_insights (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1549,6 +1658,7 @@ CREATE INDEX idx_ai_insights_dismissed ON ai_insights(dismissed) WHERE NOT dismi
 ```
 
 **Create `ai_chat_history` table:**
+
 ```sql
 CREATE TABLE ai_chat_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1565,6 +1675,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
 #### Files to Create
 
 **AI Engine:**
+
 - `src/lib/ai/pattern-analyzer.ts` - Pattern detection algorithms
 - `src/lib/ai/insights-engine.ts` - Insight generation logic
 - `src/lib/ai/prediction-model.ts` - ML prediction models
@@ -1572,6 +1683,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
 - `src/lib/ai/similarity-engine.ts` - Find similar tasks
 
 **Components:**
+
 - `src/components/ai/ai-insights-panel.tsx` - Insights widget
 - `src/components/ai/insight-card.tsx` - Individual insight display
 - `src/components/ai/ai-chat.tsx` - Chat interface
@@ -1579,9 +1691,11 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
 - `src/components/ai/prediction-badge.tsx` - Show predicted time on tasks
 
 **Pages:**
+
 - `src/app/(app)/ai-assistant/page.tsx` - Full AI assistant page with chat
 
 **tRPC Router:**
+
 - `src/server/trpc/routers/ai.ts` - AI endpoints (insights, chat, predictions)
 
 #### Dependencies
@@ -1596,6 +1710,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
 ```
 
 #### Success Criteria
+
 - [ ] Insights panel shows relevant patterns
 - [ ] Chat responds to natural language queries
 - [ ] Task completion time prediction accurate within ±20%
@@ -1609,6 +1724,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
 ## Implementation Priority Matrix
 
 ### 🔥 Immediate Priority (Weeks 1-2)
+
 **Start Here - Maximum Impact**
 
 1. ⭐ **Mobile Kanban Status Picker + Footer Nav (Sprint 1.4)** - CRITICAL
@@ -1637,6 +1753,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
    - Better UX
 
 ### 🎯 High Priority (Weeks 3-6)
+
 **Core Productivity Features**
 
 1. **Calendar View (Sprint 2.2)**
@@ -1660,6 +1777,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
    - Power user feature
 
 ### 📈 Medium Priority (Weeks 7-10)
+
 **Enhanced Capabilities**
 
 1. **File Attachments (Sprint 4.1)**
@@ -1683,6 +1801,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
    - Identify patterns
 
 ### 🚀 Long-term Goals (Weeks 11+)
+
 **Advanced Intelligence**
 
 1. **AI Insights (Sprint 5.2)**
@@ -1707,6 +1826,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
 ### ❌ Not Included (Per Requirements)
 
 **Explicitly Removed:**
+
 - **Time Tracking System (Original Sprint 2.1)** - Complexity vs value, not primary use case
 - **Pomodoro Timer (Original Sprint 2.2)** - Niche feature, users can use external timers
 - **Tags & Custom Fields (Original Sprint 4.2)** - Roles already provide categorization
@@ -1725,6 +1845,7 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
 ### Architecture Decisions
 
 **1. Mobile Detection Strategy**
+
 ```typescript
 // Use CSS media query for reliable touch detection
 const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
@@ -1737,24 +1858,28 @@ const isMobileDevice = isTouchDevice || isMobile;
 ```
 
 **2. Bottom Sheet Implementation**
+
 - Use Radix UI Dialog with custom animations
 - Transform: translateY(100%) → translateY(0)
 - Backdrop blur: backdrop-filter: blur(8px)
 - iOS safe area: padding-bottom: env(safe-area-inset-bottom)
 
 **3. Keyboard Shortcut System**
+
 - Global event listener on `document`
 - Check `event.target` to avoid triggering in input fields
 - Support sequence shortcuts (G then D)
 - Handle OS detection for Ctrl vs Cmd
 
 **4. Calendar Integration**
+
 - Use `react-big-calendar` as base
 - Custom toolbar for better UX
 - Integrate with existing task query system
 - Store calendar view preference in localStorage
 
 **5. AI Model Training**
+
 - Train models server-side (Next.js API routes)
 - Store model weights in database (JSONB column)
 - Use TensorFlow.js for inference
@@ -1763,16 +1888,19 @@ const isMobileDevice = isTouchDevice || isMobile;
 ### Performance Optimizations
 
 **1. Virtual Scrolling**
+
 - Implement for lists >100 items
 - Use `react-window` or `react-virtual`
 - Lazy load images with Intersection Observer
 
 **2. Code Splitting**
+
 - Dynamic imports for heavy components (calendar, charts)
 - Route-based splitting (already done by Next.js)
 - Lazy load AI components until needed
 
 **3. Database Indexing**
+
 ```sql
 -- Add indexes for common queries
 CREATE INDEX idx_tasks_user_due ON tasks(user_id, due_date) WHERE NOT archived;
@@ -1781,6 +1909,7 @@ CREATE INDEX idx_tasks_weekly ON tasks(user_id, week_of) WHERE NOT archived;
 ```
 
 **4. Caching Strategy**
+
 - React Query: 30s staleTime (existing)
 - Memoize expensive calculations with `useMemo`
 - Cache AI predictions for 1 hour
@@ -1789,6 +1918,7 @@ CREATE INDEX idx_tasks_weekly ON tasks(user_id, week_of) WHERE NOT archived;
 ### Security Considerations
 
 **1. Slack Integration**
+
 ```typescript
 // Validate Slack request signatures
 import crypto from 'crypto';
@@ -1797,11 +1927,11 @@ function verifySlackRequest(request: Request, signingSecret: string): boolean {
   const timestamp = request.headers.get('x-slack-request-timestamp');
   const signature = request.headers.get('x-slack-signature');
   const body = await request.text();
-  
+
   const baseString = `v0:${timestamp}:${body}`;
   const hmac = crypto.createHmac('sha256', signingSecret);
   const computedSignature = `v0=${hmac.update(baseString).digest('hex')}`;
-  
+
   return crypto.timingSafeEqual(
     Buffer.from(signature),
     Buffer.from(computedSignature)
@@ -1810,6 +1940,7 @@ function verifySlackRequest(request: Request, signingSecret: string): boolean {
 ```
 
 **2. Token Encryption**
+
 ```typescript
 // Use AES-256-GCM for Slack tokens
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
@@ -1820,13 +1951,17 @@ const IV_LENGTH = 16;
 function encrypt(text: string): string {
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY), iv);
-  const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+  const encrypted = Buffer.concat([
+    cipher.update(text, 'utf8'),
+    cipher.final(),
+  ]);
   const authTag = cipher.getAuthTag();
   return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
 }
 ```
 
 **3. Rate Limiting**
+
 - Implement per-user rate limiting on AI endpoints
 - Use Redis or in-memory store (Upstash)
 - Limits:
@@ -1837,16 +1972,19 @@ function encrypt(text: string): string {
 ### Testing Strategy
 
 **1. Unit Tests (Vitest)**
+
 - Test utility functions (date-utils, keyboard-utils)
 - Test hooks (useKeyboardShortcuts, useTouchDevice)
 - Test AI logic (pattern-analyzer, insights-engine)
 
 **2. Integration Tests**
+
 - Test tRPC routers with mock database
 - Test Slack integration with mock Slack API
 - Test file upload flow
 
 **3. E2E Tests (Playwright)**
+
 - Critical user flows:
   - Create task on mobile → Change status via bottom sheet
   - Use keyboard shortcuts to navigate and create tasks
@@ -1855,6 +1993,7 @@ function encrypt(text: string): string {
 - Mobile-specific tests (viewport resize)
 
 **4. Visual Regression (Chromatic or Percy)**
+
 - Snapshot test all components in light/dark mode
 - Mobile and desktop viewports
 - Catch unintended styling changes
@@ -1862,6 +2001,7 @@ function encrypt(text: string): string {
 ### Monitoring & Observability
 
 **1. Error Tracking (Sentry)**
+
 ```typescript
 import * as Sentry from '@sentry/nextjs';
 
@@ -1873,6 +2013,7 @@ Sentry.init({
 ```
 
 **2. Performance Monitoring**
+
 - Vercel Analytics (Web Vitals)
 - Custom metrics:
   - Time to first task load
@@ -1881,6 +2022,7 @@ Sentry.init({
   - AI prediction latency
 
 **3. User Analytics (PostHog or Mixpanel)**
+
 - Track feature adoption:
   - % users using keyboard shortcuts
   - % users on mobile
@@ -1888,6 +2030,7 @@ Sentry.init({
   - Most-saved views
 
 **4. Logging (Better Stack or Axiom)**
+
 - Structured logging with context
 - Log levels: error, warn, info, debug
 - Include user ID, request ID, timestamp
@@ -1900,6 +2043,7 @@ Sentry.init({
 ### Phase-by-Phase Breakdown
 
 **Phase 1: Premium UI/UX Polish**
+
 - Sprint 1.1 (Dark Mode): 2-3 days
 - Sprint 1.2 (Animations): 2-3 days
 - Sprint 1.3 (Keyboard Shortcuts): 2-3 days
@@ -1908,37 +2052,45 @@ Sentry.init({
 - **Total: 11-17 days (2-3 weeks)**
 
 **Phase 2: Productivity Features**
+
 - Sprint 2.1 (Recurring Tasks): 4-5 days
 - Sprint 2.2 (Calendar View): 5-7 days
 - **Total: 9-12 days (2-3 weeks)**
 
 **Phase 3: Enhanced Features**
+
 - Sprint 3.1 (Notifications): 2-3 days
 - Sprint 3.2 (Comments): 2-3 days
 - **Total: 4-6 days (1 week)**
 
 **Phase 4: Integrations & Advanced**
+
 - Sprint 4.1 (File Attachments): 2-3 days
 - Sprint 4.2 (Advanced Search): 3-4 days
 - Sprint 4.3 (Slack Integration): 3-4 days
 - **Total: 8-11 days (2 weeks)**
 
 **Phase 5: Analytics & AI**
+
 - Sprint 5.1 (Analytics): 5-7 days
 - Sprint 5.2 (AI Insights): 7-10 days
 - **Total: 12-17 days (3-4 weeks)**
 
 ### Grand Total
+
 **11-16 weeks (2.5-4 months)** for complete roadmap
 
 ### Realistic Schedule (with buffer)
+
 - **Month 1:** Phase 1 (UI/UX Polish)
 - **Month 2:** Phase 2 (Productivity) + Phase 3 (Enhanced)
 - **Month 3:** Phase 4 (Integrations)
 - **Month 4:** Phase 5 (Analytics & AI)
 
 ### MVP Scope (Launch in 6 weeks)
+
 If prioritizing for fastest launch:
+
 1. Mobile Kanban Fix (1.4) - Week 1
 2. Keyboard Shortcuts (1.3) - Week 1
 3. Dark Mode (1.1) - Week 2
@@ -1951,16 +2103,18 @@ If prioritizing for fastest launch:
 ## Success Metrics
 
 ### User Engagement
+
 - **Daily Active Usage:** Track daily sessions
 - **Session Duration:** Average time per session (target: 30+ minutes)
 - **Tasks Created/Completed per Day:** Productivity indicator (target: 8+ tasks/day)
-- **Feature Adoption Rates:** 
+- **Feature Adoption Rates:**
   - % users enabling dark mode (target: 60%)
   - % users using keyboard shortcuts (target: 40%)
   - % mobile users using status picker (target: 90%)
   - % users with saved views (target: 50%)
 
 ### Performance
+
 - **Page Load Time:** < 2s (p95)
 - **Time to Interactive:** < 3s
 - **API Response Time:** < 200ms (p95)
@@ -1968,12 +2122,14 @@ If prioritizing for fastest launch:
 - **Calendar Render Time:** < 1s for 100 tasks
 
 ### Quality
+
 - **Bug Rate:** < 5% per release
 - **Zero Critical Bugs:** No showstoppers in production
 - **User Satisfaction:** Self-assessment surveys (target: 8+/10)
 - **Feature Request Velocity:** Time from request to implementation
 
 ### AI Performance
+
 - **Prediction Accuracy:** Task completion time within ±20% (target: 70% accuracy)
 - **Insight Helpfulness:** Positive feedback rate (target: 60%)
 - **Chat Response Quality:** Successful query resolution rate (target: 80%)
@@ -2014,16 +2170,19 @@ If prioritizing for fastest launch:
 ### Sprint Planning
 
 **Sprint 1 (Week 1-2): Mobile Critical + Quick Wins**
+
 - 1.4: Mobile Kanban Status Picker + Footer Nav (5 days)
 - 1.3: Keyboard Shortcuts (3 days)
 - 1.1: Dark Mode (2 days)
 
 **Sprint 2 (Week 3-4): Animations + Inline Editing**
+
 - 1.2: Enhanced Animations (3 days)
 - 1.5: Inline Editing (3 days)
 - Testing and polish (2 days)
 
 **Sprint 3 (Week 5-7): Productivity Core**
+
 - 2.1: Recurring Tasks & Templates (5 days)
 - 2.2: Calendar View (7 days)
 
@@ -2032,16 +2191,19 @@ If prioritizing for fastest launch:
 ### Communication Plan
 
 **Weekly Updates:**
+
 - Every Monday: Sprint planning and review
 - Daily standup notes (async via Slack)
 - Demo completed features every Friday
 
 **Documentation:**
+
 - Update SYSTEM-ARCHITECTURE.md after each phase
 - Create user-facing documentation (help docs)
 - Maintain changelog in CHANGELOG.md
 
 **Feedback Loop:**
+
 - Collect user feedback via in-app widget
 - Weekly review of feature requests
 - Monthly retrospective on roadmap progress
@@ -2063,6 +2225,7 @@ If prioritizing for fastest launch:
 ### B. References
 
 **Design Inspiration:**
+
 - Linear (keyboard shortcuts, command palette)
 - Notion (inline editing, databases)
 - Todoist (recurring tasks, natural language)
@@ -2070,6 +2233,7 @@ If prioritizing for fastest launch:
 - Height (AI features, insights)
 
 **Technical Resources:**
+
 - [react-big-calendar docs](https://jquense.github.io/react-big-calendar/examples/index.html)
 - [Slack API documentation](https://api.slack.com/)
 - [RFC 5545 (iCalendar)](https://tools.ietf.org/html/rfc5545)
@@ -2079,6 +2243,7 @@ If prioritizing for fastest launch:
 ### C. Change Log
 
 **v1.0.0 - October 30, 2025**
+
 - Initial roadmap created
 - All 5 phases defined with 13 sprints
 - Mobile-first enhancements prioritized
@@ -2092,4 +2257,3 @@ If prioritizing for fastest launch:
 **Next Review:** After Sprint 3 completion  
 **Owner:** Development Team  
 **Stakeholders:** Product, Engineering, Design
-

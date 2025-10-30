@@ -72,6 +72,7 @@ SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 ```
 
 **Generate NEXTAUTH_SECRET:**
+
 ```bash
 # On Windows PowerShell:
 [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
@@ -107,28 +108,33 @@ pnpm dev
 ## 🧪 DIAGNOSTIC ENDPOINTS CREATED
 
 **Test Database:**
+
 ```
 GET http://localhost:3000/api/health/db
 ```
 
 **Check User:**
+
 ```
 GET http://localhost:3000/api/admin/check-user?email=bamabybee@gmail.com
 ```
 
 **Test Password:**
+
 ```
 POST http://localhost:3000/api/admin/test-login
 Body: {"email": "bamabybee@gmail.com", "password": "FieldTripAR15!!."}
 ```
 
 **Reset Password:**
+
 ```
 POST http://localhost:3000/api/admin/reset-password
 Body: {"email": "bamabybee@gmail.com", "newPassword": "NewPassword123!"}
 ```
 
 **Setup/Diagnostic Page:**
+
 ```
 http://localhost:3000/setup
 ```
@@ -138,6 +144,7 @@ http://localhost:3000/setup
 ## 📁 FILES CREATED
 
 ### Diagnostic Tools:
+
 1. `src/app/api/health/db/route.ts` - Database health check
 2. `src/app/api/admin/check-user/route.ts` - User lookup
 3. `src/app/api/admin/test-login/route.ts` - Login testing
@@ -145,6 +152,7 @@ http://localhost:3000/setup
 5. `src/app/setup/page.tsx` - Setup/diagnostic page
 
 ### Modified:
+
 1. `src/server/auth/index.ts` - Enhanced logging + fallback secret
 2. `src/middleware.ts` - Added `/setup` to public routes
 
@@ -159,6 +167,7 @@ http://localhost:3000/setup
 Temporarily bypass NextAuth for testing:
 
 1. Comment out middleware protection:
+
    ```typescript
    // src/middleware.ts
    export const config = {
@@ -175,6 +184,7 @@ If credentials provider continues to fail, switch to NextAuth's built-in email p
 **Option C: Check Environment Variables**
 
 Verify environment variables are loaded:
+
 ```typescript
 // Add to src/app/api/debug/env/route.ts
 export async function GET() {
@@ -182,7 +192,7 @@ export async function GET() {
     hasSecret: !!process.env.NEXTAUTH_SECRET,
     hasUrl: !!process.env.NEXTAUTH_URL,
     url: process.env.NEXTAUTH_URL,
-    nodeEnv: process.env.NODE_ENV
+    nodeEnv: process.env.NODE_ENV,
   });
 }
 ```
@@ -192,6 +202,7 @@ export async function GET() {
 ## 📊 TEST RESULTS
 
 **Password Test:** ✅ PASS
+
 ```json
 {
   "success": true,
@@ -207,6 +218,7 @@ export async function GET() {
 ```
 
 **Database Test:** ✅ PASS
+
 ```json
 {
   "ok": true,
@@ -216,6 +228,7 @@ export async function GET() {
 ```
 
 **User Exists:** ✅ PASS
+
 ```json
 {
   "exists": true,
@@ -229,6 +242,7 @@ export async function GET() {
 ```
 
 **Session Cookie:** ❌ FAIL
+
 - No cookies being set
 - Session not persisting
 
@@ -236,7 +250,7 @@ export async function GET() {
 
 ## 💡 LIKELY SOLUTION
 
-The most common cause is **missing or incorrect NEXTAUTH_SECRET**. 
+The most common cause is **missing or incorrect NEXTAUTH_SECRET**.
 
 Once you verify the `.env` file has the correct variables and restart the server, login should work immediately.
 
@@ -245,12 +259,13 @@ Once you verify the `.env` file has the correct variables and restart the server
 ## 📞 SUPPORT
 
 If login still doesn't work after following all steps:
+
 1. Check the browser console for errors
 2. Check the terminal/server logs for NextAuth errors
 3. Try the alternative authentication options above
 4. Verify `.env` file exists and is being loaded
 
 **Your credentials are correct and ready to use:**
+
 - Email: `bamabybee@gmail.com`
 - Password: `FieldTripAR15!!.`
-

@@ -396,22 +396,88 @@ export const taskAttachments = pgTable('task_attachments', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => ({
-  task: one(tasks, {
-    fields: [taskAttachments.taskId],
-    references: [tasks.id],
-  }),
-  uploader: one(users, {
-    fields: [taskAttachments.uploadedBy],
-    references: [users.id],
-  }),
-}));
+export const taskAttachmentsRelations = relations(
+  taskAttachments,
+  ({ one }) => ({
+    task: one(tasks, {
+      fields: [taskAttachments.taskId],
+      references: [tasks.id],
+    }),
+    uploader: one(users, {
+      fields: [taskAttachments.uploadedBy],
+      references: [users.id],
+    }),
+  })
+);
 
 export type TaskAttachment = typeof taskAttachments.$inferSelect;
 export type NewTaskAttachment = typeof taskAttachments.$inferInsert;
 
-// Import notification, activity, chat, and analytics schemas
+// Saved Views table
+export const savedViews = pgTable('saved_views', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  viewType: text('view_type', {
+    enum: ['board', 'dashboard', 'calendar', 'list'],
+  }).notNull(),
+  filters: jsonb('filters').notNull(), // Filter criteria object
+  sortBy: text('sort_by'),
+  sortOrder: text('sort_order', { enum: ['asc', 'desc'] }),
+  isDefault: boolean('is_default').default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const savedViewsRelations = relations(savedViews, ({ one }) => ({
+  user: one(users, {
+    fields: [savedViews.userId],
+    references: [users.id],
+  }),
+}));
+
+export type SavedView = typeof savedViews.$inferSelect;
+export type NewSavedView = typeof savedViews.$inferInsert;
+
+// Slack integrations table
+export const slackIntegrations = pgTable('slack_integrations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  teamId: text('team_id').notNull(), // Slack team/workspace ID
+  teamName: text('team_name').notNull(),
+  accessToken: text('access_token').notNull(), // Encrypted in production
+  botUserId: text('bot_user_id'),
+  botAccessToken: text('bot_access_token'), // Encrypted in production
+  scope: text('scope'),
+  webhookUrl: text('webhook_url'),
+  webhookChannel: text('webhook_channel'),
+  webhookChannelId: text('webhook_channel_id'),
+  isActive: boolean('is_active').default(true),
+  settings: jsonb('settings'), // Additional settings like notification preferences
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const slackIntegrationsRelations = relations(
+  slackIntegrations,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [slackIntegrations.userId],
+      references: [users.id],
+    }),
+  })
+);
+
+export type SlackIntegration = typeof slackIntegrations.$inferSelect;
+export type NewSlackIntegration = typeof slackIntegrations.$inferInsert;
+
+// Import notification, activity, chat, analytics, and comments schemas
 export * from './schema/notifications';
 export * from './schema/activity';
 export * from './schema/chat';
 export * from './schema/analytics';
+export * from './schema/comments';

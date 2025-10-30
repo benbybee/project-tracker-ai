@@ -37,6 +37,7 @@ A new "Debug Link" button provides detailed information about what the system is
 ### 3. **Enhanced Logging**
 
 Console logs now provide step-by-step information about:
+
 - Which extraction method succeeded
 - API endpoint attempts
 - HTML parsing results
@@ -55,12 +56,14 @@ Console logs now provide step-by-step information about:
 Look for these key indicators:
 
 #### ✅ Good Signs
+
 - **Has Next.js Data**: Yes ✅
 - **Has Plaud Branding**: Yes ✅
 - **Potential Audio URLs Found**: > 0
 - **API Endpoint Results**: At least one with Status 200 ✅
 
 #### ⚠️ Warning Signs
+
 - **Has Next.js Data**: No ❌ (page might be client-side rendered)
 - **Potential Audio URLs Found**: 0 (audio might be loaded dynamically)
 - **All API endpoints fail**: 404 or other errors
@@ -68,6 +71,7 @@ Look for these key indicators:
 ### Step 3: Inspect API Results
 
 Expand the "API Endpoint Results" section:
+
 - Check which endpoints returned 200 OK
 - Look for JSON responses
 - Examine the preview data for audio URLs
@@ -75,6 +79,7 @@ Expand the "API Endpoint Results" section:
 ### Step 4: Check Console Logs
 
 Open browser DevTools (F12) and check the Console tab for:
+
 - `[Plaud]` prefixed log messages
 - Which extraction method was attempted
 - Any error messages
@@ -86,8 +91,9 @@ Open browser DevTools (F12) and check the Console tab for:
 **Likely Cause**: Plaud updated their website structure
 
 **Solution**:
+
 1. Run the debug feature
-2. Check the "HTML Snippet" and "Next.js Data Preview" 
+2. Check the "HTML Snippet" and "Next.js Data Preview"
 3. Look for patterns in the data structure
 4. Update `src/lib/plaud-import.ts` with new extraction patterns
 
@@ -96,6 +102,7 @@ Open browser DevTools (F12) and check the Console tab for:
 **Likely Cause**: The audio file requires authentication
 
 **Possible Solutions**:
+
 - The share link might be private
 - Try sharing the recording again with public access
 - Check if the link works in an incognito browser window
@@ -105,6 +112,7 @@ Open browser DevTools (F12) and check the Console tab for:
 **Likely Cause**: Plaud doesn't expose these API endpoints or they've changed
 
 **Solution**:
+
 - The system falls back to HTML scraping automatically
 - If HTML scraping also fails, check the debug info for the actual page structure
 
@@ -160,8 +168,8 @@ if (match && match[1]) {
 ## Questions or Issues?
 
 If you continue to have issues:
+
 1. Make sure you're using a public Plaud share link
 2. Test the link in an incognito window to ensure it's publicly accessible
 3. Use the debug feature and check what data is actually being returned
 4. Check if Plaud has changed their share page structure
-

@@ -1,7 +1,17 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { tasks, projects } from '@/server/db/schema';
-import { sql } from 'drizzle-orm';
+import {
+  sql,
+  and,
+  or,
+  like,
+  gte,
+  lte,
+  inArray,
+  isNull,
+  isNotNull,
+} from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import OpenAI from 'openai';
 
@@ -22,6 +32,7 @@ function getOpenAIClient(): OpenAI | null {
 }
 
 export const searchRouter = createTRPCRouter({
+  // Semantic search using embeddings
   query: protectedProcedure
     .input(z.object({ q: z.string().min(2), topK: z.number().default(10) }))
     .query(async ({ input, ctx }) => {
@@ -76,6 +87,151 @@ export const searchRouter = createTRPCRouter({
         return results;
       } catch (error) {
         console.error('Search error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Search failed',
+        });
+      }
+    }),
+
+  // Advanced filtered search
+  advancedSearch: protectedProcedure
+    .input(
+      z.object({
+        query: z.string().optional(),
+        statuses: z.array(z.string()).optional(),
+        priorities: z.array(z.string()).optional(),
+        roleIds: z.array(z.string()).optional(),
+        assigneeIds: z.array(z.string()).optional(),
+        projectIds: z.array(z.string()).optional(),
+        dueDateFrom: z.date().optional(),
+        dueDateTo: z.date().optional(),
+        hasNoDueDate: z.boolean().optional(),
+        limit: z.number().default(50),
+        offset: z.number().default(0),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      try {
+        // Build WHERE conditions
+        const conditions = [];
+
+        // Text search
+        if (input.query && input.query.length >= 2) {
+          conditions.push(
+            or(
+              like(tasks.title, `%${input.query}%`),
+              like(tasks.description, `%${input.query}%`)
+            )
+          );
+        }
+
+        // Status filter
+        if (input.statuses && input.statuses.length > 0) {
+          conditions.push(inArray(tasks.status, input.statuses));
+        }
+
+        // Priority filter
+        if (input.priorities && input.priorities.length > 0) {
+          conditions.push(inArray(tasks.priority, input.priorities));
+        }
+
+        // Role filter
+        if (input.roleIds && input.roleIds.length > 0) {
+          conditions.push(inArray(tasks.roleId, input.roleIds));
+        }
+
+        // Assignee filter
+        if (input.assigneeIds && input.assigneeIds.length > 0) {
+          conditions.push(inArray(tasks.assigneeId, input.assigneeIds));
+        }
+
+        // Project filter
+        if (input.projectIds && input.projectIds.length > 0) {
+          conditions.push(inArray(tasks.projectId, input.projectIds));
+        }
+
+        // Due date range filter
+        if (input.dueDateFrom) {
+          conditions.push(gte(tasks.dueDate, input.dueDateFrom));
+        }
+        if (input.dueDateTo) {
+          conditions.push(lte(tasks.dueDate, input.dueDateTo));
+        }
+
+        // No due date filter
+        if (input.hasNoDueDate) {
+          conditions.push(isNull(tasks.dueDate));
+        } else if (input.dueDateFrom || input.dueDateTo) {
+          // If date range specified, exclude null dates
+          conditions.push(isNotNull(tasks.dueDate));
+        }
+
+        // Execute query
+        const results = await ctx.db
+          .select()
+          .from(tasks)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .limit(input.limit)
+          .offset(input.offset);
+
+        // Get total count for pagination
+        const [countResult] = await ctx.db
+          .select({ count: sql<number>`count(*)` })
+          .from(tasks)
+          .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+        return {
+          tasks: results,
+          total: Number(countResult?.count || 0),
+          hasMore: Number(countResult?.count || 0) > input.offset + input.limit,
+        };
+      } catch (error) {
+        console.error('Advanced search error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Search failed',
+        });
+      }
+    }),
+
+  // Quick search (simple text search without filters)
+  quickSearch: protectedProcedure
+    .input(z.object({ q: z.string().min(1), limit: z.number().default(10) }))
+    .query(async ({ input, ctx }) => {
+      try {
+        // Search both tasks and projects
+        const taskResults = await ctx.db
+          .select()
+          .from(tasks)
+          .where(
+            or(
+              like(tasks.title, `%${input.q}%`),
+              like(tasks.description, `%${input.q}%`)
+            )
+          )
+          .limit(input.limit);
+
+        const projectResults = await ctx.db
+          .select()
+          .from(projects)
+          .where(
+            or(
+              like(projects.name, `%${input.q}%`),
+              like(projects.description, `%${input.q}%`)
+            )
+          )
+          .limit(input.limit);
+
+        return {
+          tasks: taskResults.map((t) => ({ kind: 'task' as const, item: t })),
+          projects: projectResults.map((p) => ({
+            kind: 'project' as const,
+            item: p,
+          })),
+        };
+      } catch (error) {
+        console.error('Quick search error:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Search failed',

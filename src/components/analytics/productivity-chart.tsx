@@ -35,7 +35,7 @@ export function ProductivityChart({
   const chartData = React.useMemo(() => {
     if (!showMovingAverage || data.length < 3) return data;
 
-    const counts = data.map(d => d.count);
+    const counts = data.map((d) => d.count);
     const movingAvg = calculateMovingAverage(counts, 7);
 
     return data.map((d, i) => ({
@@ -47,10 +47,10 @@ export function ProductivityChart({
   // Calculate trend
   const trend = React.useMemo(() => {
     if (data.length < 2) return 'stable';
-    
+
     const recent = data.slice(-7).reduce((sum, d) => sum + d.count, 0);
     const previous = data.slice(-14, -7).reduce((sum, d) => sum + d.count, 0);
-    
+
     if (recent > previous * 1.1) return 'increasing';
     if (recent < previous * 0.9) return 'decreasing';
     return 'stable';
@@ -68,7 +68,9 @@ export function ProductivityChart({
         <div className="flex flex-col items-center justify-center h-64 text-slate-500 dark:text-slate-400">
           <TrendingUp className="h-12 w-12 mb-3 opacity-30" />
           <p className="text-sm">No completed tasks in this time period</p>
-          <p className="text-xs mt-1">Complete some tasks to see productivity trends</p>
+          <p className="text-xs mt-1">
+            Complete some tasks to see productivity trends
+          </p>
         </div>
       </div>
     );
@@ -83,9 +85,19 @@ export function ProductivityChart({
             {title}
           </h3>
           <div className="flex items-center gap-4 mt-1 text-sm text-slate-600 dark:text-slate-400">
-            <span>Total: <span className="font-semibold text-slate-900 dark:text-slate-100">{total}</span></span>
+            <span>
+              Total:{' '}
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
+                {total}
+              </span>
+            </span>
             <span>•</span>
-            <span>Avg: <span className="font-semibold text-slate-900 dark:text-slate-100">{average}/day</span></span>
+            <span>
+              Avg:{' '}
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
+                {average}/day
+              </span>
+            </span>
           </div>
         </div>
 
@@ -97,8 +109,8 @@ export function ProductivityChart({
               trend === 'increasing'
                 ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
                 : trend === 'decreasing'
-                ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
-                : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600'
+                  ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
+                  : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-600'
             }
           `}
         >
@@ -119,11 +131,17 @@ export function ProductivityChart({
           <XAxis
             dataKey="date"
             className="text-xs"
-            tick={{ fill: 'currentColor', className: 'fill-slate-600 dark:fill-slate-400' }}
+            tick={{
+              fill: 'currentColor',
+              className: 'fill-slate-600 dark:fill-slate-400',
+            }}
           />
           <YAxis
             className="text-xs"
-            tick={{ fill: 'currentColor', className: 'fill-slate-600 dark:fill-slate-400' }}
+            tick={{
+              fill: 'currentColor',
+              className: 'fill-slate-600 dark:fill-slate-400',
+            }}
           />
           <Tooltip
             contentStyle={{
@@ -134,9 +152,7 @@ export function ProductivityChart({
             }}
             labelStyle={{ fontWeight: 600, marginBottom: '4px' }}
           />
-          <Legend
-            wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-          />
+          <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
           <Line
             type="monotone"
             dataKey="count"
@@ -162,4 +178,3 @@ export function ProductivityChart({
     </div>
   );
 }
-

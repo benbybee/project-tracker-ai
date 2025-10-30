@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { db } from '@/server/db';
 import { notifications, notificationSettings, tasks } from '@/server/db/schema';
-import { eq, desc, and, sql, isNull } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 
 export const notificationsRouter = createTRPCRouter({
   // Get user notifications with grouping support
@@ -169,7 +169,11 @@ export const notificationsRouter = createTRPCRouter({
               eq(tasks.userId, ctx.session.user.id)
             )
           );
-      } else if (input.actionType === 'snooze' && input.taskId && input.snoozeDays) {
+      } else if (
+        input.actionType === 'snooze' &&
+        input.taskId &&
+        input.snoozeDays
+      ) {
         const newDueDate = new Date();
         newDueDate.setDate(newDueDate.getDate() + input.snoozeDays);
 
@@ -282,7 +286,9 @@ export const notificationsRouter = createTRPCRouter({
       z.object({
         typePreferences: z.record(z.boolean()).optional(),
         emailEnabled: z.boolean().optional(),
-        emailFrequency: z.enum(['realtime', 'daily', 'weekly', 'never']).optional(),
+        emailFrequency: z
+          .enum(['realtime', 'daily', 'weekly', 'never'])
+          .optional(),
         emailDigestTime: z.number().min(0).max(23).optional(),
         pushEnabled: z.boolean().optional(),
         quietHoursEnabled: z.boolean().optional(),

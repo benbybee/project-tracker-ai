@@ -3,6 +3,7 @@
 ## ⚠️ WARNING
 
 This script will **DELETE ALL DATA** from your database:
+
 - All users
 - All roles
 - All projects
@@ -19,6 +20,7 @@ This script will **DELETE ALL DATA** from your database:
 ## Prerequisites
 
 1. Make sure you have a `.env` file in your project root with `DATABASE_URL` configured:
+
    ```env
    DATABASE_URL=postgresql://username:password@host:port/database_name
    ```
@@ -46,6 +48,7 @@ node scripts/reset-database.mjs
 ## What Happens
 
 The script will:
+
 1. Connect to your database
 2. Delete all data from all tables in the correct order (respecting foreign key constraints)
 3. Display progress for each table
@@ -54,6 +57,7 @@ The script will:
 ## After Reset
 
 After the database is reset:
+
 1. You can create a new user account from scratch
 2. All authentication sessions will be invalid
 3. You'll start with a completely clean database
@@ -61,8 +65,8 @@ After the database is reset:
 ## Need Help?
 
 If you encounter any errors, check:
+
 - ✅ `.env` file exists and has correct DATABASE_URL
 - ✅ Database is accessible
 - ✅ You have the necessary permissions
 - ✅ `postgres` npm package is installed
-

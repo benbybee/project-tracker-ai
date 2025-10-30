@@ -15,6 +15,7 @@ This guide is kept for historical reference only.
 ## Historical Information (No Longer Applicable)
 
 ~~After resetting the database with `pnpm db:reset`, you may still see old tasks, projects, or other data in the UI. This happens because the application uses **IndexedDB** for offline storage, which persists in your browser even after:
+
 - Database reset
 - Hard refresh (Ctrl + Shift + R)
 - Clearing React Query cache~~
@@ -28,7 +29,7 @@ This guide is kept for historical reference only.
 3. **Click on the Console tab**
 4. **Run this command:**
    ```javascript
-   window.clearAppStorage()
+   window.clearAppStorage();
    ```
 5. **Wait for confirmation** messages in the console
 6. **Hard refresh** the page: `Ctrl + Shift + R` (Windows) or `Cmd + Shift + R` (Mac)
@@ -102,6 +103,7 @@ The application uses **Dexie.js** (IndexedDB wrapper) for offline-first function
 ### What Gets Cleared
 
 When you run `window.clearAppStorage()`:
+
 - ✅ IndexedDB database (`tasktracker-v1`)
 - ✅ localStorage
 - ✅ sessionStorage
@@ -111,6 +113,7 @@ When you run `window.clearAppStorage()`:
 The IndexedDB database name is: `tasktracker-v1`
 
 You can verify it's deleted by:
+
 1. F12 → Application tab (Chrome)
 2. Look under IndexedDB in left sidebar
 3. Should see **no databases** listed
@@ -120,6 +123,7 @@ You can verify it's deleted by:
 ### "window.clearAppStorage is not a function"
 
 **Solution:** The page hasn't fully loaded the utility yet.
+
 1. Wait 2-3 seconds after page load
 2. Try the command again
 3. If still not working, use Manual Method 2 above
@@ -127,6 +131,7 @@ You can verify it's deleted by:
 ### Still Seeing Old Data After Clearing
 
 **Solution:**
+
 1. Close **ALL tabs** with the application
 2. Reopen browser
 3. Clear storage again using Manual Method 2
@@ -135,6 +140,7 @@ You can verify it's deleted by:
 ### IndexedDB Deletion Blocked
 
 **Solution:**
+
 1. Close all tabs running the application
 2. Wait 5 seconds
 3. Try clearing again
@@ -146,6 +152,7 @@ To avoid this issue in the future:
 
 1. **Always clear browser storage** after database reset
 2. **Add to your reset workflow:**
+
    ```bash
    pnpm db:reset
    # Then open browser console and run:
@@ -169,8 +176,8 @@ To avoid this issue in the future:
 **Need Help?**
 
 If you're still seeing old data after following this guide:
+
 1. Check browser console for errors
 2. Try incognito/private browsing mode
 3. Verify database was actually reset (check with `pnpm db:studio`)
 4. Clear browser storage using **both** methods above
-

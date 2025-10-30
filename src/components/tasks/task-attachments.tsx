@@ -6,13 +6,31 @@
  */
 
 import { useState } from 'react';
-import { File, Image as ImageIcon, FileText, Code, Archive, Trash2, Eye, Download } from 'lucide-react';
-import { formatFileSize, getFileCategory, getFileCategoryColor } from '@/lib/file-utils';
-import { FilePreview, type FilePreviewFile } from '@/components/ui/file-preview';
+import {
+  File,
+  Image as ImageIcon,
+  FileText,
+  Code,
+  Archive,
+  Trash2,
+  Eye,
+  Download,
+  PackageOpen,
+} from 'lucide-react';
+import {
+  formatFileSize,
+  getFileCategory,
+  getFileCategoryColor,
+} from '@/lib/file-utils';
+import {
+  FilePreview,
+  type FilePreviewFile,
+} from '@/components/ui/file-preview';
 import { FileUploader } from './file-uploader';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import JSZip from 'jszip';
 
 interface TaskAttachmentsProps {
   taskId: string;
@@ -23,9 +41,12 @@ export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
   const utils = trpc.useUtils();
   const [previewFile, setPreviewFile] = useState<FilePreviewFile | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [downloadingZip, setDownloadingZip] = useState(false);
 
   // Fetch attachments
-  const { data: attachments = [], isLoading } = trpc.attachments.list.useQuery({ taskId });
+  const { data: attachments = [], isLoading } = trpc.attachments.list.useQuery({
+    taskId,
+  });
 
   // Create attachment mutation
   const createMutation = trpc.attachments.create.useMutation({
@@ -75,7 +96,7 @@ export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
   };
 
   // Handle preview
-  const handlePreview = (attachment: typeof attachments[number]) => {
+  const handlePreview = (attachment: (typeof attachments)[number]) => {
     setPreviewFile({
       id: attachment.id,
       fileName: attachment.fileName,
@@ -91,7 +112,7 @@ export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
   const handleNavigate = (direction: 'prev' | 'next') => {
     const currentIndex = attachments.findIndex((a) => a.id === previewFile?.id);
     const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
-    
+
     if (newIndex >= 0 && newIndex < attachments.length) {
       const attachment = attachments[newIndex];
       setPreviewFile({
@@ -102,6 +123,49 @@ export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
         url: attachment.url,
         thumbnailUrl: attachment.thumbnailUrl,
       });
+    }
+  };
+
+  // Download all attachments as ZIP
+  const handleDownloadAll = async () => {
+    if (attachments.length === 0) return;
+
+    setDownloadingZip(true);
+    toast.info('Preparing ZIP file...');
+
+    try {
+      const zip = new JSZip();
+
+      // Download and add each file to ZIP
+      for (const attachment of attachments) {
+        try {
+          const response = await fetch(attachment.url);
+          const blob = await response.blob();
+          zip.file(attachment.fileName, blob);
+        } catch (error) {
+          console.error(`Failed to download ${attachment.fileName}:`, error);
+        }
+      }
+
+      // Generate ZIP
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+      // Download ZIP
+      const url = window.URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `task-${taskId}-attachments.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('ZIP file downloaded successfully');
+    } catch (error) {
+      console.error('Failed to create ZIP:', error);
+      toast.error('Failed to create ZIP file');
+    } finally {
+      setDownloadingZip(false);
     }
   };
 
@@ -132,6 +196,44 @@ export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
         onUploadSuccess={handleUploadSuccess}
         onUploadError={(error) => toast.error(error)}
       />
+
+      {/* Download All Button */}
+      {attachments.length > 1 && (
+        <div className="flex justify-end">
+          <button
+            onClick={handleDownloadAll}
+            disabled={downloadingZip}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+          >
+            {downloadingZip ? (
+              <>
+                <svg className="w-4 h-4 mr-2 animate-spin" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Creating ZIP...
+              </>
+            ) : (
+              <>
+                <PackageOpen className="w-4 h-4 mr-2" />
+                Download All ({attachments.length})
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Attachments Grid */}
       {isLoading ? (
@@ -242,4 +344,3 @@ export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
     </div>
   );
 }
-

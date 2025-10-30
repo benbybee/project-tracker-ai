@@ -360,4 +360,175 @@ export const analyticsRouter = createTRPCRouter({
         totalSuggestions: suggestions.length,
       };
     }),
+
+  // Get comprehensive dashboard analytics
+  getDashboardAnalytics: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.date(),
+        endDate: z.date(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Get all completed task analytics in the date range
+      const completedTasks = await db
+        .select({
+          analytics: taskAnalytics,
+          task: tasks,
+        })
+        .from(taskAnalytics)
+        .leftJoin(tasks, eq(taskAnalytics.taskId, tasks.id))
+        .where(
+          and(
+            eq(taskAnalytics.userId, userId),
+            gte(taskAnalytics.completedAt, input.startDate),
+            gte(taskAnalytics.completedAt, input.endDate)
+          )
+        );
+
+      // Calculate daily completion counts
+      const dailyCounts = new Map<string, number>();
+      completedTasks.forEach((item) => {
+        if (item.analytics.completedAt) {
+          const date = item.analytics.completedAt.toISOString().split('T')[0];
+          dailyCounts.set(date, (dailyCounts.get(date) || 0) + 1);
+        }
+      });
+
+      // Calculate hourly/daily heatmap data
+      const heatmapData = new Map<string, number>();
+      completedTasks.forEach((item) => {
+        if (item.analytics.completedAt) {
+          const date = new Date(item.analytics.completedAt);
+          const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
+            date.getDay()
+          ];
+          const hour = date.getHours();
+          const key = `${day}-${hour}`;
+          heatmapData.set(key, (heatmapData.get(key) || 0) + 1);
+        }
+      });
+
+      return {
+        dailyCounts: Array.from(dailyCounts.entries()).map(([date, count]) => ({
+          date,
+          count,
+        })),
+        heatmapData: Array.from(heatmapData.entries()).map(([key, count]) => {
+          const [day, hour] = key.split('-');
+          return { day, hour: parseInt(hour), count };
+        }),
+        totalCompleted: completedTasks.length,
+      };
+    }),
+
+  // Get AI-powered insights and predictions
+  getAiInsights: protectedProcedure.query(async ({ ctx }) => {
+    const { patternAnalyzer } = await import('@/lib/ai/pattern-analyzer');
+    const { predictiveEngine } = await import('@/lib/ai/predictive-engine');
+
+    const userId = ctx.session.user.id;
+
+    // Get user patterns
+    const patterns = await patternAnalyzer.getStoredPatterns(userId);
+
+    // If no patterns exist, analyze them first
+    let userPatterns = patterns;
+    if (!userPatterns) {
+      try {
+        userPatterns = await patternAnalyzer.analyzeUserPatterns(userId);
+      } catch (error) {
+        console.error('[Analytics] Error analyzing patterns:', error);
+        userPatterns = null;
+      }
+    }
+
+    // Get workload analysis
+    const workloadAnalysis = await predictiveEngine.analyzeWorkload(userId);
+
+    // Get weekly forecast
+    const weeklyForecast = await predictiveEngine.getWeeklyForecast(userId);
+
+    // Get high-risk tasks
+    const activeTasks = await db
+      .select()
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.userId, userId),
+          eq(tasks.archived, false),
+          sql`${tasks.status} IN ('not_started', 'in_progress')`
+        )
+      )
+      .limit(20);
+
+    const riskAssessments = await Promise.all(
+      activeTasks.map((task) =>
+        predictiveEngine.assessTaskRisk(userId, task.id)
+      )
+    );
+
+    const highRiskTasks = riskAssessments
+      .filter(
+        (r) => r && (r.riskLevel === 'high' || r.riskLevel === 'critical')
+      )
+      .slice(0, 5);
+
+    return {
+      patterns: userPatterns,
+      workload: workloadAnalysis,
+      weeklyForecast,
+      highRiskTasks,
+    };
+  }),
+
+  // Get prediction for a specific task
+  getTaskPrediction: protectedProcedure
+    .input(z.object({ taskId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { predictiveEngine } = await import('@/lib/ai/predictive-engine');
+
+      const [prediction, risk] = await Promise.all([
+        predictiveEngine.predictCompletionDate(
+          ctx.session.user.id,
+          input.taskId
+        ),
+        predictiveEngine.assessTaskRisk(ctx.session.user.id, input.taskId),
+      ]);
+
+      return {
+        prediction,
+        risk,
+      };
+    }),
+
+  // Submit feedback on AI suggestion
+  submitAiFeedback: protectedProcedure
+    .input(
+      z.object({
+        suggestionId: z.string(),
+        accepted: z.boolean(),
+        feedback: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const updated = await db
+        .update(aiSuggestions)
+        .set({
+          accepted: input.accepted,
+          feedback: input.feedback,
+          respondedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(aiSuggestions.id, input.suggestionId),
+            eq(aiSuggestions.userId, ctx.session.user.id)
+          )
+        )
+        .returning();
+
+      return updated[0];
+    }),
 });

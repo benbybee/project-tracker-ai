@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { ActivityItem } from './ActivityItem';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -11,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RefreshCw, Filter } from 'lucide-react';
+import { RefreshCw, Filter, Search, Undo2, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ActivityFeedProps {
   projectId?: string;
@@ -40,8 +42,11 @@ export function ActivityFeed({
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [actionType, setActionType] = useState<ActionType | 'all'>('all');
   const [targetType, setTargetType] = useState<TargetType | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [limit, setLimit] = useState(20);
   const [hasNewUpdates, setHasNewUpdates] = useState(false);
+
+  const utils = trpc.useUtils();
 
   const {
     data: activities,
@@ -56,6 +61,18 @@ export function ActivityFeed({
     limit,
   });
 
+  const undoActionMutation = trpc.activity.undoAction.useMutation({
+    onSuccess: () => {
+      toast.success('Action undone successfully');
+      refetch();
+      utils.tasks.list.invalidate();
+      utils.projects.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleLoadMore = () => {
     setLimit((prev) => prev + 20);
   };
@@ -65,28 +82,65 @@ export function ActivityFeed({
     refetch();
   };
 
+  const handleUndo = async (activityId: string) => {
+    await undoActionMutation.mutateAsync({ activityId });
+  };
+
+  const handleClearFilters = () => {
+    setDateRange('all');
+    setActionType('all');
+    setTargetType('all');
+    setSearchQuery('');
+  };
+
+  const isFiltered =
+    dateRange !== 'all' ||
+    actionType !== 'all' ||
+    targetType !== 'all' ||
+    searchQuery !== '';
+
+  // Filter activities by search query
+  const filteredActivities = useMemo(() => {
+    if (!activities || !searchQuery) return activities || [];
+
+    const query = searchQuery.toLowerCase();
+    return activities.filter((activity) => {
+      const payload = JSON.stringify(activity.payload || {}).toLowerCase();
+      const targetType = activity.targetType?.toLowerCase() || '';
+      const action = activity.action?.toLowerCase() || '';
+
+      return (
+        payload.includes(query) ||
+        targetType.includes(query) ||
+        action.includes(query)
+      );
+    });
+  }, [activities, searchQuery]);
+
   // Smart grouping by time buckets
   const groupedActivities = useMemo(() => {
-    if (!activities) return {};
+    if (!filteredActivities) return {};
 
     const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
     const groups: Record<string, any[]> = {
-      'Just now': [],
+      'Recent (Undo available)': [],
       'Earlier today': [],
       Yesterday: [],
       'This week': [],
       Older: [],
     };
 
-    activities.forEach((activity) => {
+    filteredActivities.forEach((activity) => {
       const activityDate = new Date(activity.createdAt);
       const diffMinutes =
         (now.getTime() - activityDate.getTime()) / (1000 * 60);
       const diffHours = diffMinutes / 60;
       const diffDays = diffHours / 24;
 
-      if (diffMinutes < 5) {
-        groups['Just now'].push(activity);
+      // Within 5 minutes - undo available
+      if (activityDate >= fiveMinutesAgo) {
+        groups['Recent (Undo available)'].push(activity);
       } else if (diffHours < 24 && activityDate.getDate() === now.getDate()) {
         groups['Earlier today'].push(activity);
       } else if (diffDays < 2 && activityDate.getDate() === now.getDate() - 1) {
@@ -102,7 +156,7 @@ export function ActivityFeed({
     return Object.fromEntries(
       Object.entries(groups).filter(([, items]) => items.length > 0)
     );
-  }, [activities]);
+  }, [filteredActivities]);
 
   if (isLoading) {
     return (
@@ -123,69 +177,115 @@ export function ActivityFeed({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Header with filters */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center space-x-2 flex-wrap gap-2">
-          <Filter className="h-4 w-4 text-gray-500" />
-
-          <Select
-            value={dateRange}
-            onValueChange={(value: any) => setDateRange(value)}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={targetType}
-            onValueChange={(value: any) => setTargetType(value)}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="task">Tasks</SelectItem>
-              <SelectItem value="project">Projects</SelectItem>
-              <SelectItem value="sync">Syncs</SelectItem>
-              <SelectItem value="system">System</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={actionType}
-            onValueChange={(value: any) => setActionType(value)}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Action" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Actions</SelectItem>
-              <SelectItem value="created">Created</SelectItem>
-              <SelectItem value="updated">Updated</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="deleted">Deleted</SelectItem>
-              <SelectItem value="synced">Synced</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Header with search and filters */}
+      <div className="space-y-3">
+        {/* Search bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search activity..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          className="flex items-center space-x-1"
-        >
-          <RefreshCw className="h-3 w-3" />
-          <span>Refresh</span>
-        </Button>
+        {/* Filters */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+
+            <Select
+              value={dateRange}
+              onValueChange={(value: any) => setDateRange(value)}
+            >
+              <SelectTrigger className="w-32 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={targetType}
+              onValueChange={(value: any) => setTargetType(value)}
+            >
+              <SelectTrigger className="w-32 h-8">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="task">Tasks</SelectItem>
+                <SelectItem value="project">Projects</SelectItem>
+                <SelectItem value="comment">Comments</SelectItem>
+                <SelectItem value="sync">Syncs</SelectItem>
+                <SelectItem value="system">System</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={actionType}
+              onValueChange={(value: any) => setActionType(value)}
+            >
+              <SelectTrigger className="w-32 h-8">
+                <SelectValue placeholder="Action" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Actions</SelectItem>
+                <SelectItem value="created">Created</SelectItem>
+                <SelectItem value="updated">Updated</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="deleted">Deleted</SelectItem>
+                <SelectItem value="commented">Commented</SelectItem>
+                <SelectItem value="synced">Synced</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {isFiltered && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-8 text-xs"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear filters
+              </Button>
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="flex items-center space-x-1 h-8"
+          >
+            <RefreshCw className="h-3 w-3" />
+            <span>Refresh</span>
+          </Button>
+        </div>
+
+        {/* Results count */}
+        {isFiltered && (
+          <div className="text-sm text-gray-600">
+            Found {filteredActivities?.length || 0} matching{' '}
+            {filteredActivities?.length === 1 ? 'activity' : 'activities'}
+          </div>
+        )}
       </div>
 
       {/* New updates banner */}
@@ -212,23 +312,70 @@ export function ActivityFeed({
       <div className="space-y-6">
         {Object.keys(groupedActivities).length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <p>No activity yet</p>
-            <p className="text-sm">Activity will appear here as you work</p>
+            {isFiltered ? (
+              <>
+                <p className="font-medium">No matching activity found</p>
+                <p className="text-sm mt-1">Try adjusting your filters</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="mt-3"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear filters
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="font-medium">No activity yet</p>
+                <p className="text-sm mt-1">
+                  Activity will appear here as you work
+                </p>
+              </>
+            )}
           </div>
         ) : (
           Object.entries(groupedActivities).map(
             ([groupName, groupActivities]) => (
               <div key={groupName} className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-600 px-3">
-                  {groupName}
-                </h3>
+                <div className="flex items-center justify-between px-3">
+                  <h3 className="text-sm font-semibold text-gray-600">
+                    {groupName}
+                  </h3>
+                  {groupName === 'Recent (Undo available)' && (
+                    <span className="text-xs text-gray-500">
+                      {groupActivities.length}{' '}
+                      {groupActivities.length === 1 ? 'action' : 'actions'}
+                    </span>
+                  )}
+                </div>
                 <div className="space-y-1">
                   {groupActivities.map((activity: any) => (
-                    <ActivityItem
-                      key={activity.id}
-                      activity={activity}
-                      showProject={!projectId}
-                    />
+                    <div key={activity.id} className="group relative">
+                      <ActivityItem
+                        activity={activity}
+                        showProject={!projectId}
+                      />
+                      {/* Undo button for recent actions */}
+                      {groupName === 'Recent (Undo available)' &&
+                        (activity.action === 'deleted' ||
+                          activity.action === 'updated' ||
+                          activity.action === 'completed') && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleUndo(activity.id)}
+                              disabled={undoActionMutation.isPending}
+                              className="h-7 text-xs"
+                            >
+                              <Undo2 className="h-3 w-3 mr-1" />
+                              Undo
+                            </Button>
+                          </div>
+                        )}
+                    </div>
                   ))}
                 </div>
               </div>

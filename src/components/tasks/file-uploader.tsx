@@ -7,7 +7,11 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Upload, X, AlertCircle, Loader2 } from 'lucide-react';
-import { formatFileSize, validateFiles, FILE_SIZE_LIMITS } from '@/lib/file-utils';
+import {
+  formatFileSize,
+  validateFiles,
+  FILE_SIZE_LIMITS,
+} from '@/lib/file-utils';
 import { cn } from '@/lib/utils';
 
 interface FileUploaderProps {
@@ -49,7 +53,10 @@ export function FileUploader({
       if (disabled) return;
 
       // Validate files
-      const validation = validateFiles(Array.from(files), existingFileCount + uploadingFiles.length);
+      const validation = validateFiles(
+        Array.from(files),
+        existingFileCount + uploadingFiles.length
+      );
       if (!validation.valid) {
         onUploadError?.(validation.error || 'Invalid files');
         return;
@@ -95,7 +102,9 @@ export function FileUploader({
 
           // Remove from uploading after delay
           setTimeout(() => {
-            setUploadingFiles((prev) => prev.filter((f) => f.file !== upload.file));
+            setUploadingFiles((prev) =>
+              prev.filter((f) => f.file !== upload.file)
+            );
           }, 1000);
         } catch (error: any) {
           // Mark as error
@@ -111,17 +120,27 @@ export function FileUploader({
         }
       }
     },
-    [taskId, existingFileCount, uploadingFiles.length, onUploadSuccess, onUploadError, disabled]
+    [
+      taskId,
+      existingFileCount,
+      uploadingFiles.length,
+      onUploadSuccess,
+      onUploadError,
+      disabled,
+    ]
   );
 
   // Drag and drop handlers
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!disabled) {
-      setIsDragging(true);
-    }
-  }, [disabled]);
+  const handleDragEnter = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!disabled) {
+        setIsDragging(true);
+      }
+    },
+    [disabled]
+  );
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -208,8 +227,9 @@ export function FileUploader({
               Drop files here or click to browse
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Max {formatFileSize(FILE_SIZE_LIMITS.MAX_FILE_SIZE)} per file • {remainingSlots}{' '}
-              {remainingSlots === 1 ? 'slot' : 'slots'} available
+              Max {formatFileSize(FILE_SIZE_LIMITS.MAX_FILE_SIZE)} per file •{' '}
+              {remainingSlots} {remainingSlots === 1 ? 'slot' : 'slots'}{' '}
+              available
             </p>
           </div>
         </div>
@@ -254,7 +274,9 @@ export function FileUploader({
                     {formatFileSize(upload.file.size)}
                   </p>
                   {upload.error && (
-                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">{upload.error}</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                      {upload.error}
+                    </p>
                   )}
                 </div>
               </div>
@@ -277,4 +299,3 @@ export function FileUploader({
     </div>
   );
 }
-

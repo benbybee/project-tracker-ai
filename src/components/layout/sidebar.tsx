@@ -33,6 +33,7 @@ const nav = [
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/daily', label: 'Daily', icon: CalendarDays },
   { href: '/notes', label: 'Notes', icon: FileText },
+  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/summary', label: 'Summary', icon: BarChart3 },
   { href: '/projects/website', label: 'Website Boards', icon: Globe },
   { href: '/plaud', label: 'Plaud AI', icon: Bot },
