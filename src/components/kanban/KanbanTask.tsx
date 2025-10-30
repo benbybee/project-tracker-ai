@@ -3,18 +3,24 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Task } from '@/types/task';
+import { Task, TaskStatus } from '@/types/task';
 import { TaskEditModal } from '@/components/tasks/TaskEditModal';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseDateAsLocal } from '@/lib/date-utils';
+import { TaskStatusPicker } from '@/components/mobile/task-status-picker';
+import { trpc } from '@/lib/trpc';
+import { useRealtime } from '@/app/providers';
 
 interface KanbanTaskProps {
   task: Task;
+  isTouchDevice?: boolean;
 }
 
-export function KanbanTask({ task }: KanbanTaskProps) {
+export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
   const [editOpen, setEditOpen] = useState(false);
+  const [statusPickerOpen, setStatusPickerOpen] = useState(false);
+  const realtime = useRealtime();
 
   const {
     attributes,
@@ -26,6 +32,15 @@ export function KanbanTask({ task }: KanbanTaskProps) {
   } = useSortable({
     id: task.id,
     data: { task, col: task.status },
+    disabled: isTouchDevice, // Disable drag on touch devices
+  });
+
+  const utils = trpc.useUtils();
+  const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
   });
 
   const style = {
@@ -56,25 +71,60 @@ export function KanbanTask({ task }: KanbanTaskProps) {
     return map[priority];
   };
 
+  const handleStatusChange = async (newStatus: TaskStatus) => {
+    if (newStatus === task.status) return;
+
+    try {
+      await updateTask.mutateAsync({
+        id: task.id,
+        status: newStatus,
+      });
+
+      // Broadcast real-time update
+      realtime.broadcastActivity({
+        type: 'task_updated',
+        entityType: 'task',
+        entityId: task.id,
+        data: {
+          taskId: task.id,
+          status: newStatus,
+          projectId: task.projectId,
+          ticketId: task.ticketId,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to update task status:', error);
+    }
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't open modal if clicking the status button
+    if ((e.target as HTMLElement).closest('[data-status-button]')) {
+      return;
+    }
+    if (!isDragging) {
+      setEditOpen(true);
+    }
+  };
+
   return (
     <>
       <div
         ref={setNodeRef}
         style={style}
         {...attributes}
-        {...listeners}
+        {...(!isTouchDevice ? listeners : {})} // Only attach drag listeners on non-touch devices
         className={cn(
           'group relative rounded-xl p-3 bg-white shadow-sm border border-gray-200',
-          'hover:shadow-md hover:border-gray-300 transition-all cursor-grab active:cursor-grabbing',
+          'card-hover', // Add hover animation
+          'transition-all duration-200',
+          !isTouchDevice && 'cursor-grab active:cursor-grabbing',
+          isTouchDevice && 'cursor-pointer',
           'flex flex-col gap-2',
-          isDragging && 'opacity-50 rotate-2'
+          isDragging && 'opacity-50 rotate-2',
+          p === 4 && !['completed'].includes(task.status) && 'priority-pulse' // Pulse for P4 urgent tasks
         )}
-        onClick={() => {
-          // Only open modal if not dragging
-          if (!isDragging) {
-            setEditOpen(true);
-          }
-        }}
+        onClick={handleCardClick}
       >
         {/* Priority corner ribbon */}
         <div
@@ -118,6 +168,21 @@ export function KanbanTask({ task }: KanbanTaskProps) {
           </p>
         )}
 
+        {/* Mobile Status Change Button */}
+        {isTouchDevice && (
+          <button
+            data-status-button
+            onClick={(e) => {
+              e.stopPropagation();
+              setStatusPickerOpen(true);
+            }}
+            className="lg:hidden flex items-center gap-2 px-3 py-2 mt-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors active:scale-98"
+          >
+            <span>Change Status</span>
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        )}
+
         {/* Footer metadata */}
         <div className="flex items-center gap-2 text-xs text-gray-500">
           {task.projectName && (
@@ -143,6 +208,13 @@ export function KanbanTask({ task }: KanbanTaskProps) {
         task={task}
         open={editOpen}
         onClose={() => setEditOpen(false)}
+      />
+
+      <TaskStatusPicker
+        isOpen={statusPickerOpen}
+        onClose={() => setStatusPickerOpen(false)}
+        currentStatus={task.status as TaskStatus}
+        onStatusChange={handleStatusChange}
       />
     </>
   );

@@ -118,11 +118,16 @@ function NavItem({
   );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [isCompact, setIsCompact] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const isMobileOpen = isOpen; // Use prop instead of local state
 
   // Check for mobile/tablet screens
   useEffect(() => {
@@ -131,7 +136,6 @@ export function Sidebar() {
       setIsMobile(mobile);
       if (mobile) {
         setIsCompact(true);
-        setIsMobileOpen(false);
       }
     };
 
@@ -142,23 +146,10 @@ export function Sidebar() {
 
   // Close mobile sidebar when route changes
   useEffect(() => {
-    if (isMobile) {
-      setIsMobileOpen(false);
+    if (isMobile && onClose) {
+      onClose();
     }
-  }, [pathname, isMobile]);
-
-  // Listen for mobile sidebar open event
-  useEffect(() => {
-    const handleOpenMobileSidebar = () => {
-      if (isMobile) {
-        setIsMobileOpen(true);
-      }
-    };
-
-    window.addEventListener('openMobileSidebar', handleOpenMobileSidebar);
-    return () =>
-      window.removeEventListener('openMobileSidebar', handleOpenMobileSidebar);
-  }, [isMobile]);
+  }, [pathname, isMobile, onClose]);
 
   // Load compact state from localStorage
   useEffect(() => {
@@ -187,7 +178,7 @@ export function Sidebar() {
       {isMobile && isMobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
-          onClick={() => setIsMobileOpen(false)}
+          onClick={onClose}
         />
       )}
 

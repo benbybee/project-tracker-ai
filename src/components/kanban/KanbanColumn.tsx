@@ -12,6 +12,7 @@ interface KanbanColumnProps {
   items: any[];
   title?: string;
   onEditTask?: (task: any) => void;
+  isTouchDevice?: boolean;
 }
 
 const STATUS_LABELS = {
@@ -26,7 +27,7 @@ const STATUS_LABELS = {
   launch: 'Launch',
 };
 
-export function KanbanColumn({ status, items, title }: KanbanColumnProps) {
+export function KanbanColumn({ status, items, title, isTouchDevice = false }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: {
@@ -57,7 +58,7 @@ export function KanbanColumn({ status, items, title }: KanbanColumnProps) {
           strategy={verticalListSortingStrategy}
         >
           {items.map((task) => (
-            <KanbanTask key={task.id} task={task} />
+            <KanbanTask key={task.id} task={task} isTouchDevice={isTouchDevice} />
           ))}
         </SortableContext>
 

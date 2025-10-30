@@ -2,10 +2,14 @@
 import { useState, useEffect } from 'react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
+import { MobileFooterNav } from '@/components/mobile/mobile-footer-nav';
+import { useMobileViewport } from '@/hooks/useTouchDevice';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarWidth, setSidebarWidth] = useState('256px'); // Default expanded width
   const [isMobile, setIsMobile] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const isMobileViewport = useMobileViewport();
 
   // Check for mobile/tablet screens and update sidebar width
   useEffect(() => {
@@ -45,7 +49,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-[100dvh]">
-      <Sidebar />
+      <Sidebar isOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
       <div
         className="transition-all duration-300 px-4 py-4 md:pr-3 md:pl-0"
         style={{
@@ -54,11 +58,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             : sidebarWidth === '84px'
               ? '92px'
               : '264px',
+          paddingBottom: isMobileViewport ? '80px' : undefined, // Add padding for mobile footer
         }}
       >
         <Topbar />
         <main className="mt-4 grid gap-4">{children}</main>
       </div>
+
+      {/* Mobile Footer Navigation */}
+      {isMobileViewport && (
+        <MobileFooterNav onMenuClick={() => setMobileSidebarOpen(true)} />
+      )}
     </div>
   );
 }

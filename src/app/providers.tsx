@@ -15,6 +15,23 @@ import {
 // @ts-ignore
 import superjson from 'superjson';
 import { getWebSocketClient } from '@/lib/ws-client';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts-modal';
+
+// Keyboard Shortcuts Provider
+function KeyboardShortcutsProvider({ children }: { children: ReactNode }) {
+  const { helpModalOpen, setHelpModalOpen } = useKeyboardShortcuts();
+
+  return (
+    <>
+      {children}
+      <KeyboardShortcutsModal
+        isOpen={helpModalOpen}
+        onClose={() => setHelpModalOpen(false)}
+      />
+    </>
+  );
+}
 
 // Real-time context
 interface RealtimeContextType {
@@ -414,7 +431,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <SessionProvider>
-          <RealtimeProvider>{children}</RealtimeProvider>
+          <RealtimeProvider>
+            <KeyboardShortcutsProvider>{children}</KeyboardShortcutsProvider>
+          </RealtimeProvider>
         </SessionProvider>
       </QueryClientProvider>
     </trpc.Provider>

@@ -19,6 +19,7 @@ import KanbanFilters from './KanbanFilters';
 import { Task, TaskStatus } from '@/types/task';
 import { useRealtime } from '@/app/providers';
 import { trpc } from '@/lib/trpc';
+import { useTouchDevice } from '@/hooks/useTouchDevice';
 
 type BoardVariant = 'default' | 'website';
 
@@ -48,25 +49,30 @@ export function KanbanBoard({
   variant = 'default',
 }: KanbanBoardProps) {
   const columns = variant === 'website' ? WEB_COLS : DEFAULT_COLS;
+  const isTouchDevice = useTouchDevice();
 
   // Improved sensor configuration for smoother drag and drop
+  // Disable drag-and-drop on touch devices (mobile) to prevent UX issues
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
         distance: 5, // 5px movement to start drag
       },
     }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5,
-      },
-    }),
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    })
+    // Only enable touch/pointer sensors on non-touch devices
+    ...(!isTouchDevice ? [
+      useSensor(TouchSensor, {
+        activationConstraint: {
+          delay: 200,
+          tolerance: 5,
+        },
+      }),
+      useSensor(PointerSensor, {
+        activationConstraint: {
+          distance: 5,
+        },
+      })
+    ] : [])
   );
 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -217,7 +223,14 @@ export function KanbanBoard({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {columns.map((status) => {
             const items = tasksByCol[status] || [];
-            return <KanbanColumn key={status} status={status} items={items} />;
+            return (
+              <KanbanColumn 
+                key={status} 
+                status={status} 
+                items={items}
+                isTouchDevice={isTouchDevice}
+              />
+            );
           })}
         </div>
 

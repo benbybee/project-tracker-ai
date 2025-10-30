@@ -17,7 +17,8 @@ declare module 'next-auth' {
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'development-secret-change-in-production',
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -27,6 +28,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          logger.error('Missing credentials');
           return null;
         }
 
@@ -38,6 +40,7 @@ export const authOptions: NextAuthOptions = {
             .limit(1);
 
           if (!user[0]) {
+            logger.error('User not found', { email: credentials.email });
             return null;
           }
 
@@ -47,15 +50,37 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isValidPassword) {
+            logger.error('Invalid password', { email: credentials.email });
             return null;
           }
 
+          logger.info('Authentication successful', { email: credentials.email });
           return {
             id: user[0].id,
             email: user[0].email,
           };
-        } catch (error) {
-          logger.error('Authentication error', error);
+        } catch (error: any) {
+          // Enhanced error logging for database issues
+          const isConnectionError = 
+            error?.code === 'ECONNREFUSED' || 
+            error?.message?.includes('ECONNREFUSED') ||
+            error?.message?.includes('Connection refused');
+          
+          if (isConnectionError) {
+            logger.error('❌ DATABASE CONNECTION FAILED - PostgreSQL is not running or DATABASE_URL is incorrect', {
+              error: error?.message,
+              code: error?.code,
+              hint: 'Check if DATABASE_URL is configured in .env and database is accessible'
+            });
+          } else {
+            logger.error('Authentication database error', {
+              error: error?.message,
+              code: error?.code,
+              stack: error?.stack
+            });
+          }
+          
+          // Return null to trigger authentication failure
           return null;
         }
       },

@@ -2,6 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animation Utilities */
+@layer utilities {
+  /* Button press animation */
+  .btn-press {
+    @apply transition-transform active:scale-95;
+  }
+
+  /* Card hover elevation */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  /* Ripple effect (requires JS trigger) */
+  .ripple {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .ripple:active::after {
+    width: 300px;
+    height: 300px;
+  }
+
+  /* Priority pulse for urgent tasks */
+  .priority-pulse {
+    @apply relative;
+  }
+
+  .priority-pulse::before {
+    content: '';
+    @apply absolute -inset-1 rounded-xl bg-red-500/20 animate-pulse-slow;
+  }
+}
+
 /* Pending navigation shimmer effect */
 @layer components {
   [data-pending='true'] {
