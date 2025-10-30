@@ -23,14 +23,14 @@ export function parseDateAsLocal(dateStr: string | null | undefined): Date {
   if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') {
     return new Date(); // Return current date as fallback
   }
-  
+
   const [year, month, day] = dateStr.split('-').map(Number);
-  
+
   // Validate parsed values
   if (isNaN(year) || isNaN(month) || isNaN(day)) {
     return new Date(); // Return current date as fallback
   }
-  
+
   return new Date(year, month - 1, day);
 }
 
