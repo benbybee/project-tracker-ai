@@ -11,7 +11,7 @@ import {
   Activity,
   Sparkles,
 } from 'lucide-react';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 
 export function AiInsightsPanel() {
   const { data: insights, isLoading } = trpc.analytics.getAiInsights.useQuery();
@@ -318,10 +318,12 @@ export function AiInsightsPanel() {
           </div>
 
           <div className="space-y-3">
-            {insights.highRiskTasks.map((riskTask) => (
-              <div
-                key={riskTask.taskId}
-                className={`
+            {insights.highRiskTasks
+              .filter((t): t is NonNullable<typeof t> => t !== null)
+              .map((riskTask) => (
+                <div
+                  key={riskTask.taskId}
+                  className={`
                   border rounded-lg p-4 cursor-pointer transition-all
                   ${
                     riskTask.riskLevel === 'critical'
@@ -330,17 +332,17 @@ export function AiInsightsPanel() {
                   }
                   ${expandedRisk === riskTask.taskId ? 'ring-2 ring-red-500 dark:ring-red-400' : ''}
                 `}
-                onClick={() =>
-                  setExpandedRisk(
-                    expandedRisk === riskTask.taskId ? null : riskTask.taskId
-                  )
-                }
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span
-                        className={`
+                  onClick={() =>
+                    setExpandedRisk(
+                      expandedRisk === riskTask.taskId ? null : riskTask.taskId
+                    )
+                  }
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span
+                          className={`
                           px-2 py-1 rounded text-xs font-bold uppercase
                           ${
                             riskTask.riskLevel === 'critical'
@@ -348,19 +350,19 @@ export function AiInsightsPanel() {
                               : 'bg-orange-600 dark:bg-orange-700 text-white'
                           }
                         `}
-                      >
-                        {riskTask.riskLevel}
-                      </span>
-                      <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                        Risk Score: {riskTask.riskScore}
-                      </span>
-                    </div>
+                        >
+                          {riskTask.riskLevel}
+                        </span>
+                        <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                          Risk Score: {riskTask.riskScore}
+                        </span>
+                      </div>
 
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {riskTask.riskFactors.map((factor, index) => (
-                        <span
-                          key={index}
-                          className={`
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {riskTask.riskFactors.map((factor, index) => (
+                          <span
+                            key={index}
+                            className={`
                             px-2 py-1 rounded-lg text-xs font-medium
                             ${
                               factor.severity === 'high'
@@ -370,49 +372,49 @@ export function AiInsightsPanel() {
                                   : 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
                             }
                           `}
-                        >
-                          {factor.factor}
-                        </span>
-                      ))}
+                          >
+                            {factor.factor}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {expandedRisk === riskTask.taskId && (
-                  <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-800 space-y-3">
-                    <div>
-                      <h5 className="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">
-                        Risk Factors:
-                      </h5>
-                      {riskTask.riskFactors.map((factor, index) => (
-                        <p
-                          key={index}
-                          className="text-sm text-slate-700 dark:text-slate-300 ml-2"
-                        >
-                          • {factor.description}
-                        </p>
-                      ))}
-                    </div>
-
-                    {riskTask.recommendations.length > 0 && (
+                  {expandedRisk === riskTask.taskId && (
+                    <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-800 space-y-3">
                       <div>
                         <h5 className="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">
-                          Recommendations:
+                          Risk Factors:
                         </h5>
-                        {riskTask.recommendations.map((rec, index) => (
+                        {riskTask.riskFactors.map((factor, index) => (
                           <p
                             key={index}
                             className="text-sm text-slate-700 dark:text-slate-300 ml-2"
                           >
-                            • {rec}
+                            • {factor.description}
                           </p>
                         ))}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+
+                      {riskTask.recommendations.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                            Recommendations:
+                          </h5>
+                          {riskTask.recommendations.map((rec, index) => (
+                            <p
+                              key={index}
+                              className="text-sm text-slate-700 dark:text-slate-300 ml-2"
+                            >
+                              • {rec}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
           </div>
         </div>
       )}

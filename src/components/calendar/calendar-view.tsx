@@ -37,7 +37,7 @@ export function CalendarView() {
         allDay: true,
         color: task.role?.color || undefined,
         projectId: task.projectId,
-        projectName: task.projectName,
+        projectName: task.project?.name || 'Unknown Project',
         status: task.status,
         priority: task.priorityScore ? parseInt(task.priorityScore) : undefined,
       }));

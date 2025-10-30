@@ -85,8 +85,7 @@ async function handleBlockActions(
     await db
       .update(tasks)
       .set({
-        status: 'done',
-        completedAt: new Date(),
+        status: 'completed',
       })
       .where(eq(tasks.id, taskId));
 

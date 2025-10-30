@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
-import { tasks, slackIntegrations } from '@/server/db/schema';
+import { slackIntegrations } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function POST(req: NextRequest) {
@@ -80,22 +80,12 @@ async function handleReactionAdded(event: any, teamId: string) {
     return NextResponse.json({ ok: true });
   }
 
-  const message = data.messages[0];
-  const messageText = message.text || '';
+  // const message = data.messages[0];
+  // const messageText = message.text || '';
 
-  // Create task from message
-  // Find a default project or create in inbox
-  // For simplicity, we'll skip project selection here
-  // In production, you might want to prompt the user for a project
-
-  await db.insert(tasks).values({
-    title: messageText.slice(0, 200), // Use first 200 chars as title
-    description: messageText,
-    status: 'todo',
-    priority: 'medium',
-    createdBy: integration.userId,
-    // TODO: Add projectId after implementing project selection
-  });
+  // TODO: Create task from message
+  // Need to implement project selection first since projectId is required
+  // For now, just acknowledge the reaction
 
   // Post confirmation message
   await fetch('https://slack.com/api/chat.postEphemeral', {
@@ -107,7 +97,7 @@ async function handleReactionAdded(event: any, teamId: string) {
     body: JSON.stringify({
       channel: item.channel,
       user: user,
-      text: '✅ Task created from this message!',
+      text: '✅ Task creation from messages coming soon! Use `/task create` for now.',
     }),
   });
 

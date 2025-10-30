@@ -143,7 +143,7 @@ export const searchRouter = createTRPCRouter({
 
         // Assignee filter
         if (input.assigneeIds && input.assigneeIds.length > 0) {
-          conditions.push(inArray(tasks.assigneeId, input.assigneeIds));
+          conditions.push(inArray(tasks.userId, input.assigneeIds));
         }
 
         // Project filter

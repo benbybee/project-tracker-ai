@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
 
         // Get today's date range
         const today = new Date();
-        const startOfToday = startOfDay(today);
-        const endOfToday = endOfDay(today);
+        const startOfToday = startOfDay(today).toISOString().split('T')[0];
+        const endOfToday = endOfDay(today).toISOString().split('T')[0];
 
         // Get yesterday's date range
         const yesterday = subDays(today, 1);
@@ -66,8 +66,8 @@ export async function GET(req: NextRequest) {
               .from(tasks)
               .where(
                 and(
-                  eq(tasks.assigneeId, integration.userId),
-                  inArray(tasks.status, ['todo', 'in_progress']),
+                  eq(tasks.userId, integration.userId),
+                  inArray(tasks.status, ['not_started', 'in_progress']),
                   gte(tasks.dueDate, startOfToday),
                   lte(tasks.dueDate, endOfToday)
                 )
@@ -80,9 +80,9 @@ export async function GET(req: NextRequest) {
               .from(tasks)
               .where(
                 and(
-                  eq(tasks.assigneeId, integration.userId),
-                  inArray(tasks.status, ['todo', 'in_progress']),
-                  lte(tasks.dueDate, today)
+                  eq(tasks.userId, integration.userId),
+                  inArray(tasks.status, ['not_started', 'in_progress']),
+                  lte(tasks.dueDate, new Date().toISOString().split('T')[0])
                 )
               )
               .limit(10),
@@ -93,10 +93,10 @@ export async function GET(req: NextRequest) {
               .from(tasks)
               .where(
                 and(
-                  eq(tasks.assigneeId, integration.userId),
-                  eq(tasks.status, 'done'),
-                  gte(tasks.completedAt, startOfYesterday),
-                  lte(tasks.completedAt, endOfYesterday)
+                  eq(tasks.userId, integration.userId),
+                  eq(tasks.status, 'completed'),
+                  gte(tasks.updatedAt, startOfYesterday),
+                  lte(tasks.updatedAt, endOfYesterday)
                 )
               )
               .limit(10),
@@ -157,11 +157,4 @@ export async function GET(req: NextRequest) {
     console.error('Daily standup error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
-
-// Helper function for inArray
-function inArray(column: any, values: any[]) {
-  // This is a simplified implementation
-  // In production, use the proper drizzle-orm inArray function
-  return eq(column, values[0]); // Placeholder
 }

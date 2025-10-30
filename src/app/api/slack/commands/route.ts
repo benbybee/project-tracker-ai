@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { tasks, projects, slackIntegrations } from '@/server/db/schema';
-import { eq, and, like, lte, gte } from 'drizzle-orm';
+import { eq, and, or, like, lte, gte } from 'drizzle-orm';
 import {
   parseSlashCommand,
   formatTaskAsSlackBlock,
@@ -110,7 +110,7 @@ async function handleCreate(args: string[], userId: string) {
     .from(projects)
     .where(
       and(
-        eq(projects.createdBy, userId),
+        eq(projects.userId, userId),
         or(
           eq(projects.id, projectIdentifier),
           like(projects.name, `%${projectIdentifier}%`)
@@ -134,9 +134,9 @@ async function handleCreate(args: string[], userId: string) {
     .values({
       title,
       projectId: project.id,
-      status: 'todo',
-      priority: 'medium',
-      createdBy: userId,
+      userId: userId,
+      status: 'not_started',
+      priorityScore: '2',
     })
     .returning();
 
@@ -162,8 +162,8 @@ async function handleList(args: string[], userId: string) {
       .from(tasks)
       .where(
         and(
-          eq(tasks.assigneeId, userId),
-          inArray(tasks.status, ['todo', 'in_progress'])
+          eq(tasks.userId, userId),
+          inArray(tasks.status, ['not_started', 'in_progress'])
         )
       )
       .limit(10);
@@ -180,7 +180,7 @@ async function handleList(args: string[], userId: string) {
     .from(projects)
     .where(
       and(
-        eq(projects.createdBy, userId),
+        eq(projects.userId, userId),
         or(
           eq(projects.id, projectIdentifier),
           like(projects.name, `%${projectIdentifier}%`)
@@ -240,14 +240,14 @@ async function handleComplete(args: string[], _userId: string) {
   // Update task
   const [updatedTask] = await db
     .update(tasks)
-    .set({ status: 'done', completedAt: new Date() })
+    .set({ status: 'completed' })
     .where(eq(tasks.id, taskId))
     .returning();
 
   return NextResponse.json({
     response_type: 'in_channel',
     blocks: slackSuccessResponse(
-      `Task "${updatedTask.title}" marked as complete! 🎉`
+      `Task "${updatedTask?.title}" marked as complete! 🎉`
     ),
   });
 }
@@ -271,7 +271,7 @@ async function handleSearch(query: string, userId: string) {
     .from(tasks)
     .where(
       and(
-        eq(tasks.assigneeId, userId),
+        eq(tasks.userId, userId),
         or(
           like(tasks.title, `%${query}%`),
           like(tasks.description, `%${query}%`)
@@ -291,16 +291,16 @@ async function handleSearch(query: string, userId: string) {
  */
 async function handleToday(userId: string) {
   const today = new Date();
-  const startOfToday = startOfDay(today);
-  const endOfToday = endOfDay(today);
+  const startOfToday = startOfDay(today).toISOString().split('T')[0];
+  const endOfToday = endOfDay(today).toISOString().split('T')[0];
 
   const todayTasks = await db
     .select()
     .from(tasks)
     .where(
       and(
-        eq(tasks.assigneeId, userId),
-        inArray(tasks.status, ['todo', 'in_progress']),
+        eq(tasks.userId, userId),
+        inArray(tasks.status, ['not_started', 'in_progress']),
         gte(tasks.dueDate, startOfToday),
         lte(tasks.dueDate, endOfToday)
       )
@@ -317,15 +317,15 @@ async function handleToday(userId: string) {
  * Handle /task overdue
  */
 async function handleOverdue(userId: string) {
-  const now = new Date();
+  const now = new Date().toISOString().split('T')[0];
 
   const overdueTasks = await db
     .select()
     .from(tasks)
     .where(
       and(
-        eq(tasks.assigneeId, userId),
-        inArray(tasks.status, ['todo', 'in_progress']),
+        eq(tasks.userId, userId),
+        inArray(tasks.status, ['not_started', 'in_progress']),
         lte(tasks.dueDate, now)
       )
     )
