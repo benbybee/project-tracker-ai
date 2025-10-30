@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, RefreshCw, Database, ExternalLink } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  RefreshCw,
+  Database,
+  ExternalLink,
+} from 'lucide-react';
 
 interface DBHealth {
   ok: boolean;
@@ -51,7 +57,8 @@ export default function SetupPage() {
           </div>
 
           <p className="text-slate-600 dark:text-slate-300 mb-8">
-            This app requires a PostgreSQL database connection. Check your configuration below.
+            This app requires a PostgreSQL database connection. Check your
+            configuration below.
           </p>
 
           {/* Database Status Card */}
@@ -65,7 +72,9 @@ export default function SetupPage() {
                 disabled={loading}
                 className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50"
               >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                />
                 Test Connection
               </button>
             </div>
@@ -90,7 +99,8 @@ export default function SetupPage() {
                         Your database is properly configured. You can now{' '}
                         <a href="/sign-in" className="underline font-medium">
                           sign in
-                        </a>.
+                        </a>
+                        .
                       </p>
                     </div>
                   </div>
@@ -121,14 +131,16 @@ export default function SetupPage() {
                             🔧 How to Fix:
                           </p>
                           <ol className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                            {Object.entries(dbHealth.solution).map(([key, value]) => (
-                              <li key={key} className="flex gap-2">
-                                <span className="font-mono text-indigo-600 dark:text-indigo-400">
-                                  {key.replace('step', '')}
-                                </span>
-                                <span>{value}</span>
-                              </li>
-                            ))}
+                            {Object.entries(dbHealth.solution).map(
+                              ([key, value]) => (
+                                <li key={key} className="flex gap-2">
+                                  <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                                    {key.replace('step', '')}
+                                  </span>
+                                  <span>{value}</span>
+                                </li>
+                              )
+                            )}
                           </ol>
                         </div>
                       )}
@@ -192,7 +204,8 @@ export default function SetupPage() {
                       3
                     </span>
                     <p>
-                      Go to Project Settings → Database → Copy the Connection String (URI format)
+                      Go to Project Settings → Database → Copy the Connection
+                      String (URI format)
                     </p>
                   </li>
                   <li className="flex gap-3">
@@ -200,9 +213,15 @@ export default function SetupPage() {
                       4
                     </span>
                     <div className="flex-1">
-                      <p className="mb-2">Create/update <code className="px-2 py-1 bg-slate-100 dark:bg-slate-900 rounded text-sm">.env</code> file:</p>
+                      <p className="mb-2">
+                        Create/update{' '}
+                        <code className="px-2 py-1 bg-slate-100 dark:bg-slate-900 rounded text-sm">
+                          .env
+                        </code>{' '}
+                        file:
+                      </p>
                       <pre className="p-4 bg-slate-900 text-green-400 rounded-lg text-sm overflow-x-auto">
-{`DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres"
+                        {`DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres"
 NEXTAUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
 OPENAI_API_KEY="sk-your-key-here"
@@ -219,7 +238,7 @@ SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"`}
                     <div className="flex-1">
                       <p className="mb-2">Run migrations and seed:</p>
                       <pre className="p-4 bg-slate-900 text-green-400 rounded-lg text-sm">
-{`pnpm db:push
+                        {`pnpm db:push
 pnpm db:seed`}
                       </pre>
                     </div>
@@ -248,16 +267,28 @@ pnpm db:seed`}
                     <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-sm font-bold">
                       2
                     </span>
-                    <p>Create a database (e.g., <code className="px-2 py-1 bg-slate-100 dark:bg-slate-900 rounded text-sm">project_tracker</code>)</p>
+                    <p>
+                      Create a database (e.g.,{' '}
+                      <code className="px-2 py-1 bg-slate-100 dark:bg-slate-900 rounded text-sm">
+                        project_tracker
+                      </code>
+                      )
+                    </p>
                   </li>
                   <li className="flex gap-3">
                     <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-sm font-bold">
                       3
                     </span>
                     <div className="flex-1">
-                      <p className="mb-2">Update <code className="px-2 py-1 bg-slate-100 dark:bg-slate-900 rounded text-sm">.env</code>:</p>
+                      <p className="mb-2">
+                        Update{' '}
+                        <code className="px-2 py-1 bg-slate-100 dark:bg-slate-900 rounded text-sm">
+                          .env
+                        </code>
+                        :
+                      </p>
                       <pre className="p-4 bg-slate-900 text-green-400 rounded-lg text-sm">
-{`DATABASE_URL="postgresql://username:password@localhost:5432/project_tracker"`}
+                        {`DATABASE_URL="postgresql://username:password@localhost:5432/project_tracker"`}
                       </pre>
                     </div>
                   </li>
@@ -292,4 +323,3 @@ pnpm db:seed`}
     </div>
   );
 }
-

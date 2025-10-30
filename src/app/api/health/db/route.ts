@@ -12,8 +12,8 @@ export async function GET() {
       status: 'connected',
     });
   } catch (error: any) {
-    const isConnectionError = 
-      error?.code === 'ECONNREFUSED' || 
+    const isConnectionError =
+      error?.code === 'ECONNREFUSED' ||
       error?.message?.includes('ECONNREFUSED') ||
       error?.message?.includes('Connection refused') ||
       error?.message?.includes('connect ECONNREFUSED');
@@ -35,7 +35,8 @@ export async function GET() {
         solution: {
           step1: 'Check if .env file exists with valid DATABASE_URL',
           step2: 'For Supabase: Copy connection string from project settings',
-          step3: 'For local PostgreSQL: Ensure PostgreSQL is running on port 5432',
+          step3:
+            'For local PostgreSQL: Ensure PostgreSQL is running on port 5432',
           step4: 'Restart the development server after updating .env',
         },
       }),
@@ -44,4 +45,3 @@ export async function GET() {
     return NextResponse.json(errorResponse, { status: 500 });
   }
 }
-

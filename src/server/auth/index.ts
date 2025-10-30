@@ -17,7 +17,8 @@ declare module 'next-auth' {
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || 'development-secret-change-in-production',
+  secret:
+    process.env.NEXTAUTH_SECRET || 'development-secret-change-in-production',
   debug: process.env.NODE_ENV === 'development',
   providers: [
     CredentialsProvider({
@@ -54,32 +55,37 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          logger.info('Authentication successful', { email: credentials.email });
+          logger.info('Authentication successful', {
+            email: credentials.email,
+          });
           return {
             id: user[0].id,
             email: user[0].email,
           };
         } catch (error: any) {
           // Enhanced error logging for database issues
-          const isConnectionError = 
-            error?.code === 'ECONNREFUSED' || 
+          const isConnectionError =
+            error?.code === 'ECONNREFUSED' ||
             error?.message?.includes('ECONNREFUSED') ||
             error?.message?.includes('Connection refused');
-          
+
           if (isConnectionError) {
-            logger.error('❌ DATABASE CONNECTION FAILED - PostgreSQL is not running or DATABASE_URL is incorrect', {
-              error: error?.message,
-              code: error?.code,
-              hint: 'Check if DATABASE_URL is configured in .env and database is accessible'
-            });
+            logger.error(
+              '❌ DATABASE CONNECTION FAILED - PostgreSQL is not running or DATABASE_URL is incorrect',
+              {
+                error: error?.message,
+                code: error?.code,
+                hint: 'Check if DATABASE_URL is configured in .env and database is accessible',
+              }
+            );
           } else {
             logger.error('Authentication database error', {
               error: error?.message,
               code: error?.code,
-              stack: error?.stack
+              stack: error?.stack,
             });
           }
-          
+
           // Return null to trigger authentication failure
           return null;
         }

@@ -52,27 +52,31 @@ export function KanbanBoard({
   const isTouchDevice = useTouchDevice();
 
   // Improved sensor configuration for smoother drag and drop
-  // Disable drag-and-drop on touch devices (mobile) to prevent UX issues
+  // Call all hooks unconditionally (Rules of Hooks requirement)
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5, // 5px movement to start drag
+    },
+  });
+
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 200,
+      tolerance: 5,
+    },
+  });
+
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  });
+
+  // Conditionally compose sensors based on device type
+  // Disable touch/pointer sensors on touch devices to prevent UX issues
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 5, // 5px movement to start drag
-      },
-    }),
-    // Only enable touch/pointer sensors on non-touch devices
-    ...(!isTouchDevice ? [
-      useSensor(TouchSensor, {
-        activationConstraint: {
-          delay: 200,
-          tolerance: 5,
-        },
-      }),
-      useSensor(PointerSensor, {
-        activationConstraint: {
-          distance: 5,
-        },
-      })
-    ] : [])
+    mouseSensor,
+    ...(isTouchDevice ? [] : [touchSensor, pointerSensor])
   );
 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -224,9 +228,9 @@ export function KanbanBoard({
           {columns.map((status) => {
             const items = tasksByCol[status] || [];
             return (
-              <KanbanColumn 
-                key={status} 
-                status={status} 
+              <KanbanColumn
+                key={status}
+                status={status}
                 items={items}
                 isTouchDevice={isTouchDevice}
               />

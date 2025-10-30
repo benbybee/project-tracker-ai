@@ -5,7 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task, TaskStatus } from '@/types/task';
 import { TaskEditModal } from '@/components/tasks/TaskEditModal';
-import { CalendarDays, ChevronDown } from 'lucide-react';
+import { CalendarDays, ChevronDown, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseDateAsLocal } from '@/lib/date-utils';
 import { TaskStatusPicker } from '@/components/mobile/task-status-picker';
@@ -139,7 +139,13 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
 
         {/* Header with title and badges */}
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 truncate">
+          <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 truncate flex items-center gap-1">
+            {task.isRecurring && (
+              <Repeat
+                className="h-3 w-3 text-blue-600 shrink-0"
+                title="Recurring task"
+              />
+            )}
             {task.title}
           </h4>
           <div className="flex gap-1 shrink-0 flex-wrap">

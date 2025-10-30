@@ -527,6 +527,8 @@ All API communication uses tRPC for end-to-end type safety. The main router (`sr
 - `roles` - Role CRUD operations
 - `projects` - Project management
 - `tasks` - Task management with analytics
+- `templates` - Task & project templates with variable substitution
+- `recurring` - Recurring task management with RRULE support
 - `search` - Semantic search
 - `dashboard` - Dashboard aggregations
 - `notifications` - User notifications
@@ -1171,6 +1173,14 @@ Lists all pending Plaud-generated tasks.
 - Project filter
 - Task creation
 
+**calendar/page.tsx**
+- Month/Week/Day views
+- Task scheduling on calendar
+- View switcher controls
+- Navigation (Previous/Today/Next)
+- Click to create task on date
+- Color-coded events by priority/project
+
 **daily/page.tsx**
 - Today's tasks
 - Daily planner
@@ -1499,7 +1509,10 @@ project-tracker-ai/
 ✅ Priority levels (P1-P4)  
 ✅ Due dates & daily planner  
 ✅ Archive & block tasks  
-✅ Drag-and-drop Kanban
+✅ Drag-and-drop Kanban  
+✅ **Recurring tasks** - Daily/Weekly/Monthly/Yearly with RRULE  
+✅ **Task templates** - Save and reuse with variable substitution  
+✅ **Auto-generation** - Next occurrence created on completion
 
 ### Project Management
 ✅ General & website project types  
@@ -1508,7 +1521,9 @@ project-tracker-ai/
 ✅ Pin/unpin projects  
 ✅ Progress tracking  
 ✅ **Project-specific notes** - Create notes directly within project context  
-✅ **Notes filtering** - Filter and search project notes
+✅ **Notes filtering** - Filter and search project notes  
+✅ **Project templates** - Save entire project structures with tasks  
+✅ **Date adjustment** - Shift all task dates when using template
 
 ### AI-Powered Features
 ✅ Daily task planning (GPT-4)  
@@ -1550,10 +1565,13 @@ project-tracker-ai/
 ### Advanced Features
 ✅ Progressive Web App (PWA) with static asset caching  
 ✅ Search (⌘K command palette)  
+✅ **Calendar view** - Month/Week/Day views with task scheduling  
 ✅ Drag-and-drop file uploads  
 ✅ Role-based filtering  
 ✅ Analytics & insights  
-✅ Real-time cross-tab synchronization (WebSocket-based)
+✅ Real-time cross-tab synchronization (WebSocket-based)  
+✅ **Recurring tasks** - Full RRULE RFC 5545 compliance  
+✅ **Templates** - Task and project templates with variables
 
 ### Developer Experience
 ✅ End-to-end type safety (tRPC)  

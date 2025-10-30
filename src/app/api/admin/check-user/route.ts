@@ -7,7 +7,10 @@ export async function GET(request: Request) {
   const email = searchParams.get('email');
 
   if (!email) {
-    return NextResponse.json({ error: 'Email parameter required' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Email parameter required' },
+      { status: 400 }
+    );
   }
 
   try {
@@ -16,7 +19,7 @@ export async function GET(request: Request) {
         id: users.id,
         email: users.email,
         createdAt: users.createdAt,
-        hasPassword: sql`CASE WHEN ${users.passwordHash} IS NOT NULL THEN true ELSE false END`
+        hasPassword: sql`CASE WHEN ${users.passwordHash} IS NOT NULL THEN true ELSE false END`,
       })
       .from(users)
       .where(eq(users.email, email))
@@ -26,7 +29,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         exists: false,
         message: `User with email "${email}" not found in database`,
-        hint: 'You may need to sign up first or run the seed script'
+        hint: 'You may need to sign up first or run the seed script',
       });
     }
 
@@ -36,15 +39,17 @@ export async function GET(request: Request) {
         id: user[0].id,
         email: user[0].email,
         createdAt: user[0].createdAt,
-        hasPassword: user[0].hasPassword
+        hasPassword: user[0].hasPassword,
       },
-      message: 'User found in database'
+      message: 'User found in database',
     });
   } catch (error: any) {
-    return NextResponse.json({
-      error: 'Database query failed',
-      details: error?.message
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Database query failed',
+        details: error?.message,
+      },
+      { status: 500 }
+    );
   }
 }
-

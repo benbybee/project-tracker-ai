@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Zap } from 'lucide-react';
-import { formatShortcut, getModKey } from '@/lib/keyboard-utils';
+import { getModKey } from '@/lib/keyboard-utils';
 import { cn } from '@/lib/utils';
 
 interface KeyboardShortcutsModalProps {
@@ -17,55 +17,134 @@ interface Shortcut {
   category: string;
 }
 
-export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsModalProps) {
+export function KeyboardShortcutsModal({
+  isOpen,
+  onClose,
+}: KeyboardShortcutsModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const modKey = getModKey();
 
-  const shortcuts: Shortcut[] = useMemo(() => [
-    // Global shortcuts
-    { keys: [modKey, 'K'], description: 'Open command palette', category: 'Global' },
-    { keys: [modKey, 'N'], description: 'Quick create task', category: 'Global' },
-    { keys: [modKey, 'Shift', 'P'], description: 'Quick create project', category: 'Global' },
-    { keys: [modKey, ','], description: 'Open settings', category: 'Global' },
-    { keys: [modKey, 'B'], description: 'Toggle sidebar', category: 'Global' },
-    { keys: [modKey, '/'], description: 'Show keyboard shortcuts', category: 'Global' },
-    { keys: ['Esc'], description: 'Close modals / Cancel', category: 'Global' },
-    
-    // Navigation (Vim-style)
-    { keys: ['G', 'D'], description: 'Go to Dashboard', category: 'Navigation' },
-    { keys: ['G', 'B'], description: 'Go to Board', category: 'Navigation' },
-    { keys: ['G', 'P'], description: 'Go to Projects', category: 'Navigation' },
-    { keys: ['G', 'C'], description: 'Go to Daily (Calendar)', category: 'Navigation' },
-    { keys: ['G', 'T'], description: 'Go to Tickets', category: 'Navigation' },
-    { keys: ['G', 'S'], description: 'Go to Settings', category: 'Navigation' },
-    { keys: ['G', 'N'], description: 'Go to Notes', category: 'Navigation' },
-    
-    // Task actions (when task is focused)
-    { keys: ['E'], description: 'Edit selected task', category: 'Tasks' },
-    { keys: ['C'], description: 'Mark task as complete', category: 'Tasks' },
-    { keys: ['Del'], description: 'Archive selected task', category: 'Tasks' },
-    { keys: ['Enter'], description: 'Open task details', category: 'Tasks' },
-    { keys: ['1'], description: 'Set priority to P1 (Highest)', category: 'Tasks' },
-    { keys: ['2'], description: 'Set priority to P2 (High)', category: 'Tasks' },
-    { keys: ['3'], description: 'Set priority to P3 (Medium)', category: 'Tasks' },
-    { keys: ['4'], description: 'Set priority to P4 (Low)', category: 'Tasks' },
-    { keys: ['↑', '↓'], description: 'Navigate between tasks', category: 'Tasks' },
-    { keys: ['←', '→'], description: 'Navigate between columns', category: 'Tasks' },
-  ], [modKey]);
+  const shortcuts: Shortcut[] = useMemo(
+    () => [
+      // Global shortcuts
+      {
+        keys: [modKey, 'K'],
+        description: 'Open command palette',
+        category: 'Global',
+      },
+      {
+        keys: [modKey, 'N'],
+        description: 'Quick create task',
+        category: 'Global',
+      },
+      {
+        keys: [modKey, 'Shift', 'P'],
+        description: 'Quick create project',
+        category: 'Global',
+      },
+      { keys: [modKey, ','], description: 'Open settings', category: 'Global' },
+      {
+        keys: [modKey, 'B'],
+        description: 'Toggle sidebar',
+        category: 'Global',
+      },
+      {
+        keys: [modKey, '/'],
+        description: 'Show keyboard shortcuts',
+        category: 'Global',
+      },
+      {
+        keys: ['Esc'],
+        description: 'Close modals / Cancel',
+        category: 'Global',
+      },
+
+      // Navigation (Vim-style)
+      {
+        keys: ['G', 'D'],
+        description: 'Go to Dashboard',
+        category: 'Navigation',
+      },
+      { keys: ['G', 'B'], description: 'Go to Board', category: 'Navigation' },
+      {
+        keys: ['G', 'P'],
+        description: 'Go to Projects',
+        category: 'Navigation',
+      },
+      {
+        keys: ['G', 'C'],
+        description: 'Go to Daily (Calendar)',
+        category: 'Navigation',
+      },
+      {
+        keys: ['G', 'T'],
+        description: 'Go to Tickets',
+        category: 'Navigation',
+      },
+      {
+        keys: ['G', 'S'],
+        description: 'Go to Settings',
+        category: 'Navigation',
+      },
+      { keys: ['G', 'N'], description: 'Go to Notes', category: 'Navigation' },
+
+      // Task actions (when task is focused)
+      { keys: ['E'], description: 'Edit selected task', category: 'Tasks' },
+      { keys: ['C'], description: 'Mark task as complete', category: 'Tasks' },
+      {
+        keys: ['Del'],
+        description: 'Archive selected task',
+        category: 'Tasks',
+      },
+      { keys: ['Enter'], description: 'Open task details', category: 'Tasks' },
+      {
+        keys: ['1'],
+        description: 'Set priority to P1 (Highest)',
+        category: 'Tasks',
+      },
+      {
+        keys: ['2'],
+        description: 'Set priority to P2 (High)',
+        category: 'Tasks',
+      },
+      {
+        keys: ['3'],
+        description: 'Set priority to P3 (Medium)',
+        category: 'Tasks',
+      },
+      {
+        keys: ['4'],
+        description: 'Set priority to P4 (Low)',
+        category: 'Tasks',
+      },
+      {
+        keys: ['↑', '↓'],
+        description: 'Navigate between tasks',
+        category: 'Tasks',
+      },
+      {
+        keys: ['←', '→'],
+        description: 'Navigate between columns',
+        category: 'Tasks',
+      },
+    ],
+    [modKey]
+  );
 
   const filteredShortcuts = useMemo(() => {
     if (!searchQuery) return shortcuts;
-    
+
     const query = searchQuery.toLowerCase();
-    return shortcuts.filter(s => 
-      s.description.toLowerCase().includes(query) ||
-      s.keys.some(k => k.toLowerCase().includes(query))
+    return shortcuts.filter(
+      (s) =>
+        s.description.toLowerCase().includes(query) ||
+        s.keys.some((k) => k.toLowerCase().includes(query))
     );
   }, [shortcuts, searchQuery]);
 
   const categorizedShortcuts = useMemo(() => {
     const categories = new Map<string, Shortcut[]>();
-    filteredShortcuts.forEach(shortcut => {
+    filteredShortcuts.forEach((shortcut) => {
       if (!categories.has(shortcut.category)) {
         categories.set(shortcut.category, []);
       }
@@ -137,41 +216,43 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
 
             {/* Shortcuts List */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
-              {Array.from(categorizedShortcuts.entries()).map(([category, categoryShortcuts]) => (
-                <div key={category} className="mb-6 last:mb-0">
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">
-                    {category}
-                  </h3>
-                  <div className="space-y-2">
-                    {categoryShortcuts.map((shortcut, index) => (
-                      <div
-                        key={`${category}-${index}`}
-                        className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                      >
-                        <span className="text-sm text-slate-700 dark:text-slate-300">
-                          {shortcut.description}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {shortcut.keys.map((key, keyIndex) => (
-                            <kbd
-                              key={keyIndex}
-                              className={cn(
-                                'px-2 py-1 text-xs font-semibold rounded',
-                                'bg-slate-200 dark:bg-slate-700',
-                                'text-slate-700 dark:text-slate-300',
-                                'border border-slate-300 dark:border-slate-600',
-                                'shadow-sm'
-                              )}
-                            >
-                              {key}
-                            </kbd>
-                          ))}
+              {Array.from(categorizedShortcuts.entries()).map(
+                ([category, categoryShortcuts]) => (
+                  <div key={category} className="mb-6 last:mb-0">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">
+                      {category}
+                    </h3>
+                    <div className="space-y-2">
+                      {categoryShortcuts.map((shortcut, index) => (
+                        <div
+                          key={`${category}-${index}`}
+                          className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <span className="text-sm text-slate-700 dark:text-slate-300">
+                            {shortcut.description}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {shortcut.keys.map((key, keyIndex) => (
+                              <kbd
+                                key={keyIndex}
+                                className={cn(
+                                  'px-2 py-1 text-xs font-semibold rounded',
+                                  'bg-slate-200 dark:bg-slate-700',
+                                  'text-slate-700 dark:text-slate-300',
+                                  'border border-slate-300 dark:border-slate-600',
+                                  'shadow-sm'
+                                )}
+                              >
+                                {key}
+                              </kbd>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
 
               {filteredShortcuts.length === 0 && (
                 <div className="text-center py-8">
@@ -185,7 +266,15 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
             {/* Footer */}
             <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
               <p className="text-xs text-slate-600 dark:text-slate-400 text-center">
-                Press <kbd className="px-2 py-0.5 text-xs font-semibold rounded bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600">{modKey}</kbd> + <kbd className="px-2 py-0.5 text-xs font-semibold rounded bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600">/</kbd> to toggle this menu
+                Press{' '}
+                <kbd className="px-2 py-0.5 text-xs font-semibold rounded bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600">
+                  {modKey}
+                </kbd>{' '}
+                +{' '}
+                <kbd className="px-2 py-0.5 text-xs font-semibold rounded bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600">
+                  /
+                </kbd>{' '}
+                to toggle this menu
               </p>
             </div>
           </motion.div>
@@ -194,4 +283,3 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
     </AnimatePresence>
   );
 }
-

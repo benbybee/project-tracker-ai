@@ -41,13 +41,13 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
 
   return (
     <footer className="lg:hidden fixed bottom-0 inset-x-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/20 z-40">
-      <nav 
+      <nav
         className="flex justify-around items-center h-16"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {navItems.map((item) => {
           const Icon = item.icon;
-          
+
           if (item.onClick) {
             return (
               <button
@@ -62,16 +62,20 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
                 )}
                 aria-label={item.label}
               >
-                <Icon 
+                <Icon
                   className={cn(
                     'w-6 h-6',
-                    item.active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400'
-                  )} 
+                    item.active
+                      ? 'text-indigo-600 dark:text-indigo-400'
+                      : 'text-slate-600 dark:text-slate-400'
+                  )}
                 />
-                <span 
+                <span
                   className={cn(
                     'text-xs font-medium',
-                    item.active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400'
+                    item.active
+                      ? 'text-indigo-600 dark:text-indigo-400'
+                      : 'text-slate-600 dark:text-slate-400'
                   )}
                 >
                   {item.label}
@@ -93,16 +97,20 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
               )}
               aria-label={item.label}
             >
-              <Icon 
+              <Icon
                 className={cn(
                   'w-6 h-6',
-                  item.active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400'
-                )} 
+                  item.active
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'text-slate-600 dark:text-slate-400'
+                )}
               />
-              <span 
+              <span
                 className={cn(
                   'text-xs font-medium',
-                  item.active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400'
+                  item.active
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'text-slate-600 dark:text-slate-400'
                 )}
               >
                 {item.label}
@@ -114,4 +122,3 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
     </footer>
   );
 }
-

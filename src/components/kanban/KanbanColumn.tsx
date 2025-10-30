@@ -27,7 +27,12 @@ const STATUS_LABELS = {
   launch: 'Launch',
 };
 
-export function KanbanColumn({ status, items, title, isTouchDevice = false }: KanbanColumnProps) {
+export function KanbanColumn({
+  status,
+  items,
+  title,
+  isTouchDevice = false,
+}: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: {
@@ -58,7 +63,11 @@ export function KanbanColumn({ status, items, title, isTouchDevice = false }: Ka
           strategy={verticalListSortingStrategy}
         >
           {items.map((task) => (
-            <KanbanTask key={task.id} task={task} isTouchDevice={isTouchDevice} />
+            <KanbanTask
+              key={task.id}
+              task={task}
+              isTouchDevice={isTouchDevice}
+            />
           ))}
         </SortableContext>
 

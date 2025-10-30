@@ -693,6 +693,67 @@ export const tasksRouter = createTRPCRouter({
           projectId: row.projectId,
           payload: { completedAt: new Date() },
         });
+
+        // Auto-generate next occurrence if this task has a recurring parent
+        if (row.recurrenceParentId) {
+          try {
+            // Import the recurring router logic inline to avoid circular dependency
+            const { getNextOccurrence } = await import(
+              '@/lib/recurrence-parser'
+            );
+
+            // Get the parent recurring task
+            const [parentTask] = await ctx.db
+              .select()
+              .from(tasks)
+              .where(
+                and(
+                  eq(tasks.id, row.recurrenceParentId),
+                  eq(tasks.isRecurring, true)
+                )
+              )
+              .limit(1);
+
+            if (parentTask && parentTask.recurrenceRule) {
+              const rruleString = parentTask.recurrenceRule as string;
+              const nextDate = getNextOccurrence(rruleString, new Date());
+
+              if (nextDate) {
+                // Create the next occurrence
+                await ctx.db.insert(tasks).values({
+                  userId: ctx.session.user.id,
+                  projectId: parentTask.projectId,
+                  roleId: parentTask.roleId,
+                  title: parentTask.title,
+                  description: parentTask.description,
+                  priorityScore: parentTask.priorityScore,
+                  status: 'not_started',
+                  isRecurring: false,
+                  recurrenceParentId: parentTask.id,
+                  dueDate: nextDate.toISOString().split('T')[0],
+                });
+
+                // Update parent's next occurrence
+                const afterNext = getNextOccurrence(rruleString, nextDate);
+                await ctx.db
+                  .update(tasks)
+                  .set({
+                    nextOccurrence: afterNext
+                      ? afterNext.toISOString().split('T')[0]
+                      : null,
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(tasks.id, parentTask.id));
+              }
+            }
+          } catch (error) {
+            console.error(
+              'Failed to auto-generate next recurring task occurrence:',
+              error
+            );
+            // Don't fail the completion if recurring generation fails
+          }
+        }
       }
 
       return row;

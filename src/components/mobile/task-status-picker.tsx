@@ -1,10 +1,20 @@
 'use client';
 
-import { CheckCircle2, Circle, CircleDashed, Clock, Lock, Rocket, FileText, Palette, Code, Bug, PartyPopper } from 'lucide-react';
+import {
+  CheckCircle2,
+  Circle,
+  Clock,
+  Lock,
+  FileText,
+  Palette,
+  Code,
+  Bug,
+  PartyPopper,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-type TaskStatus = 
+type TaskStatus =
   | 'not_started'
   | 'in_progress'
   | 'blocked'
@@ -22,19 +32,22 @@ interface TaskStatusPickerProps {
   onStatusChange: (status: TaskStatus) => void;
 }
 
-const STATUS_CONFIG: Record<TaskStatus, { 
-  label: string; 
-  icon: React.ComponentType<any>; 
-  color: string; 
-  bgColor: string;
-  description: string;
-}> = {
+const STATUS_CONFIG: Record<
+  TaskStatus,
+  {
+    label: string;
+    icon: React.ComponentType<any>;
+    color: string;
+    bgColor: string;
+    description: string;
+  }
+> = {
   not_started: {
     label: 'Not Started',
     icon: Circle,
     color: 'text-slate-600',
     bgColor: 'bg-slate-100 hover:bg-slate-200',
-    description: 'Task hasn\'t been started yet',
+    description: "Task hasn't been started yet",
   },
   in_progress: {
     label: 'In Progress',
@@ -200,4 +213,3 @@ export function TaskStatusPicker({
     </AnimatePresence>
   );
 }
-

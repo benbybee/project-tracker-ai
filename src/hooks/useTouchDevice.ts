@@ -13,25 +13,28 @@ export function useTouchDevice() {
   useEffect(() => {
     // Method 1: CSS media query (most reliable)
     const mediaQuery = window.matchMedia('(pointer: coarse)');
-    
+
     // Method 2: User agent check (fallback)
-    const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    
+    const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(
+      navigator.userAgent
+    );
+
     // Method 3: Touch events support
-    const hasTouchEvents = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
+    const hasTouchEvents =
+      'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     // Combine all methods for best accuracy
     const isTouch = mediaQuery.matches || (isMobileUA && hasTouchEvents);
-    
+
     setIsTouchDevice(isTouch);
-    
+
     // Listen for changes (e.g., device orientation change)
     const handler = (e: MediaQueryListEvent) => {
       setIsTouchDevice(e.matches || (isMobileUA && hasTouchEvents));
     };
-    
+
     mediaQuery.addEventListener('change', handler);
-    
+
     return () => {
       mediaQuery.removeEventListener('change', handler);
     };
@@ -49,15 +52,15 @@ export function useMobileViewport() {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 1024px)');
-    
+
     setIsMobile(mediaQuery.matches);
-    
+
     const handler = (e: MediaQueryListEvent) => {
       setIsMobile(e.matches);
     };
-    
+
     mediaQuery.addEventListener('change', handler);
-    
+
     return () => {
       mediaQuery.removeEventListener('change', handler);
     };
@@ -65,4 +68,3 @@ export function useMobileViewport() {
 
   return isMobile;
 }
-

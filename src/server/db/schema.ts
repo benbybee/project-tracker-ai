@@ -125,6 +125,11 @@ export const tasks = pgTable('tasks', {
   blockedAt: timestamp('blocked_at'),
   archived: boolean('archived').default(false),
   archivedAt: timestamp('archived_at'),
+  // Recurring task fields
+  isRecurring: boolean('is_recurring').default(false),
+  recurrenceRule: jsonb('recurrence_rule'), // RRULE format (RFC 5545)
+  recurrenceParentId: uuid('recurrence_parent_id'),
+  nextOccurrence: date('next_occurrence'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -320,6 +325,58 @@ export const notesRelations = relations(notes, ({ one }) => ({
 
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
+
+// Task Templates table
+export const taskTemplates = pgTable('task_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  taskData: jsonb('task_data').notNull(), // Full task structure
+  category: text('category'),
+  subtasks: jsonb('subtasks'), // Array of subtask templates
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const taskTemplatesRelations = relations(taskTemplates, ({ one }) => ({
+  user: one(users, {
+    fields: [taskTemplates.userId],
+    references: [users.id],
+  }),
+}));
+
+export type TaskTemplate = typeof taskTemplates.$inferSelect;
+export type NewTaskTemplate = typeof taskTemplates.$inferInsert;
+
+// Project Templates table
+export const projectTemplates = pgTable('project_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  projectData: jsonb('project_data').notNull(), // Full project + tasks structure
+  category: text('category'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const projectTemplatesRelations = relations(
+  projectTemplates,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [projectTemplates.userId],
+      references: [users.id],
+    }),
+  })
+);
+
+export type ProjectTemplate = typeof projectTemplates.$inferSelect;
+export type NewProjectTemplate = typeof projectTemplates.$inferInsert;
 
 // Import notification, activity, chat, and analytics schemas
 export * from './schema/notifications';

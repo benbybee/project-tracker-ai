@@ -77,7 +77,9 @@ export function InlineEdit({
     setIsEditing(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const newValue = e.target.value;
     setCurrentValue(newValue);
 
@@ -186,4 +188,3 @@ export function InlineEdit({
     </div>
   );
 }
-

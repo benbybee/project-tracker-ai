@@ -57,7 +57,7 @@ export default function DashboardPage() {
       // Optimistic update
       utils.dashboard.get.setData(
         { roleId: selectedRoleId || undefined },
-        (old) => {
+        (old: typeof dashboardData | undefined) => {
           if (!old) return old;
           return {
             ...old,

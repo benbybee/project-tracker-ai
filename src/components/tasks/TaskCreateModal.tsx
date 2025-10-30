@@ -20,6 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { RecurringTaskModal } from '@/components/tasks/recurring-task-modal';
+import { TaskTemplateModal } from '@/components/tasks/task-template-modal';
+import { type RecurrenceConfig } from '@/lib/recurrence-parser';
+import { Repeat, FileText } from 'lucide-react';
 
 interface TaskCreateModalProps {
   open: boolean;
@@ -46,12 +50,23 @@ export function TaskCreateModal({
   });
 
   const [saving, setSaving] = useState(false);
+  const [recurringModalOpen, setRecurringModalOpen] = useState(false);
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [recurrenceConfig, setRecurrenceConfig] =
+    useState<RecurrenceConfig | null>(null);
 
   const utils = trpc.useUtils();
   const createTask = trpc.tasks.create.useMutation({
     onSuccess: () => {
       utils.tasks.list.invalidate();
       utils.dashboard.get.invalidate();
+    },
+  });
+  const createRecurringTask = trpc.recurring.createRecurringTask.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+      utils.recurring.listRecurringTasks.invalidate();
     },
   });
 
@@ -73,19 +88,36 @@ export function TaskCreateModal({
     setSaving(true);
 
     try {
-      await createTask.mutateAsync({
-        projectId: form.projectId,
-        title: form.title.trim(),
-        description: form.description || undefined,
-        status: form.status || 'not_started',
-        dueDate: form.dueDate || undefined,
-        priorityScore: form.priorityScore?.toString() as
-          | '1'
-          | '2'
-          | '3'
-          | '4'
-          | undefined,
-      });
+      // If recurrence is set, create recurring task
+      if (recurrenceConfig) {
+        await createRecurringTask.mutateAsync({
+          projectId: form.projectId,
+          title: form.title.trim(),
+          description: form.description || undefined,
+          priorityScore: form.priorityScore?.toString() as
+            | '1'
+            | '2'
+            | '3'
+            | '4',
+          startDate: form.dueDate || new Date().toISOString().split('T')[0],
+          recurrenceConfig: recurrenceConfig,
+        });
+      } else {
+        // Regular task
+        await createTask.mutateAsync({
+          projectId: form.projectId,
+          title: form.title.trim(),
+          description: form.description || undefined,
+          status: form.status || 'not_started',
+          dueDate: form.dueDate || undefined,
+          priorityScore: form.priorityScore?.toString() as
+            | '1'
+            | '2'
+            | '3'
+            | '4'
+            | undefined,
+        });
+      }
 
       // Reset form and close
       setForm({
@@ -96,6 +128,7 @@ export function TaskCreateModal({
         dueDate: '',
         priorityScore: 2,
       });
+      setRecurrenceConfig(null);
       onClose();
     } catch (error) {
       console.error('Failed to create task:', error);
@@ -103,6 +136,16 @@ export function TaskCreateModal({
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleTemplateSelected = (templateData: any) => {
+    // Populate form with template data
+    setForm((prev) => ({
+      ...prev,
+      title: templateData.title,
+      description: templateData.description,
+      priorityScore: templateData.priorityScore || 2,
+    }));
   };
 
   if (!open) return null;
@@ -204,6 +247,47 @@ export function TaskCreateModal({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Recurrence & Template Options */}
+          <div className="flex gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setRecurringModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Repeat className="h-4 w-4" />
+              {recurrenceConfig ? 'Edit Recurrence' : 'Make Recurring'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setTemplateModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Use Template
+            </Button>
+          </div>
+
+          {recurrenceConfig && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+              <p className="font-medium text-blue-700 dark:text-blue-300">
+                🔁 Recurring task configured
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setRecurrenceConfig(null)}
+                className="mt-1 text-xs"
+              >
+                Remove recurrence
+              </Button>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -220,6 +304,22 @@ export function TaskCreateModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Recurring Task Modal */}
+      <RecurringTaskModal
+        open={recurringModalOpen}
+        onClose={() => setRecurringModalOpen(false)}
+        onSave={(config) => setRecurrenceConfig(config)}
+        initialConfig={recurrenceConfig || undefined}
+      />
+
+      {/* Template Modal */}
+      <TaskTemplateModal
+        open={templateModalOpen}
+        onClose={() => setTemplateModalOpen(false)}
+        mode="use"
+        onUseTemplate={handleTemplateSelected}
+      />
     </Dialog>
   );
 }

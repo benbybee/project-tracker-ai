@@ -13,7 +13,7 @@ export function Confetti({ trigger }: ConfettiProps) {
       confetti({
         particleCount: 100,
         spread: 70,
-        origin: { y: 0.6 }
+        origin: { y: 0.6 },
       });
     }
   }, [trigger]);
@@ -26,7 +26,6 @@ export function triggerConfetti() {
     particleCount: 100,
     spread: 70,
     origin: { y: 0.6 },
-    colors: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b']
+    colors: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b'],
   });
 }
-
