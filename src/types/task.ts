@@ -39,4 +39,6 @@ export type Task = {
   isDaily?: boolean;
   archived?: boolean;
   subtasks?: Subtask[];
+  isRecurring?: boolean;
+  recurrenceRule?: any;
 };
