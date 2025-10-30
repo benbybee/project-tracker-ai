@@ -3,7 +3,6 @@
 import {
   type CalendarEvent,
   getMonthDays,
-  isSameDay,
   isToday,
   isCurrentMonth,
   getEventsForDay,

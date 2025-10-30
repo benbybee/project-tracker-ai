@@ -185,6 +185,7 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
     references: [roles.id],
   }),
   subtasks: many(subtasks),
+  attachments: many(taskAttachments),
 }));
 
 export const subtasksRelations = relations(subtasks, ({ one }) => ({
@@ -377,6 +378,37 @@ export const projectTemplatesRelations = relations(
 
 export type ProjectTemplate = typeof projectTemplates.$inferSelect;
 export type NewProjectTemplate = typeof projectTemplates.$inferInsert;
+
+// Task Attachments table
+export const taskAttachments = pgTable('task_attachments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  taskId: uuid('task_id')
+    .notNull()
+    .references(() => tasks.id, { onDelete: 'cascade' }),
+  fileName: text('file_name').notNull(),
+  fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+  mimeType: text('mime_type').notNull(),
+  url: text('url').notNull(), // Vercel Blob URL
+  thumbnailUrl: text('thumbnail_url'), // For images
+  uploadedBy: uuid('uploaded_by')
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskAttachments.taskId],
+    references: [tasks.id],
+  }),
+  uploader: one(users, {
+    fields: [taskAttachments.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
+export type TaskAttachment = typeof taskAttachments.$inferSelect;
+export type NewTaskAttachment = typeof taskAttachments.$inferInsert;
 
 // Import notification, activity, chat, and analytics schemas
 export * from './schema/notifications';

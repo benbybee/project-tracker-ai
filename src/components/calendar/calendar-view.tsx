@@ -19,7 +19,6 @@ import {
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('month');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // Fetch all tasks for the current period
@@ -69,8 +68,7 @@ export function CalendarView() {
     setCurrentDate(new Date());
   };
 
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
+  const handleDateClick = () => {
     setCreateModalOpen(true);
   };
 
@@ -171,7 +169,6 @@ export function CalendarView() {
           {/* Create Task Button */}
           <Button
             onClick={() => {
-              setSelectedDate(new Date());
               setCreateModalOpen(true);
             }}
             className="flex items-center gap-2"
@@ -214,7 +211,6 @@ export function CalendarView() {
         open={createModalOpen}
         onClose={() => {
           setCreateModalOpen(false);
-          setSelectedDate(null);
         }}
         projectId={undefined}
         defaultStatus="not_started"

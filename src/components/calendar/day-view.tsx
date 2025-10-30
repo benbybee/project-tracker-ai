@@ -6,7 +6,6 @@ import {
   getEventsForDay,
   getEventColor,
   formatDate,
-  formatTime,
 } from '@/lib/calendar-utils';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +21,6 @@ export function DayView({ currentDate, events, onDateClick }: DayViewProps) {
 
   // Separate all-day and timed events
   const allDayEvents = dayEvents.filter((e) => e.allDay);
-  const timedEvents = dayEvents.filter((e) => !e.allDay);
 
   return (
     <div className="h-full flex flex-col">

@@ -8,7 +8,6 @@ import {
   getEventsForDay,
   getEventColor,
   getShortDayName,
-  formatDate,
 } from '@/lib/calendar-utils';
 import { cn } from '@/lib/utils';
 
