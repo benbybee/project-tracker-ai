@@ -26,7 +26,7 @@ export const activityLog = pgTable('activity_log', {
   }).notNull(),
   payload: jsonb('payload'),
   projectId: uuid('project_id').references(() => projects.id),
-  taskId: uuid('task_id').references(() => tasks.id),
+  taskId: uuid('task_id').references(() => tasks.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

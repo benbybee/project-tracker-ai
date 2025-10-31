@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Keyboard } from 'lucide-react';
+import { Keyboard, Bot } from 'lucide-react';
+import Link from 'next/link';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TaskModal } from '@/components/tasks/TaskModal';
@@ -58,6 +59,14 @@ export function Topbar() {
             </button>
           )}
           <NotificationBell />
+          <Link
+            href="/chat"
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="AI Chat"
+            title="AI Chat"
+          >
+            <Bot className="h-5 w-5" />
+          </Link>
           <GradientButton
             onClick={() => setTaskModalOpen(true)}
             className="hidden sm:block"

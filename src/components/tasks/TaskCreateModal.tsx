@@ -30,6 +30,7 @@ interface TaskCreateModalProps {
   onClose: () => void;
   projectId?: string;
   defaultStatus?: TaskStatus;
+  defaultDueDate?: string;
 }
 
 export function TaskCreateModal({
@@ -37,6 +38,7 @@ export function TaskCreateModal({
   onClose,
   projectId,
   defaultStatus,
+  defaultDueDate,
 }: TaskCreateModalProps) {
   const params = useParams<{ id?: string }>();
 
@@ -45,7 +47,7 @@ export function TaskCreateModal({
     status: defaultStatus || 'not_started',
     title: '',
     description: '',
-    dueDate: '',
+    dueDate: defaultDueDate || '',
     priorityScore: 2,
   });
 

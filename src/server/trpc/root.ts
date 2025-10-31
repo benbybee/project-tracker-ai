@@ -17,6 +17,7 @@ import { attachmentsRouter } from './routers/attachments';
 import { commentsRouter } from './routers/comments';
 import { viewsRouter } from './routers/views';
 import { slackRouter } from './routers/slack';
+import { agentRouter } from './routers/agent';
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -37,6 +38,7 @@ export const appRouter = createTRPCRouter({
   comments: commentsRouter,
   views: viewsRouter,
   slack: slackRouter,
+  agent: agentRouter,
 });
 
 export type AppRouter = typeof appRouter;

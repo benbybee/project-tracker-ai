@@ -6,10 +6,12 @@ import { trpc } from '@/lib/trpc';
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
-import { ProjectHeader } from '@/components/projects/project-header';
-import { ProjectStats } from '@/components/projects/project-stats';
+import { ProjectHeaderCompact } from '@/components/projects/project-header-compact';
+import { ProjectMetricsGrid } from '@/components/projects/project-metrics-grid';
+import { ProjectQuickActions } from '@/components/projects/project-quick-actions';
+import { ProjectAiChatModal } from '@/components/projects/project-ai-chat-modal';
 import { QuickAddTask } from '@/components/projects/quick-add-task';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { ProjectNotesSection } from '@/components/projects/ProjectNotesSection';
@@ -23,8 +25,62 @@ export default function ProjectDetailPage() {
   const { data: tasks } = trpc.tasks.list.useQuery({
     projectId,
   });
+  const { data: velocityData } = trpc.projects.getVelocity.useQuery({
+    id: projectId,
+  });
+  const { data: healthData } = trpc.projects.getHealth.useQuery({
+    id: projectId,
+  });
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    if (!tasks || !velocityData || !healthData) {
+      return {
+        progress: {
+          completed: 0,
+          total: 0,
+          percentage: 0,
+          trend: 'stable' as const,
+        },
+        velocity: {
+          tasksPerWeek: 0,
+          trend: 0,
+          sparklineData: [],
+        },
+        health: {
+          status: 'on-track' as const,
+          blockers: 0,
+          overdue: 0,
+        },
+      };
+    }
+
+    const completed = tasks.filter((t) => t.status === 'completed').length;
+    const total = tasks.length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    return {
+      progress: {
+        completed,
+        total,
+        percentage,
+        trend: 'stable' as const, // Could calculate from history
+      },
+      velocity: {
+        tasksPerWeek: velocityData.tasksPerWeek,
+        trend: velocityData.trend,
+        sparklineData: velocityData.sparklineData,
+      },
+      health: {
+        status: healthData.status,
+        blockers: healthData.blockers,
+        overdue: healthData.overdue,
+      },
+    };
+  }, [tasks, velocityData, healthData]);
 
   if (projectLoading) {
     return (
@@ -63,32 +119,30 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const projectRole = project.role;
-
   return (
     <div className="w-full">
       <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-2 py-6">
-        {/* Project Header */}
-        <ProjectHeader
-          project={project}
-          role={projectRole}
-          onNewTask={() => setCreateModalOpen(true)}
+        {/* Compact Header */}
+        <ProjectHeaderCompact project={project} />
+
+        {/* Metrics Grid */}
+        <ProjectMetricsGrid
+          metrics={metrics}
+          projectId={projectId}
+          onAiChatOpen={() => setAiChatOpen(true)}
         />
 
-        {/* Project Stats */}
-        <ProjectStats
-          counts={{
-            total: tasks?.length || 0,
-            inProgress:
-              tasks?.filter((task) => task.status === 'in_progress').length ||
-              0,
-            completed:
-              tasks?.filter((task) => task.status === 'completed').length || 0,
-          }}
+        {/* Quick Actions */}
+        <ProjectQuickActions
+          projectId={projectId}
+          projectType={project.type}
+          wpOneClickEnabled={project.wpOneClickEnabled}
+          onNewTask={() => setCreateModalOpen(true)}
+          onAiChat={() => setAiChatOpen(true)}
         />
 
         {/* Kanban Board Section */}
-        <section className="mt-8">
+        <section className="mt-8" data-board-section>
           <header className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Board</h2>
             <div className="hidden md:block text-sm text-slate-500">
@@ -110,6 +164,14 @@ export default function ProjectDetailPage() {
           open={createModalOpen}
           onClose={() => setCreateModalOpen(false)}
           projectId={projectId}
+        />
+
+        {/* AI Chat Modal */}
+        <ProjectAiChatModal
+          isOpen={aiChatOpen}
+          onClose={() => setAiChatOpen(false)}
+          projectId={projectId}
+          projectName={project.name}
         />
       </div>
     </div>

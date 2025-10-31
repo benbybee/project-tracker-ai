@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
-import { projects, roles } from '@/server/db';
-import { eq, and, like, or, desc } from 'drizzle-orm';
+import { projects, roles, tasks } from '@/server/db';
+import { eq, and, like, or, desc, gte, lte } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { upsertEmbedding } from '@/server/search/upsertEmbedding';
 import { logProjectActivity } from '@/lib/activity-logger';
@@ -409,5 +409,129 @@ export const projectsRouter = createTRPCRouter({
       }
 
       return { ok: true };
+    }),
+
+  getVelocity: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      // Get tasks completed in the last 4 weeks
+      const fourWeeksAgo = new Date();
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+      const completedTasks = await ctx.db
+        .select({
+          id: tasks.id,
+          completedAt: tasks.updatedAt,
+        })
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.projectId, input.id),
+            eq(tasks.status, 'completed'),
+            gte(tasks.updatedAt, fourWeeksAgo)
+          )
+        );
+
+      // Calculate tasks per week
+      const weeksElapsed = 4;
+      const tasksPerWeek = completedTasks.length / weeksElapsed;
+
+      // Get previous 4 weeks for trend
+      const eightWeeksAgo = new Date();
+      eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+
+      const previousTasks = await ctx.db
+        .select({
+          id: tasks.id,
+        })
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.projectId, input.id),
+            eq(tasks.status, 'completed'),
+            gte(tasks.updatedAt, eightWeeksAgo),
+            lte(tasks.updatedAt, fourWeeksAgo)
+          )
+        );
+
+      const previousTasksPerWeek = previousTasks.length / weeksElapsed;
+      const trend =
+        previousTasksPerWeek > 0
+          ? ((tasksPerWeek - previousTasksPerWeek) / previousTasksPerWeek) * 100
+          : 0;
+
+      // Generate sparkline data (last 7 days)
+      const sparklineData: number[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const dayStart = new Date();
+        dayStart.setDate(dayStart.getDate() - i);
+        dayStart.setHours(0, 0, 0, 0);
+
+        const dayEnd = new Date(dayStart);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        const dayCount = completedTasks.filter((t) => {
+          const completedDate = new Date(t.completedAt!);
+          return completedDate >= dayStart && completedDate <= dayEnd;
+        }).length;
+
+        sparklineData.push(dayCount);
+      }
+
+      return {
+        tasksPerWeek,
+        trend,
+        sparklineData,
+      };
+    }),
+
+  getHealth: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      // Get all tasks for the project
+      const projectTasks = await ctx.db
+        .select({
+          id: tasks.id,
+          status: tasks.status,
+          dueDate: tasks.dueDate,
+        })
+        .from(tasks)
+        .where(eq(tasks.projectId, input.id));
+
+      // Count blockers
+      const blockers = projectTasks.filter(
+        (t) => t.status === 'blocked'
+      ).length;
+
+      // Count overdue tasks
+      const now = new Date();
+      const overdue = projectTasks.filter((t) => {
+        if (!t.dueDate || t.status === 'completed') return false;
+        return new Date(t.dueDate) < now;
+      }).length;
+
+      // Calculate completion rate
+      const total = projectTasks.length;
+      const completed = projectTasks.filter(
+        (t) => t.status === 'completed'
+      ).length;
+      const completionRate = total > 0 ? (completed / total) * 100 : 0;
+
+      // Determine health status
+      let status: 'on-track' | 'at-risk' | 'behind';
+      if (blockers > 2 || overdue > 5) {
+        status = 'behind';
+      } else if (blockers > 0 || overdue > 2 || completionRate < 30) {
+        status = 'at-risk';
+      } else {
+        status = 'on-track';
+      }
+
+      return {
+        status,
+        blockers,
+        overdue,
+        completionRate,
+      };
     }),
 });

@@ -11,6 +11,7 @@ import { SuggestionCard } from '@/components/ai/SuggestionCard';
 import { PlanActionBar } from '@/components/ai/PlanActionBar';
 import { useAiSuggestions } from '@/hooks/useAiSuggestions';
 import { trpc } from '@/lib/trpc';
+import { parseDateAsLocal } from '@/lib/date-utils';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -48,25 +49,22 @@ export default function DailyPlannerPage() {
 
   const todayTasks = useMemo(
     () =>
-      tasks.filter(
-        (t) =>
-          t.dueDate &&
-          new Date(t.dueDate) >= start &&
-          new Date(t.dueDate) < end &&
-          t.status !== 'completed'
-      ),
+      tasks.filter((t) => {
+        if (!t.dueDate || t.status === 'completed') return false;
+        const taskDate = parseDateAsLocal(t.dueDate);
+        return taskDate >= start && taskDate < end;
+      }),
     [tasks, start, end]
   );
 
   const next3 = useMemo(
     () =>
-      tasks.filter(
-        (t) =>
-          t.dueDate &&
-          new Date(t.dueDate) >= end &&
-          new Date(t.dueDate) < new Date(end.getTime() + 3 * 86400000) &&
-          t.status !== 'completed'
-      ),
+      tasks.filter((t) => {
+        if (!t.dueDate || t.status === 'completed') return false;
+        const taskDate = parseDateAsLocal(t.dueDate);
+        const threeDaysLater = new Date(end.getTime() + 3 * 86400000);
+        return taskDate >= end && taskDate < threeDaysLater;
+      }),
     [tasks, end]
   );
 

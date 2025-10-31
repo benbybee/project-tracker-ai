@@ -8,6 +8,7 @@
 import { db } from '@/server/db';
 import { tasks, taskAnalytics, projects } from '@/server/db/schema';
 import { eq, and, gte, lte, sql, isNull } from 'drizzle-orm';
+import { parseDateAsLocal } from '@/lib/date-utils';
 
 export interface CompletionPrediction {
   taskId: string;
@@ -372,13 +373,16 @@ export class PredictiveEngine {
       );
 
     // Categorize by priority
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const taskBreakdown = {
-      urgent: activeTasks.filter(
-        (t) =>
-          t.dueDate &&
-          new Date(t.dueDate) < new Date() &&
-          t.status !== 'completed'
-      ).length,
+      urgent: activeTasks.filter((t) => {
+        if (!t.dueDate || t.status === 'completed') return false;
+        const taskDate = parseDateAsLocal(t.dueDate);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate < today;
+      }).length,
       highPriority: activeTasks.filter((t) => t.priorityScore === '1').length,
       mediumPriority: activeTasks.filter((t) => t.priorityScore === '2').length,
       lowPriority: activeTasks.filter(
@@ -527,9 +531,15 @@ export class PredictiveEngine {
 
     // Generate daily focus recommendations
     const recommendedDailyFocus: string[] = [];
-    const overdueToday = tasksThisWeek.filter(
-      (t) => t.dueDate && new Date(t.dueDate) < new Date()
-    );
+    const todayForComparison = new Date();
+    todayForComparison.setHours(0, 0, 0, 0);
+
+    const overdueToday = tasksThisWeek.filter((t) => {
+      if (!t.dueDate) return false;
+      const taskDate = parseDateAsLocal(t.dueDate);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate < todayForComparison;
+    });
     const highPriority = tasksThisWeek
       .filter((t) => t.priorityScore === '1')
       .slice(0, 3);

@@ -52,15 +52,21 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
             return (
               <button
                 key={item.label}
-                onClick={item.onClick}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  item.onClick();
+                }}
                 className={cn(
-                  'flex flex-col items-center justify-center min-w-[60px] h-full gap-1',
+                  'flex flex-col items-center justify-center min-w-[60px] h-full',
                   'transition-colors duration-200',
                   'hover:bg-black/5 dark:hover:bg-white/5',
                   'active:scale-95 transition-transform',
+                  'touch-manipulation', // Improve touch responsiveness
                   item.active && 'text-indigo-600 dark:text-indigo-400'
                 )}
                 aria-label={item.label}
+                type="button"
               >
                 <Icon
                   className={cn(
@@ -70,16 +76,7 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
                       : 'text-slate-600 dark:text-slate-400'
                   )}
                 />
-                <span
-                  className={cn(
-                    'text-xs font-medium',
-                    item.active
-                      ? 'text-indigo-600 dark:text-indigo-400'
-                      : 'text-slate-600 dark:text-slate-400'
-                  )}
-                >
-                  {item.label}
-                </span>
+                <span className="sr-only">{item.label}</span>
               </button>
             );
           }
@@ -89,10 +86,11 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
               key={item.label}
               href={item.href!}
               className={cn(
-                'flex flex-col items-center justify-center min-w-[60px] h-full gap-1',
+                'flex flex-col items-center justify-center min-w-[60px] h-full',
                 'transition-colors duration-200',
                 'hover:bg-black/5 dark:hover:bg-white/5',
                 'active:scale-95 transition-transform',
+                'touch-manipulation', // Improve touch responsiveness
                 item.active && 'text-indigo-600 dark:text-indigo-400'
               )}
               aria-label={item.label}
@@ -105,16 +103,7 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
                     : 'text-slate-600 dark:text-slate-400'
                 )}
               />
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  item.active
-                    ? 'text-indigo-600 dark:text-indigo-400'
-                    : 'text-slate-600 dark:text-slate-400'
-                )}
-              >
-                {item.label}
-              </span>
+              <span className="sr-only">{item.label}</span>
             </Link>
           );
         })}

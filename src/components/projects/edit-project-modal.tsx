@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { trpc } from '@/lib/trpc';
@@ -14,7 +14,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { GlassCard } from '@/components/ui/glass-card';
 
 const EditProjectSchema = z.object({
@@ -82,6 +88,7 @@ export function EditProjectModal({
     formState: { errors },
     reset,
     watch,
+    control,
   } = useForm<EditProjectFields>({
     resolver: zodResolver(EditProjectSchema),
     defaultValues: {
@@ -173,24 +180,53 @@ export function EditProjectModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Project Type
                 </label>
-                <Select {...register('type')}>
-                  <option value="general">General</option>
-                  <option value="website">Website</option>
-                </Select>
+                <Controller
+                  name="type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General</SelectItem>
+                        <SelectItem value="website">Website</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Role
                 </label>
-                <Select {...register('roleId')}>
-                  <option value="">No role assigned</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </Select>
+                <Controller
+                  name="roleId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || 'no-role'}
+                      onValueChange={(value) =>
+                        field.onChange(value === 'no-role' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="No role assigned" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="no-role">
+                          No role assigned
+                        </SelectItem>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </div>
 

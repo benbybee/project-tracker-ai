@@ -110,13 +110,33 @@ export async function POST(req: Request) {
     let taskCounts;
     try {
       console.error('[AI Analytics Chat] Fetching task counts...');
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      // Calculate start of week (Sunday)
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      const startOfWeekStr = startOfWeek.toISOString();
+
+      // Calculate start of month
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const startOfMonthStr = startOfMonth.toISOString();
+
       [taskCounts] = await db
         .select({
           total: sql<number>`count(*)`,
           completed: sql<number>`count(*) filter (where ${tasks.status} = 'completed')`,
-          inProgress: sql<number>`count(*) filter (where ${tasks.status} = 'in_progress')`,
-          notStarted: sql<number>`count(*) filter (where ${tasks.status} = 'not_started')`,
+          inProgress: sql<number>`count(*) filter (where ${tasks.status} IN ('in_progress', 'in-progress'))`,
+          notStarted: sql<number>`count(*) filter (where ${tasks.status} IN ('not_started', 'not-completed'))`,
+          blocked: sql<number>`count(*) filter (where ${tasks.status} = 'blocked')`,
           overdue: sql<number>`count(*) filter (where ${tasks.dueDate} < current_date and ${tasks.status} != 'completed')`,
+          dueToday: sql<number>`count(*) filter (where ${tasks.dueDate} = ${todayStr} and ${tasks.status} != 'completed')`,
+          createdThisWeek: sql<number>`count(*) filter (where ${tasks.createdAt} >= ${startOfWeekStr})`,
+          createdThisMonth: sql<number>`count(*) filter (where ${tasks.createdAt} >= ${startOfMonthStr})`,
+          completedThisWeek: sql<number>`count(*) filter (where ${tasks.status} = 'completed' AND ${tasks.updatedAt} >= ${startOfWeekStr})`,
+          completedThisMonth: sql<number>`count(*) filter (where ${tasks.status} = 'completed' AND ${tasks.updatedAt} >= ${startOfMonthStr})`,
         })
         .from(tasks)
         .where(and(eq(tasks.userId, userId), eq(tasks.archived, false)));
@@ -175,7 +195,13 @@ export async function POST(req: Request) {
         completed: Number(taskCounts.completed),
         inProgress: Number(taskCounts.inProgress),
         notStarted: Number(taskCounts.notStarted),
+        blocked: Number(taskCounts.blocked),
         overdue: Number(taskCounts.overdue),
+        dueToday: Number(taskCounts.dueToday),
+        createdThisWeek: Number(taskCounts.createdThisWeek),
+        createdThisMonth: Number(taskCounts.createdThisMonth),
+        completedThisWeek: Number(taskCounts.completedThisWeek),
+        completedThisMonth: Number(taskCounts.completedThisMonth),
       },
       projectCount: Number(projectCount.count),
     };
@@ -210,7 +236,15 @@ TASK STATUS:
 - Completed: ${analyticsContext.taskCounts.completed}
 - In progress: ${analyticsContext.taskCounts.inProgress}
 - Not started: ${analyticsContext.taskCounts.notStarted}
+- Blocked: ${analyticsContext.taskCounts.blocked}
 - Overdue: ${analyticsContext.taskCounts.overdue}
+- Due today: ${analyticsContext.taskCounts.dueToday}
+
+RECENT ACTIVITY:
+- Tasks created this week: ${analyticsContext.taskCounts.createdThisWeek}
+- Tasks created this month: ${analyticsContext.taskCounts.createdThisMonth}
+- Tasks completed this week: ${analyticsContext.taskCounts.completedThisWeek}
+- Tasks completed this month: ${analyticsContext.taskCounts.completedThisMonth}
 
 WEEKLY FORECAST:
 - Estimated completions: ${analyticsContext.forecast.estimatedCompletions}
