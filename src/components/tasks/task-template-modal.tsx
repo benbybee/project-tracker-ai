@@ -119,7 +119,7 @@ export function TaskTemplateModal({
 
   const extractVariables = (text: string): string[] => {
     const regex = /{{(\w+)}}/g;
-    const matches = [];
+    const matches: string[] = [];
     let match;
     while ((match = regex.exec(text)) !== null) {
       if (!matches.includes(match[1])) {

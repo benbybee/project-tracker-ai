@@ -17,9 +17,9 @@ interface Comment {
   id: string;
   userId: string;
   content: string;
-  isPinned: boolean;
-  isEdited: boolean;
-  reactions?: Array<{ emoji: string; userId: string }>;
+  isPinned: boolean | null;
+  isEdited: boolean | null;
+  reactions?: unknown;
   createdAt: Date;
   editedAt?: Date | null;
 }
@@ -106,7 +106,11 @@ export function CommentItem({
   };
 
   // Group reactions by emoji
-  const groupedReactions = (comment.reactions || []).reduce(
+  const reactions = (comment.reactions || []) as Array<{
+    emoji: string;
+    userId: string;
+  }>;
+  const groupedReactions = reactions.reduce(
     (acc, reaction) => {
       if (!acc[reaction.emoji]) {
         acc[reaction.emoji] = {

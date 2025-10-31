@@ -189,7 +189,8 @@ export const activityRouter = createTRPCRouter({
       // Undo based on action type
       if (activity.action === 'deleted' && activity.targetType === 'task') {
         // Restore deleted task from payload
-        if (activity.payload && activity.payload.task) {
+        const payload = activity.payload as any;
+        if (payload && payload.task) {
           const { tasks } = await import('@/server/db/schema');
           await db
             .update(tasks)
@@ -205,12 +206,13 @@ export const activityRouter = createTRPCRouter({
         activity.targetType === 'task'
       ) {
         // Restore previous values from payload
-        if (activity.payload && activity.payload.oldValues) {
+        const payload = activity.payload as any;
+        if (payload && payload.oldValues) {
           const { tasks } = await import('@/server/db/schema');
           await db
             .update(tasks)
             .set({
-              ...activity.payload.oldValues,
+              ...payload.oldValues,
               updatedAt: new Date(),
             })
             .where(eq(tasks.id, activity.targetId!));
@@ -221,10 +223,11 @@ export const activityRouter = createTRPCRouter({
       ) {
         // Mark task as not completed
         const { tasks } = await import('@/server/db/schema');
+        const payload = activity.payload as any;
         await db
           .update(tasks)
           .set({
-            status: activity.payload?.previousStatus || 'in_progress',
+            status: payload?.previousStatus || 'in_progress',
             updatedAt: new Date(),
           })
           .where(eq(tasks.id, activity.targetId!));

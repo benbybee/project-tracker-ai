@@ -99,8 +99,22 @@ export const searchRouter = createTRPCRouter({
     .input(
       z.object({
         query: z.string().optional(),
-        statuses: z.array(z.string()).optional(),
-        priorities: z.array(z.string()).optional(),
+        statuses: z
+          .array(
+            z.enum([
+              'not_started',
+              'in_progress',
+              'blocked',
+              'completed',
+              'content',
+              'design',
+              'dev',
+              'qa',
+              'launch',
+            ])
+          )
+          .optional(),
+        priorities: z.array(z.enum(['1', '2', '3', '4'])).optional(),
         roleIds: z.array(z.string()).optional(),
         assigneeIds: z.array(z.string()).optional(),
         projectIds: z.array(z.string()).optional(),
@@ -133,7 +147,7 @@ export const searchRouter = createTRPCRouter({
 
         // Priority filter
         if (input.priorities && input.priorities.length > 0) {
-          conditions.push(inArray(tasks.priority, input.priorities));
+          conditions.push(inArray(tasks.priorityScore, input.priorities));
         }
 
         // Role filter
@@ -153,10 +167,14 @@ export const searchRouter = createTRPCRouter({
 
         // Due date range filter
         if (input.dueDateFrom) {
-          conditions.push(gte(tasks.dueDate, input.dueDateFrom));
+          conditions.push(
+            gte(tasks.dueDate, input.dueDateFrom.toISOString().split('T')[0])
+          );
         }
         if (input.dueDateTo) {
-          conditions.push(lte(tasks.dueDate, input.dueDateTo));
+          conditions.push(
+            lte(tasks.dueDate, input.dueDateTo.toISOString().split('T')[0])
+          );
         }
 
         // No due date filter

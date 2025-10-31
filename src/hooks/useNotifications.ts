@@ -14,6 +14,7 @@ export function useNotifications() {
     trpc.notifications.getNotifications.useQuery({
       limit: 20,
       unreadOnly: false,
+      grouped: false,
     });
 
   const { data: unreadCountData, refetch: refetchUnreadCount } =
@@ -46,7 +47,9 @@ export function useNotifications() {
   // Update local state when data changes
   useEffect(() => {
     if (notificationsData) {
-      setNotifications(notificationsData);
+      setNotifications(
+        Array.isArray(notificationsData) ? notificationsData : []
+      );
     }
   }, [notificationsData]);
 

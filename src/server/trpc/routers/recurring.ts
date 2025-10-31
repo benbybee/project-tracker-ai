@@ -82,7 +82,13 @@ export const recurringRouter = createTRPCRouter({
       const startDate = new Date(input.startDate);
 
       // Convert config to RRULE
-      const rruleString = configToRRule(input.recurrenceConfig, startDate);
+      const config = {
+        ...input.recurrenceConfig,
+        endDate: input.recurrenceConfig.endDate
+          ? new Date(input.recurrenceConfig.endDate)
+          : undefined,
+      };
+      const rruleString = configToRRule(config, startDate);
 
       // Calculate next occurrence
       const nextOccurrence = getNextOccurrence(rruleString, new Date());
@@ -140,7 +146,13 @@ export const recurringRouter = createTRPCRouter({
       const startDate = input.startDate
         ? new Date(input.startDate)
         : new Date();
-      const rruleString = configToRRule(input.recurrenceConfig, startDate);
+      const config = {
+        ...input.recurrenceConfig,
+        endDate: input.recurrenceConfig.endDate
+          ? new Date(input.recurrenceConfig.endDate)
+          : undefined,
+      };
+      const rruleString = configToRRule(config, startDate);
       const nextOccurrence = getNextOccurrence(rruleString, new Date());
 
       // Update the task
@@ -362,14 +374,20 @@ export const recurringRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const startDate = new Date(input.startDate);
-      const rruleString = configToRRule(input.recurrenceConfig, startDate);
+      const config = {
+        ...input.recurrenceConfig,
+        endDate: input.recurrenceConfig.endDate
+          ? new Date(input.recurrenceConfig.endDate)
+          : undefined,
+      };
+      const rruleString = configToRRule(config, startDate);
 
       const occurrences = getNextOccurrences(
         rruleString,
         input.count,
         startDate
       );
-      const description = getRecurrenceDescription(input.recurrenceConfig);
+      const description = getRecurrenceDescription(config);
 
       return {
         description,

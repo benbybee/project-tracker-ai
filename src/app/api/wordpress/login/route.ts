@@ -6,10 +6,7 @@ import { projects } from '@/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 // Rate limiting map: userId -> { count, resetTime }
-const rateLimitMap = new Map<
-  string,
-  { count: number; resetTime: number }
->();
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 const RATE_LIMIT_MAX = 5; // Maximum requests per window
 const RATE_LIMIT_WINDOW = 60 * 1000; // 60 seconds in milliseconds
@@ -71,7 +68,8 @@ export async function GET(request: NextRequest) {
     if (!checkRateLimit(userId)) {
       return NextResponse.json(
         {
-          error: 'Rate limit exceeded. Please wait a minute before trying again.',
+          error:
+            'Rate limit exceeded. Please wait a minute before trying again.',
         },
         { status: 429 }
       );
@@ -130,7 +128,10 @@ export async function GET(request: NextRequest) {
 
     // 7. Construct WordPress API URL
     let wordpressUrl = project.domain;
-    if (!wordpressUrl.startsWith('http://') && !wordpressUrl.startsWith('https://')) {
+    if (
+      !wordpressUrl.startsWith('http://') &&
+      !wordpressUrl.startsWith('https://')
+    ) {
       wordpressUrl = `https://${wordpressUrl}`;
     }
 
@@ -155,7 +156,7 @@ export async function GET(request: NextRequest) {
       if (!wpResponse.ok) {
         const errorText = await wpResponse.text();
         console.error('WordPress API error:', errorText);
-        
+
         return NextResponse.json(
           {
             error: `WordPress API error: ${wpResponse.status} ${wpResponse.statusText}`,
@@ -204,4 +205,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

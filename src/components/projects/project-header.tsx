@@ -112,10 +112,7 @@ export function ProjectHeader({
 
   const handleWordPressLogin = () => {
     // Open WordPress login in a new window
-    window.open(
-      `/api/wordpress/login?projectId=${project.id}`,
-      '_blank'
-    );
+    window.open(`/api/wordpress/login?projectId=${project.id}`, '_blank');
   };
   return (
     <div className="relative overflow-hidden rounded-[var(--radius-xl)] shadow-soft">
@@ -405,7 +402,12 @@ function MetaCard({
             {value}
           </a>
         ) : (
-          <div className={cn("text-sm font-medium", onClick && "text-purple-600 cursor-pointer")}>
+          <div
+            className={cn(
+              'text-sm font-medium',
+              onClick && 'text-purple-600 cursor-pointer'
+            )}
+          >
             {value ?? '—'}
           </div>
         )}
@@ -414,10 +416,10 @@ function MetaCard({
   );
 
   return (
-    <GlassCard 
+    <GlassCard
       className={cn(
-        "py-3 px-4 flex items-center justify-between",
-        onClick && "cursor-pointer hover:bg-purple-50/50 transition-colors"
+        'py-3 px-4 flex items-center justify-between',
+        onClick && 'cursor-pointer hover:bg-purple-50/50 transition-colors'
       )}
       onClick={onClick}
     >

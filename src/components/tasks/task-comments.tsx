@@ -88,7 +88,10 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
     }
   };
 
-  const handleTogglePin = async (commentId: string, isPinned: boolean) => {
+  const handleTogglePin = async (
+    commentId: string,
+    isPinned: boolean | null
+  ) => {
     await togglePinMutation.mutateAsync({
       id: commentId,
       isPinned: !isPinned,

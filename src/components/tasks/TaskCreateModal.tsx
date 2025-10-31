@@ -100,7 +100,12 @@ export function TaskCreateModal({
             | '3'
             | '4',
           startDate: form.dueDate || new Date().toISOString().split('T')[0],
-          recurrenceConfig: recurrenceConfig,
+          recurrenceConfig: {
+            ...recurrenceConfig,
+            endDate: recurrenceConfig.endDate
+              ? recurrenceConfig.endDate.toISOString().split('T')[0]
+              : undefined,
+          },
         });
       } else {
         // Regular task

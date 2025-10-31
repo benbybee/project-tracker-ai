@@ -36,7 +36,11 @@ const ProjectSchema = z.object({
     .or(z.literal('')),
   // WordPress one-click login fields
   wpOneClickEnabled: z.boolean().optional(),
-  wpAdminEmail: z.string().email('Must be a valid email').optional().or(z.literal('')),
+  wpAdminEmail: z
+    .string()
+    .email('Must be a valid email')
+    .optional()
+    .or(z.literal('')),
   wpApiKey: z.string().optional(),
 });
 
@@ -324,7 +328,8 @@ export default function NewProjectPage() {
               {wpOneClickEnabled && (
                 <>
                   <p className="text-xs text-purple-700">
-                    Configure WordPress Magic Login Pro integration for seamless authentication.
+                    Configure WordPress Magic Login Pro integration for seamless
+                    authentication.
                   </p>
 
                   <div className="grid grid-cols-1 gap-4">

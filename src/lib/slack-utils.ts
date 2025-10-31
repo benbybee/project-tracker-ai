@@ -12,21 +12,25 @@ export interface SlackBlock {
   [key: string]: any;
 }
 
-// Priority emoji mapping
+// Priority emoji mapping (priorityScore: 1=low, 2=medium, 3=high, 4=urgent)
 const PRIORITY_EMOJI: Record<string, string> = {
-  low: '🟢',
-  medium: '🟡',
-  high: '🟠',
-  urgent: '🔴',
+  '1': '🟢', // low
+  '2': '🟡', // medium
+  '3': '🟠', // high
+  '4': '🔴', // urgent
 };
 
 // Status emoji mapping
 const STATUS_EMOJI: Record<string, string> = {
-  todo: '⚪',
+  not_started: '⚪',
   in_progress: '🔵',
-  in_review: '🟣',
-  done: '✅',
+  completed: '✅',
   blocked: '🚫',
+  content: '📝',
+  design: '🎨',
+  dev: '💻',
+  qa: '🔍',
+  launch: '🚀',
 };
 
 /**
@@ -36,8 +40,8 @@ export function formatTaskAsSlackBlock(
   task: Task,
   project?: Project | null
 ): SlackBlock[] {
-  const priorityEmoji = PRIORITY_EMOJI[task.priority || 'medium'];
-  const statusEmoji = STATUS_EMOJI[task.status || 'todo'];
+  const priorityEmoji = PRIORITY_EMOJI[task.priorityScore || '2'];
+  const statusEmoji = STATUS_EMOJI[task.status || 'not_started'];
 
   const blocks: SlackBlock[] = [
     {
@@ -57,7 +61,7 @@ export function formatTaskAsSlackBlock(
         },
         {
           type: 'mrkdwn',
-          text: `*Priority:*\n${priorityEmoji} ${formatPriority(task.priority)}`,
+          text: `*Priority:*\n${priorityEmoji} ${formatPriority(task.priorityScore)}`,
         },
       ],
     },
@@ -163,14 +167,14 @@ export function formatTaskListAsSlackBlocks(tasks: Task[]): SlackBlock[] {
   ];
 
   tasks.slice(0, 10).forEach((task) => {
-    const priorityEmoji = PRIORITY_EMOJI[task.priority || 'medium'];
-    const statusEmoji = STATUS_EMOJI[task.status || 'todo'];
+    const priorityEmoji = PRIORITY_EMOJI[task.priorityScore || '2'];
+    const statusEmoji = STATUS_EMOJI[task.status || 'not_started'];
 
     blocks.push({
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `${statusEmoji} *${task.title}*\n${priorityEmoji} ${formatPriority(task.priority)} • ID: \`${task.id.slice(0, 8)}\``,
+        text: `${statusEmoji} *${task.title}*\n${priorityEmoji} ${formatPriority(task.priorityScore)} • ID: \`${task.id.slice(0, 8)}\``,
       },
       accessory: {
         type: 'button',
@@ -254,7 +258,7 @@ export function formatDailyStandupBlocks(data: {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `• ${PRIORITY_EMOJI[task.priority || 'medium']} ${task.title}`,
+          text: `• ${PRIORITY_EMOJI[task.priorityScore || '2']} ${task.title}`,
         },
       }))
     );
@@ -355,7 +359,13 @@ function formatStatus(status: string | null): string {
     .join(' ');
 }
 
-function formatPriority(priority: string | null): string {
-  if (!priority) return 'Medium';
-  return priority.charAt(0).toUpperCase() + priority.slice(1);
+function formatPriority(priorityScore: string | null): string {
+  if (!priorityScore) return 'Medium';
+  const priorityMap: Record<string, string> = {
+    '1': 'Low',
+    '2': 'Medium',
+    '3': 'High',
+    '4': 'Urgent',
+  };
+  return priorityMap[priorityScore] || 'Medium';
 }
