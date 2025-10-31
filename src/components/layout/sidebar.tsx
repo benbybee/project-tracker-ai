@@ -14,6 +14,8 @@ import {
   Command,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Archive,
   BarChart3,
   Globe,
@@ -26,24 +28,73 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { triggerCommandPalette } from '@/lib/sidebar-utils';
 
-const nav = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/projects', label: 'Projects', icon: FolderKanban },
-  { href: '/board', label: 'Board', icon: Columns3 },
-  { href: '/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/daily', label: 'Daily', icon: CalendarDays },
-  { href: '/notes', label: 'Notes', icon: FileText },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/summary', label: 'Summary', icon: BarChart3 },
-  { href: '/projects/website', label: 'Website Boards', icon: Globe },
-  { href: '/plaud', label: 'Plaud AI', icon: Bot },
-  { href: '/tickets', label: 'Tickets', icon: MessagesSquare },
-  { href: '/completed', label: 'Completed', icon: Archive },
-  { href: '/settings', label: 'Settings', icon: Settings },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: any;
+}
+
+interface NavGroup {
+  id: string;
+  label: string;
+  collapsible?: boolean;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    id: 'home',
+    label: 'Home',
+    items: [{ href: '/dashboard', label: 'Dashboard', icon: Home }],
+  },
+  {
+    id: 'plan',
+    label: 'Plan',
+    collapsible: true,
+    items: [
+      { href: '/projects', label: 'Projects', icon: FolderKanban },
+      { href: '/calendar', label: 'Calendar', icon: Calendar },
+      { href: '/daily', label: 'Daily', icon: CalendarDays },
+    ],
+  },
+  {
+    id: 'execute',
+    label: 'Execute',
+    collapsible: true,
+    items: [
+      { href: '/board', label: 'Board', icon: Columns3 },
+      { href: '/tickets', label: 'Tickets', icon: MessagesSquare },
+      { href: '/projects/website', label: 'Website Boards', icon: Globe },
+    ],
+  },
+  {
+    id: 'capture',
+    label: 'Capture',
+    collapsible: true,
+    items: [
+      { href: '/notes', label: 'Notes', icon: FileText },
+      { href: '/plaud', label: 'Plaud AI', icon: Bot },
+    ],
+  },
+  {
+    id: 'review',
+    label: 'Review',
+    collapsible: true,
+    items: [
+      { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+      { href: '/summary', label: 'Summary', icon: BarChart3 },
+      { href: '/completed', label: 'Completed', icon: Archive },
+    ],
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    items: [{ href: '/settings', label: 'Settings', icon: Settings }],
+  },
 ];
 
 // Extract all nav hrefs for checking more specific routes
-const navHrefs = nav.map((item) => item.href);
+const navHrefs = navGroups.flatMap((group) => group.items.map((item) => item.href));
 
 // NavItem component with proper active state detection
 function NavItem({
@@ -118,6 +169,155 @@ function NavItem({
         )}
       </AnimatePresence>
     </Link>
+  );
+}
+
+// NavGroup component with collapsible functionality
+function NavGroup({
+  group,
+  isCompact,
+  isMobile,
+}: {
+  group: NavGroup;
+  isCompact: boolean;
+  isMobile: boolean;
+}) {
+  const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Check if any item in this group is active
+  const hasActiveItem = useMemo(() => {
+    return group.items.some((item) => {
+      if (item.href === '/dashboard') {
+        return pathname === '/dashboard' || pathname === '/';
+      }
+      if (pathname === item.href) {
+        return true;
+      }
+      if (pathname.startsWith(item.href + '/')) {
+        const hasMoreSpecificMatch = navHrefs.some(
+          (navHref) =>
+            navHref !== item.href &&
+            navHref.startsWith(item.href) &&
+            pathname.startsWith(navHref)
+        );
+        return !hasMoreSpecificMatch;
+      }
+      return false;
+    });
+  }, [pathname, group.items]);
+
+  // Load collapsed state from localStorage
+  useEffect(() => {
+    if (group.collapsible && !isCompact) {
+      const savedState = localStorage.getItem(`sidebar-group-collapsed-${group.id}`);
+      if (savedState !== null) {
+        setIsCollapsed(JSON.parse(savedState));
+      }
+    }
+  }, [group.id, group.collapsible, isCompact]);
+
+  // Auto-expand if group contains active item
+  useEffect(() => {
+    if (hasActiveItem && isCollapsed && group.collapsible) {
+      setIsCollapsed(false);
+    }
+  }, [hasActiveItem, isCollapsed, group.collapsible]);
+
+  // Save collapsed state to localStorage
+  const toggleCollapsed = () => {
+    if (group.collapsible) {
+      const newState = !isCollapsed;
+      setIsCollapsed(newState);
+      localStorage.setItem(`sidebar-group-collapsed-${group.id}`, JSON.stringify(newState));
+    }
+  };
+
+  // In compact mode, don't show group headers, just show items with dividers
+  if (isCompact && !isMobile) {
+    return (
+      <>
+        {group.id !== 'home' && (
+          <div className="h-px bg-white/10 my-2 mx-3" />
+        )}
+        {group.items.map((item) => (
+          <NavItem
+            key={item.href}
+            href={item.href}
+            icon={item.icon}
+            label={item.label}
+            isCompact={true}
+            isMobile={isMobile}
+          />
+        ))}
+      </>
+    );
+  }
+
+  // Normal mode with group headers
+  return (
+    <div className="space-y-1">
+      {group.collapsible ? (
+        <>
+          <button
+            onClick={toggleCollapsed}
+            className={cn(
+              'flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
+              'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300',
+              'focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-lg'
+            )}
+            aria-expanded={!isCollapsed}
+          >
+            <span>{group.label}</span>
+            {isCollapsed ? (
+              <ChevronDown className="h-3 w-3" />
+            ) : (
+              <ChevronUp className="h-3 w-3" />
+            )}
+          </button>
+          <AnimatePresence initial={false}>
+            {!isCollapsed && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                {group.items.map((item) => (
+                  <NavItem
+                    key={item.href}
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    isCompact={false}
+                    isMobile={isMobile}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      ) : (
+        <>
+          {group.id !== 'home' && (
+            <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              {group.label}
+            </div>
+          )}
+          {group.items.map((item) => (
+            <NavItem
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              isCompact={false}
+              isMobile={isMobile}
+            />
+          ))}
+        </>
+      )}
+    </div>
   );
 }
 
@@ -242,13 +442,11 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-1 p-3" aria-label="Main">
-          {nav.map((item) => (
-            <NavItem
-              key={item.href}
-              href={item.href}
-              icon={item.icon}
-              label={item.label}
+        <nav className="flex flex-col gap-2 p-3 overflow-y-auto flex-1" aria-label="Main">
+          {navGroups.map((group) => (
+            <NavGroup
+              key={group.id}
+              group={group}
               isCompact={!isMobile && isCompact}
               isMobile={isMobile}
             />

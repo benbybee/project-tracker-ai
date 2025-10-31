@@ -31,54 +31,118 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
+    console.error('[AI Analytics Chat] Starting request for user:', userId);
 
     // Gather analytics context
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const [completionStats, patterns, workloadAnalysis, weeklyForecast] =
-      await Promise.all([
-        // Get completion statistics
-        db
-          .select({
-            count: sql<number>`count(*)`,
-            avgDuration: sql<number>`avg(${taskAnalytics.actualDurationMinutes})`,
-          })
-          .from(taskAnalytics)
-          .where(
-            and(
-              eq(taskAnalytics.userId, userId),
-              gte(taskAnalytics.createdAt, thirtyDaysAgo)
-            )
-          ),
+    let completionStats;
+    let patterns;
+    let workloadAnalysis;
+    let weeklyForecast;
 
-        // Get user patterns
-        patternAnalyzer.getStoredPatterns(userId),
+    try {
+      console.error('[AI Analytics Chat] Fetching completion stats...');
+      [completionStats] = await db
+        .select({
+          count: sql<number>`count(*)`,
+          avgDuration: sql<number>`avg(${taskAnalytics.actualDurationMinutes})`,
+        })
+        .from(taskAnalytics)
+        .where(
+          and(
+            eq(taskAnalytics.userId, userId),
+            gte(taskAnalytics.createdAt, thirtyDaysAgo)
+          )
+        );
+      console.error('[AI Analytics Chat] Completion stats fetched successfully');
+    } catch (error: any) {
+      console.error('[AI Analytics Chat] Error fetching completion stats:', {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw new Error(`Failed to fetch completion stats: ${error.message}`);
+    }
 
-        // Get workload analysis
-        predictiveEngine.analyzeWorkload(userId),
+    try {
+      console.error('[AI Analytics Chat] Fetching user patterns...');
+      patterns = await patternAnalyzer.getStoredPatterns(userId);
+      console.error('[AI Analytics Chat] User patterns fetched:', {
+        found: !!patterns,
+      });
+    } catch (error: any) {
+      console.error('[AI Analytics Chat] Error fetching patterns:', {
+        error: error.message,
+        stack: error.stack,
+      });
+      // Continue without patterns
+      patterns = null;
+    }
 
-        // Get weekly forecast
-        predictiveEngine.getWeeklyForecast(userId),
-      ]);
+    try {
+      console.error('[AI Analytics Chat] Analyzing workload...');
+      workloadAnalysis = await predictiveEngine.analyzeWorkload(userId);
+      console.error('[AI Analytics Chat] Workload analyzed successfully');
+    } catch (error: any) {
+      console.error('[AI Analytics Chat] Error analyzing workload:', {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw new Error(`Failed to analyze workload: ${error.message}`);
+    }
+
+    try {
+      console.error('[AI Analytics Chat] Fetching weekly forecast...');
+      weeklyForecast = await predictiveEngine.getWeeklyForecast(userId);
+      console.error('[AI Analytics Chat] Weekly forecast fetched successfully');
+    } catch (error: any) {
+      console.error('[AI Analytics Chat] Error fetching forecast:', {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw new Error(`Failed to fetch weekly forecast: ${error.message}`);
+    }
 
     // Get active task counts
-    const [taskCounts] = await db
-      .select({
-        total: sql<number>`count(*)`,
-        completed: sql<number>`count(*) filter (where ${tasks.status} = 'completed')`,
-        inProgress: sql<number>`count(*) filter (where ${tasks.status} = 'in_progress')`,
-        notStarted: sql<number>`count(*) filter (where ${tasks.status} = 'not_started')`,
-        overdue: sql<number>`count(*) filter (where ${tasks.dueDate} < current_date and ${tasks.status} != 'completed')`,
-      })
-      .from(tasks)
-      .where(and(eq(tasks.userId, userId), eq(tasks.archived, false)));
+    let taskCounts;
+    try {
+      console.error('[AI Analytics Chat] Fetching task counts...');
+      [taskCounts] = await db
+        .select({
+          total: sql<number>`count(*)`,
+          completed: sql<number>`count(*) filter (where ${tasks.status} = 'completed')`,
+          inProgress: sql<number>`count(*) filter (where ${tasks.status} = 'in_progress')`,
+          notStarted: sql<number>`count(*) filter (where ${tasks.status} = 'not_started')`,
+          overdue: sql<number>`count(*) filter (where ${tasks.dueDate} < current_date and ${tasks.status} != 'completed')`,
+        })
+        .from(tasks)
+        .where(and(eq(tasks.userId, userId), eq(tasks.archived, false)));
+      console.error('[AI Analytics Chat] Task counts fetched successfully');
+    } catch (error: any) {
+      console.error('[AI Analytics Chat] Error fetching task counts:', {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw new Error(`Failed to fetch task counts: ${error.message}`);
+    }
 
     // Get project counts
-    const [projectCount] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(projects)
-      .where(eq(projects.userId, userId));
+    let projectCount;
+    try {
+      console.error('[AI Analytics Chat] Fetching project counts...');
+      [projectCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(projects)
+        .where(eq(projects.userId, userId));
+      console.error('[AI Analytics Chat] Project counts fetched successfully');
+    } catch (error: any) {
+      console.error('[AI Analytics Chat] Error fetching project counts:', {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw new Error(`Failed to fetch project counts: ${error.message}`);
+    }
 
     // Build context for AI
     const analyticsContext = {
@@ -156,28 +220,56 @@ PROJECTS: ${analyticsContext.projectCount} total
 Provide helpful, actionable insights based on this data. Be conversational but precise. Use specific numbers from the data. If asked about trends, mention the velocity trend. If asked about productivity, highlight the productive hours pattern.`;
 
     // Call OpenAI
-    const openai = getOpenAIClient();
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: query },
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
-    });
+    let completion;
+    try {
+      console.error('[AI Analytics Chat] Initializing OpenAI client...');
+      const openai = getOpenAIClient();
+      
+      console.error('[AI Analytics Chat] Calling OpenAI API...');
+      completion = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: query },
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+      });
+      console.error('[AI Analytics Chat] OpenAI API call successful');
+    } catch (error: any) {
+      console.error('[AI Analytics Chat] OpenAI API error:', {
+        error: error.message,
+        code: error.code,
+        type: error.type,
+        status: error.status,
+        stack: error.stack,
+      });
+      throw new Error(
+        `OpenAI API failed: ${error.message} (${error.type || 'unknown error'})`
+      );
+    }
 
     const response = completion.choices[0]?.message?.content;
 
     if (!response) {
+      console.error('[AI Analytics Chat] Empty response from OpenAI');
       throw new Error('No response from AI');
     }
 
+    console.error('[AI Analytics Chat] Request completed successfully');
     return NextResponse.json({ response });
   } catch (error: any) {
-    console.error('[AI Analytics Chat] Error:', error);
+    console.error('[AI Analytics Chat] Fatal error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
     return NextResponse.json(
-      { error: error.message || 'Failed to process query' },
+      {
+        error: error.message || 'Failed to process query',
+        details:
+          process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }

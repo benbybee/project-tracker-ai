@@ -70,11 +70,11 @@ User is automatically logged into WordPress admin
 
 Three new fields are added to the `projects` table:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `wpOneClickEnabled` | boolean | Enables WordPress one-click login for this project |
-| `wpAdminEmail` | text (nullable) | WordPress admin email for authentication |
-| `wpApiKey` | text (nullable) | Magic Login Pro API key (stored encrypted) |
+| Field               | Type            | Description                                        |
+| ------------------- | --------------- | -------------------------------------------------- |
+| `wpOneClickEnabled` | boolean         | Enables WordPress one-click login for this project |
+| `wpAdminEmail`      | text (nullable) | WordPress admin email for authentication           |
+| `wpApiKey`          | text (nullable) | Magic Login Pro API key (stored encrypted)         |
 
 ### Environment Variables (Optional)
 
@@ -121,10 +121,12 @@ WP_GLOBAL_API_KEY=your-default-api-key
 Once WordPress one-click login is enabled for a project, you'll see login buttons in two places:
 
 #### 1. Project Header (Quick Access)
+
 - Look for the **"Open WordPress Site"** button next to Sync/Edit/Delete
 - Click to open WordPress admin in a new context
 
 #### 2. Project Metadata Cards (Website Projects)
+
 - Scroll to the website details section
 - Find the **"WordPress Admin"** card
 - Click "One-Click Login Available" to access
@@ -171,7 +173,8 @@ To prevent abuse, the WordPress login endpoint is rate-limited:
 
 #### "WordPress API Error: Invalid API Key"
 
-**Solution**: 
+**Solution**:
+
 - Verify the API key in Magic Login Pro settings
 - Ensure the key is copied correctly (no extra spaces)
 - Regenerate the API key if necessary
@@ -179,6 +182,7 @@ To prevent abuse, the WordPress login endpoint is rate-limited:
 #### "WordPress API Error: Email not found"
 
 **Solution**:
+
 - Verify the WordPress admin email exists in WordPress
 - Check that the user account is active
 - Ensure the email matches exactly (case-sensitive)
@@ -186,12 +190,14 @@ To prevent abuse, the WordPress login endpoint is rate-limited:
 #### "Rate Limit Exceeded"
 
 **Solution**:
+
 - Wait 60 seconds before trying again
 - Avoid clicking the login button multiple times rapidly
 
 #### "CORS Error" or "Network Error"
 
 **Solution**:
+
 - Verify WordPress site is accessible via HTTPS
 - Check WordPress REST API is enabled: Visit `{domain}/wp-json/`
 - Ensure Magic Login Pro plugin is active
@@ -200,6 +206,7 @@ To prevent abuse, the WordPress login endpoint is rate-limited:
 #### Magic Link Redirects to 404
 
 **Solution**:
+
 - Check WordPress permalink settings (must not be "Plain")
 - Re-save permalink settings: Settings → Permalinks → Save Changes
 - Verify Magic Login Pro is up to date
@@ -215,15 +222,19 @@ To prevent abuse, the WordPress login endpoint is rate-limited:
 Generates a magic link and redirects the user to WordPress admin.
 
 **Query Parameters**:
+
 - `projectId` (required): UUID of the project
 
-**Authentication**: 
+**Authentication**:
+
 - Requires valid session (user must be logged in)
 
-**Rate Limiting**: 
+**Rate Limiting**:
+
 - 5 requests per user per minute
 
 **Response**:
+
 - **302 Redirect**: Redirects to WordPress magic link on success
 - **401 Unauthorized**: User not authenticated
 - **403 Forbidden**: User does not own project or WordPress login disabled
@@ -232,6 +243,7 @@ Generates a magic link and redirects the user to WordPress admin.
 - **500 Internal Server Error**: WordPress API error (check logs)
 
 **Example**:
+
 ```
 GET /api/wordpress/login?projectId=550e8400-e29b-41d4-a716-446655440000
 ```
@@ -245,12 +257,14 @@ GET /api/wordpress/login?projectId=550e8400-e29b-41d4-a716-446655440000
 Creates a one-time magic link for passwordless login.
 
 **Headers**:
+
 ```
 Authorization: Bearer {api_key}
 Content-Type: application/json
 ```
 
 **Body**:
+
 ```json
 {
   "email": "admin@example.com"
@@ -258,6 +272,7 @@ Content-Type: application/json
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -266,6 +281,7 @@ Content-Type: application/json
 ```
 
 **Error Response**:
+
 ```json
 {
   "success": false,
@@ -316,6 +332,7 @@ Content-Type: application/json
 ### Monitoring
 
 Monitor these metrics:
+
 - **Success rate**: Percentage of successful login attempts
 - **Error rate**: Track specific error types (invalid key, user not found, etc.)
 - **Rate limit hits**: How often users hit rate limits
@@ -344,6 +361,7 @@ Monitor these metrics:
 ### Q: Is this secure?
 
 **A**: Yes, when properly configured:
+
 - API keys are encrypted in the database
 - Magic links are one-time use with short TTL
 - Domain whitelisting prevents unauthorized access
@@ -359,6 +377,7 @@ Monitor these metrics:
 ## Support
 
 For issues related to:
+
 - **Task Tracker app**: Check application logs and verify project configuration
 - **Magic Login Pro**: Consult plugin documentation at https://handyplugins.co/magic-login-pro/docs/
 - **WordPress API**: Ensure REST API is enabled and accessible
@@ -376,9 +395,9 @@ For issues related to:
 ## Changelog
 
 ### v1.0.0 (Initial Release)
+
 - One-click WordPress login integration
 - Per-project API key configuration
 - Rate limiting (5 req/min per user)
 - Security hardening (encryption, session validation)
 - Documentation and testing checklist
-

@@ -87,16 +87,17 @@ Choose one of these database providers:
 2. Vercel automatically adds `DATABASE_URL` to your environment variables
 
 3. After deployment, run migration:
+
    ```bash
    # Install Vercel CLI
    npm i -g vercel
-   
+
    # Link to your project
    vercel link
-   
+
    # Pull environment variables
    vercel env pull .env.local
-   
+
    # Run database migration
    pnpm db:push
    ```
@@ -132,6 +133,7 @@ Required for file attachments (Sprint 4.1).
 2. Vercel automatically adds `BLOB_READ_WRITE_TOKEN`
 
 **Storage Limits:**
+
 - Hobby plan: 1GB free
 - Pro plan: 100GB included
 
@@ -149,11 +151,13 @@ Required for AI features (Sprint 5.2).
 6. Add to Vercel as `OPENAI_API_KEY`
 
 **Cost Estimate:**
+
 - GPT-3.5-turbo: ~$0.002 per 1K tokens
 - Average analytics query: ~500 tokens = $0.001
 - Expected monthly cost: $5-20 (depending on usage)
 
 **Free Credits:**
+
 - New accounts get $5 free credits
 - Valid for 3 months
 
@@ -235,6 +239,7 @@ openssl rand -hex 32
 ### Part 8: Add to Vercel Environment Variables
 
 Go to Vercel project > Settings > Environment Variables:
+
 ```bash
 SLACK_CLIENT_ID=1234567890.1234567890
 SLACK_CLIENT_SECRET=abc123def456ghi789jkl012mno345pq
@@ -247,6 +252,7 @@ Select all environments and click **"Save"**
 ### Part 9: Redeploy
 
 After adding Slack variables, trigger a new deployment:
+
 - Go to **Deployments** tab
 - Click **"..."** on latest deployment
 - Click **"Redeploy"**
@@ -260,6 +266,7 @@ After adding Slack variables, trigger a new deployment:
 Visit your deployed URL: `https://your-project-name.vercel.app`
 
 **Check:**
+
 - ✅ Homepage loads
 - ✅ Can sign up / sign in
 - ✅ Dashboard displays
@@ -284,6 +291,7 @@ pnpm db:studio
 ### 3. Test All Features
 
 #### Core Features
+
 - [ ] User authentication (sign up, login, logout)
 - [ ] Create/edit/delete tasks
 - [ ] Kanban board drag & drop
@@ -291,29 +299,34 @@ pnpm db:studio
 - [ ] Mobile responsive design
 
 #### Phase 1 Features
+
 - [ ] Animations (shimmer loaders, button press)
 - [ ] Keyboard shortcuts (Ctrl/⌘ + K)
 - [ ] Mobile footer navigation
 - [ ] Touch-friendly status picker
 
 #### Phase 2 Features
+
 - [ ] Recurring tasks
 - [ ] Task templates
 - [ ] Calendar view (month/week/day)
 
 #### Phase 3 Features
+
 - [ ] Notification settings
 - [ ] Activity feed with undo
 - [ ] Task comments
 - [ ] Emoji reactions
 
 #### Phase 4 Features
+
 - [ ] File attachments (upload/preview/download)
 - [ ] Advanced search with filters
 - [ ] Saved views
 - [ ] Slack integration (if configured)
 
 #### Phase 5 Features
+
 - [ ] Analytics dashboard
 - [ ] AI insights panel
 - [ ] Predictive analytics
@@ -333,11 +346,11 @@ pnpm db:studio
 
 Your deployment includes 3 automated CRON jobs:
 
-| Job | Schedule | Purpose |
-|-----|----------|---------|
-| Archive Completed Tasks | Sundays 11:59 PM | Archive old completed tasks |
-| AI Pattern Analysis | Sundays 12:00 AM | Analyze user patterns weekly |
-| Slack Daily Standup | Mon-Fri 9:00 AM | Send daily standup to Slack channels |
+| Job                     | Schedule         | Purpose                              |
+| ----------------------- | ---------------- | ------------------------------------ |
+| Archive Completed Tasks | Sundays 11:59 PM | Archive old completed tasks          |
+| AI Pattern Analysis     | Sundays 12:00 AM | Analyze user patterns weekly         |
+| Slack Daily Standup     | Mon-Fri 9:00 AM  | Send daily standup to Slack channels |
 
 **Note:** CRON jobs require Vercel Pro plan. On Hobby plan, they won't run but won't cause errors.
 
@@ -378,12 +391,14 @@ Your deployment includes 3 automated CRON jobs:
 ### Build Fails
 
 **Error:** `Cannot find module`
+
 ```bash
 # Solution: Clear build cache
 vercel --force
 ```
 
 **Error:** `TypeScript errors`
+
 ```bash
 # Solution: Run lint locally first
 pnpm lint
@@ -393,22 +408,26 @@ pnpm lint
 ### Runtime Errors
 
 **Error:** `Database connection failed`
+
 1. Check `DATABASE_URL` is set correctly
 2. Verify database accepts external connections
 3. Check SSL mode: `?sslmode=require`
 4. Run `pnpm db:push` to create tables
 
 **Error:** `NextAuth configuration error`
+
 1. Verify `NEXTAUTH_SECRET` is at least 32 characters
 2. Check `NEXTAUTH_URL` matches deployment URL
 3. Clear browser cookies
 
 **Error:** `OpenAI API error`
+
 1. Verify API key is valid (starts with `sk-`)
 2. Check API credits: https://platform.openai.com/usage
 3. Ensure billing is set up
 
 **Error:** `Blob storage error`
+
 1. Verify Blob store exists in Vercel
 2. Check `BLOB_READ_WRITE_TOKEN` is set
 3. Verify store is in same region
@@ -416,11 +435,13 @@ pnpm lint
 ### Slack Integration Issues
 
 **Error:** `Slack command not working`
+
 1. Verify Request URL includes `https://`
 2. Check URL verification passed (green checkmark)
 3. Redeploy after adding Slack env vars
 
 **Error:** `OAuth redirect fails`
+
 1. Verify redirect URL in Slack app matches deployment URL
 2. Check `SLACK_CLIENT_ID` and `SLACK_CLIENT_SECRET` are correct
 3. Ensure user has admin permissions in workspace
@@ -439,6 +460,7 @@ pnpm lint
 ### Caching Strategy
 
 Already configured in `vercel.json`:
+
 - Service Worker: No cache (always fresh)
 - Manifest: 1 year cache
 - Icons: 1 year cache
@@ -462,6 +484,7 @@ CREATE INDEX idx_tasks_created_at ON tasks(created_at);
 ## 📈 Scaling Considerations
 
 ### Vercel Hobby Plan (Free)
+
 - ✅ Sufficient for: 100-1000 users
 - ✅ Bandwidth: 100GB/month
 - ✅ Serverless Function Execution: 100GB-hours/month
@@ -469,6 +492,7 @@ CREATE INDEX idx_tasks_created_at ON tasks(created_at);
 - ❌ No team collaboration
 
 ### Vercel Pro Plan ($20/month)
+
 - ✅ Unlimited users
 - ✅ Bandwidth: 1TB/month
 - ✅ CRON jobs enabled
@@ -476,6 +500,7 @@ CREATE INDEX idx_tasks_created_at ON tasks(created_at);
 - ✅ Preview deployments: 12 hours retention
 
 ### When to Upgrade
+
 - User count > 1000
 - Need CRON jobs (automated tasks)
 - Team collaboration required
@@ -500,6 +525,7 @@ CREATE INDEX idx_tasks_created_at ON tasks(created_at);
 ### Recommended: Enable Vercel Security Headers
 
 Add to `next.config.js`:
+
 ```javascript
 async headers() {
   return [
@@ -551,10 +577,12 @@ If you encounter issues:
 ## ✅ Deployment Complete!
 
 Once deployed, your app will be available at:
+
 - **Production:** `https://your-project-name.vercel.app`
 - **Custom Domain:** Configure in Vercel Settings > Domains
 
 **Next Steps:**
+
 1. ✅ Add custom domain (optional)
 2. ✅ Invite team members
 3. ✅ Set up monitoring alerts
@@ -566,6 +594,7 @@ Once deployed, your app will be available at:
 **Congratulations! 🎉**
 
 You've deployed a production-ready project management system with:
+
 - ✅ 13 sprints completed
 - ✅ 5 phases of features
 - ✅ AI-powered analytics
@@ -580,4 +609,3 @@ You've deployed a production-ready project management system with:
 **Last Updated:** October 30, 2025
 **Author:** Project Tracker AI Team
 **Version:** 1.0.0
-

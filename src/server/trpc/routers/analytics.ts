@@ -426,62 +426,133 @@ export const analyticsRouter = createTRPCRouter({
 
   // Get AI-powered insights and predictions
   getAiInsights: protectedProcedure.query(async ({ ctx }) => {
-    const { patternAnalyzer } = await import('@/lib/ai/pattern-analyzer');
-    const { predictiveEngine } = await import('@/lib/ai/predictive-engine');
+    console.error('[Analytics.getAiInsights] Starting for user:', ctx.session.user.id);
+    
+    try {
+      const { patternAnalyzer } = await import('@/lib/ai/pattern-analyzer');
+      const { predictiveEngine } = await import('@/lib/ai/predictive-engine');
 
-    const userId = ctx.session.user.id;
+      const userId = ctx.session.user.id;
 
-    // Get user patterns
-    const patterns = await patternAnalyzer.getStoredPatterns(userId);
-
-    // If no patterns exist, analyze them first
-    let userPatterns = patterns;
-    if (!userPatterns) {
+      // Get user patterns with error handling
+      let userPatterns = null;
       try {
-        userPatterns = await patternAnalyzer.analyzeUserPatterns(userId);
-      } catch (error) {
-        console.error('[Analytics] Error analyzing patterns:', error);
+        console.error('[Analytics.getAiInsights] Fetching stored patterns...');
+        const patterns = await patternAnalyzer.getStoredPatterns(userId);
+
+        // If no patterns exist, analyze them first
+        userPatterns = patterns;
+        if (!userPatterns) {
+          console.error('[Analytics.getAiInsights] No patterns found, analyzing...');
+          try {
+            userPatterns = await patternAnalyzer.analyzeUserPatterns(userId);
+            console.error('[Analytics.getAiInsights] Patterns analyzed successfully');
+          } catch (error: any) {
+            console.error('[Analytics.getAiInsights] Error analyzing patterns:', {
+              error: error.message,
+              stack: error.stack,
+            });
+            userPatterns = null;
+          }
+        } else {
+          console.error('[Analytics.getAiInsights] Patterns fetched successfully');
+        }
+      } catch (error: any) {
+        console.error('[Analytics.getAiInsights] Error fetching patterns:', {
+          error: error.message,
+          stack: error.stack,
+        });
         userPatterns = null;
       }
+
+      // Get workload analysis with error handling
+      let workloadAnalysis;
+      try {
+        console.error('[Analytics.getAiInsights] Analyzing workload...');
+        workloadAnalysis = await predictiveEngine.analyzeWorkload(userId);
+        console.error('[Analytics.getAiInsights] Workload analyzed successfully');
+      } catch (error: any) {
+        console.error('[Analytics.getAiInsights] Error analyzing workload:', {
+          error: error.message,
+          stack: error.stack,
+        });
+        throw new Error(`Failed to analyze workload: ${error.message}`);
+      }
+
+      // Get weekly forecast with error handling
+      let weeklyForecast;
+      try {
+        console.error('[Analytics.getAiInsights] Fetching weekly forecast...');
+        weeklyForecast = await predictiveEngine.getWeeklyForecast(userId);
+        console.error('[Analytics.getAiInsights] Weekly forecast fetched successfully');
+      } catch (error: any) {
+        console.error('[Analytics.getAiInsights] Error fetching forecast:', {
+          error: error.message,
+          stack: error.stack,
+        });
+        throw new Error(`Failed to fetch weekly forecast: ${error.message}`);
+      }
+
+      // Get high-risk tasks with error handling
+      let highRiskTasks = [];
+      try {
+        console.error('[Analytics.getAiInsights] Fetching active tasks...');
+        const activeTasks = await db
+          .select()
+          .from(tasks)
+          .where(
+            and(
+              eq(tasks.userId, userId),
+              eq(tasks.archived, false),
+              sql`${tasks.status} IN ('not_started', 'in_progress')`
+            )
+          )
+          .limit(20);
+
+        console.error('[Analytics.getAiInsights] Assessing task risks...');
+        const riskAssessments = await Promise.all(
+          activeTasks.map((task) =>
+            predictiveEngine.assessTaskRisk(userId, task.id).catch((error: any) => {
+              console.error('[Analytics.getAiInsights] Risk assessment failed for task:', {
+                taskId: task.id,
+                error: error.message,
+              });
+              return null;
+            })
+          )
+        );
+
+        highRiskTasks = riskAssessments
+          .filter(
+            (r) => r && (r.riskLevel === 'high' || r.riskLevel === 'critical')
+          )
+          .slice(0, 5);
+        
+        console.error('[Analytics.getAiInsights] Risk assessments completed');
+      } catch (error: any) {
+        console.error('[Analytics.getAiInsights] Error with risk assessments:', {
+          error: error.message,
+          stack: error.stack,
+        });
+        // Continue with empty high risk tasks
+        highRiskTasks = [];
+      }
+
+      console.error('[Analytics.getAiInsights] Completed successfully');
+      return {
+        patterns: userPatterns,
+        workload: workloadAnalysis,
+        weeklyForecast,
+        highRiskTasks,
+      };
+    } catch (error: any) {
+      console.error('[Analytics.getAiInsights] Fatal error:', {
+        error: error.message,
+        stack: error.stack,
+        userId: ctx.session.user.id,
+      });
+      throw error;
     }
-
-    // Get workload analysis
-    const workloadAnalysis = await predictiveEngine.analyzeWorkload(userId);
-
-    // Get weekly forecast
-    const weeklyForecast = await predictiveEngine.getWeeklyForecast(userId);
-
-    // Get high-risk tasks
-    const activeTasks = await db
-      .select()
-      .from(tasks)
-      .where(
-        and(
-          eq(tasks.userId, userId),
-          eq(tasks.archived, false),
-          sql`${tasks.status} IN ('not_started', 'in_progress')`
-        )
-      )
-      .limit(20);
-
-    const riskAssessments = await Promise.all(
-      activeTasks.map((task) =>
-        predictiveEngine.assessTaskRisk(userId, task.id)
-      )
-    );
-
-    const highRiskTasks = riskAssessments
-      .filter(
-        (r) => r && (r.riskLevel === 'high' || r.riskLevel === 'critical')
-      )
-      .slice(0, 5);
-
-    return {
-      patterns: userPatterns,
-      workload: workloadAnalysis,
-      weeklyForecast,
-      highRiskTasks,
-    };
   }),
 
   // Get prediction for a specific task

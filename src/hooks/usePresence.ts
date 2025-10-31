@@ -50,7 +50,7 @@ export function usePresence() {
     (_data: Partial<PresenceData>) => {
       if (!session?.user) return;
 
-      // In a real implementation, this would send presence data to the WebSocket
+      // Placeholder - no-op method for presence tracking
     },
     [session]
   );
@@ -60,7 +60,7 @@ export function usePresence() {
     (_entityType: 'task' | 'project', _entityId: string) => {
       if (!session?.user) return;
 
-      // In a real implementation, this would send typing indicator to the WebSocket
+      // Placeholder - no-op method for typing indicators
     },
     [session]
   );
@@ -70,7 +70,7 @@ export function usePresence() {
     (_entityType: 'task' | 'project', _entityId: string) => {
       if (!session?.user) return;
 
-      // In a real implementation, this would clear typing indicator via the WebSocket
+      // Placeholder - no-op method for typing indicators
     },
     [session]
   );

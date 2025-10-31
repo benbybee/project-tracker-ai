@@ -33,57 +33,73 @@ export const projectsRouter = createTRPCRouter({
       })
     )
     .query(async ({ input, ctx }) => {
-      const conditions = [eq(projects.userId, ctx.session.user.id)];
+      try {
+        const conditions = [eq(projects.userId, ctx.session.user.id)];
 
-      if (input.search) {
-        conditions.push(
-          or(
-            like(projects.name, `%${input.search}%`),
-            like(projects.description, `%${input.search}%`)
-          )!
-        );
+        if (input.search) {
+          conditions.push(
+            or(
+              like(projects.name, `%${input.search}%`),
+              like(projects.description, `%${input.search}%`)
+            )!
+          );
+        }
+
+        if (input.type) {
+          conditions.push(eq(projects.type, input.type));
+        }
+
+        if (input.roleId) {
+          conditions.push(eq(projects.roleId, input.roleId));
+        }
+
+        return await ctx.db
+          .select({
+            id: projects.id,
+            name: projects.name,
+            type: projects.type,
+            description: projects.description,
+            roleId: projects.roleId,
+            notes: projects.notes,
+            pinned: projects.pinned,
+            domain: projects.domain,
+            hostingProvider: projects.hostingProvider,
+            dnsStatus: projects.dnsStatus,
+            goLiveDate: projects.goLiveDate,
+            repoUrl: projects.repoUrl,
+            stagingUrl: projects.stagingUrl,
+            checklistJson: projects.checklistJson,
+            websiteStatus: projects.websiteStatus,
+            wpOneClickEnabled: projects.wpOneClickEnabled,
+            wpAdminEmail: projects.wpAdminEmail,
+            wpApiKey: projects.wpApiKey,
+            createdAt: projects.createdAt,
+            updatedAt: projects.updatedAt,
+            role: {
+              id: roles.id,
+              name: roles.name,
+              color: roles.color,
+            },
+          })
+          .from(projects)
+          .leftJoin(roles, eq(projects.roleId, roles.id))
+          .where(and(...conditions))
+          .orderBy(desc(projects.pinned), desc(projects.updatedAt));
+      } catch (error: any) {
+        // Enhanced error logging for debugging
+        console.error('[projects.list] Database query failed:', {
+          error: error?.message,
+          code: error?.code,
+          userId: ctx.session.user.id,
+          input,
+        });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message:
+            'Failed to fetch projects. Please check database connection.',
+          cause: error,
+        });
       }
-
-      if (input.type) {
-        conditions.push(eq(projects.type, input.type));
-      }
-
-      if (input.roleId) {
-        conditions.push(eq(projects.roleId, input.roleId));
-      }
-
-      return await ctx.db
-        .select({
-          id: projects.id,
-          name: projects.name,
-          type: projects.type,
-          description: projects.description,
-          roleId: projects.roleId,
-          notes: projects.notes,
-          pinned: projects.pinned,
-          domain: projects.domain,
-          hostingProvider: projects.hostingProvider,
-          dnsStatus: projects.dnsStatus,
-          goLiveDate: projects.goLiveDate,
-          repoUrl: projects.repoUrl,
-          stagingUrl: projects.stagingUrl,
-          checklistJson: projects.checklistJson,
-          websiteStatus: projects.websiteStatus,
-          wpOneClickEnabled: projects.wpOneClickEnabled,
-          wpAdminEmail: projects.wpAdminEmail,
-          wpApiKey: projects.wpApiKey,
-          createdAt: projects.createdAt,
-          updatedAt: projects.updatedAt,
-          role: {
-            id: roles.id,
-            name: roles.name,
-            color: roles.color,
-          },
-        })
-        .from(projects)
-        .leftJoin(roles, eq(projects.roleId, roles.id))
-        .where(and(...conditions))
-        .orderBy(desc(projects.pinned), desc(projects.updatedAt));
     }),
 
   get: protectedProcedure

@@ -13,6 +13,7 @@
 ## 📝 5-Minute Deploy - Copy & Paste
 
 ### 1. Import to Vercel
+
 🔗 https://vercel.com/new/import?s=https://github.com/benbybee/project-tracker-ai
 
 ### 2. Generate Secrets (Run in Terminal)
@@ -58,11 +59,13 @@ CRON_SECRET=[generated_above]
 ## 🗄️ Quick Database Setup
 
 ### Option A: Vercel Postgres (Recommended)
+
 1. Vercel Dashboard → Storage → Create Database → Postgres
 2. `DATABASE_URL` is auto-added to env vars
 3. After deploy: `pnpm db:push`
 
 ### Option B: Supabase (Free Alternative)
+
 1. [supabase.com](https://supabase.com) → New Project
 2. Settings → Database → Copy Connection String
 3. Add as `DATABASE_URL` in Vercel
@@ -110,19 +113,19 @@ Click to deploy in one click:
 
 ## 🎯 Feature Availability Matrix
 
-| Feature | Free Plan | Pro Plan |
-|---------|-----------|----------|
-| Core Task Management | ✅ | ✅ |
-| Kanban Board | ✅ | ✅ |
-| Calendar View | ✅ | ✅ |
-| File Attachments | ✅ | ✅ |
-| AI Analytics | ✅ | ✅ |
-| Comments & Reactions | ✅ | ✅ |
-| Slack Integration | ✅ | ✅ |
-| **CRON Jobs** | ❌ | ✅ |
-| - Daily Standup | ❌ | ✅ |
-| - Auto-Archive | ❌ | ✅ |
-| - AI Pattern Analysis | ❌ | ✅ |
+| Feature               | Free Plan | Pro Plan |
+| --------------------- | --------- | -------- |
+| Core Task Management  | ✅        | ✅       |
+| Kanban Board          | ✅        | ✅       |
+| Calendar View         | ✅        | ✅       |
+| File Attachments      | ✅        | ✅       |
+| AI Analytics          | ✅        | ✅       |
+| Comments & Reactions  | ✅        | ✅       |
+| Slack Integration     | ✅        | ✅       |
+| **CRON Jobs**         | ❌        | ✅       |
+| - Daily Standup       | ❌        | ✅       |
+| - Auto-Archive        | ❌        | ✅       |
+| - AI Pattern Analysis | ❌        | ✅       |
 
 **Note:** All features work except automated CRON jobs on Free tier.
 
@@ -131,12 +134,14 @@ Click to deploy in one click:
 ## 🔧 Quick Fixes
 
 ### Build Fails?
+
 ```bash
 # Clear cache and redeploy
 vercel --force
 ```
 
 ### Database Connection Error?
+
 ```bash
 # Pull env vars and run migration
 vercel env pull .env.local
@@ -144,6 +149,7 @@ pnpm db:push
 ```
 
 ### Can't Login?
+
 ```bash
 # Verify secrets are set correctly
 # NEXTAUTH_SECRET must be 32+ chars
@@ -155,22 +161,27 @@ pnpm db:push
 ## 📊 Expected Costs
 
 ### Vercel (Hosting)
+
 - **Free Tier:** $0/month (sufficient for 100-1000 users)
 - **Pro Tier:** $20/month (unlimited users + CRON jobs)
 
 ### Database
+
 - **Vercel Postgres:** $0/month (256MB) → $20/month (1GB)
 - **Supabase:** $0/month (500MB) → $25/month (8GB)
 
 ### OpenAI (AI Features)
+
 - **New Account:** $5 free credits (3 months)
 - **Expected Usage:** $5-20/month (depends on analytics usage)
 
 ### Vercel Blob (File Storage)
+
 - **Hobby:** 1GB free
 - **Pro:** 100GB included
 
 **Total Estimated Cost:**
+
 - **Month 1-3:** $0-5/month (free credits)
 - **Month 4+:** $20-50/month (with Pro plan)
 
@@ -190,6 +201,7 @@ pnpm db:push
 Your app is live at: `https://[your-project].vercel.app`
 
 **What you built today:**
+
 - ✅ Complete task management system
 - ✅ AI-powered analytics
 - ✅ Slack integration
@@ -197,6 +209,7 @@ Your app is live at: `https://[your-project].vercel.app`
 - ✅ 13 sprints in 1 day! ⚡
 
 **Next Steps:**
+
 1. Add custom domain
 2. Invite team members
 3. Configure Slack workspace
@@ -206,4 +219,3 @@ Your app is live at: `https://[your-project].vercel.app`
 
 **Last Updated:** October 30, 2025
 **Status:** Ready for Production 🚀
-

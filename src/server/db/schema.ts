@@ -143,7 +143,7 @@ export const subtasks = pgTable('subtasks', {
   id: uuid('id').primaryKey().defaultRandom(),
   taskId: uuid('task_id')
     .notNull()
-    .references(() => tasks.id),
+    .references(() => tasks.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   completed: boolean('completed').default(false),
   position: integer('position').notNull(),

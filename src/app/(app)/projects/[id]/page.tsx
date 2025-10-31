@@ -12,8 +12,6 @@ import { ProjectHeader } from '@/components/projects/project-header';
 import { ProjectStats } from '@/components/projects/project-stats';
 import { QuickAddTask } from '@/components/projects/quick-add-task';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
-import { useRealtime } from '@/app/providers';
-import { RealtimeTest } from '@/components/sync/RealtimeTest';
 import { ProjectNotesSection } from '@/components/projects/ProjectNotesSection';
 
 export default function ProjectDetailPage() {
@@ -25,7 +23,6 @@ export default function ProjectDetailPage() {
   const { data: tasks } = trpc.tasks.list.useQuery({
     projectId,
   });
-  const { isConnected, onlineUsers } = useRealtime();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -78,19 +75,6 @@ export default function ProjectDetailPage() {
           onNewTask={() => setCreateModalOpen(true)}
         />
 
-        {/* Real-time Status Indicator */}
-        {isConnected && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-green-700">
-                Real-time collaboration active ({onlineUsers.length} users
-                online)
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* Project Stats */}
         <ProjectStats
           counts={{
@@ -127,9 +111,6 @@ export default function ProjectDetailPage() {
           onClose={() => setCreateModalOpen(false)}
           projectId={projectId}
         />
-
-        {/* Real-time Test Panel (only in development) */}
-        {process.env.NODE_ENV === 'development' && <RealtimeTest />}
       </div>
     </div>
   );

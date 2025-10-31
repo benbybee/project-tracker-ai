@@ -18,7 +18,6 @@ import { PageHeader } from '@/components/layout/page-header';
 import { useSession, signOut } from 'next-auth/react';
 import { usePWAToast } from '@/components/ui/toast-pwa';
 import { invalidateRoleQueries } from '@/lib/cache-invalidation';
-import { useRealtime } from '@/app/providers';
 import { NotificationSettings } from '@/components/notifications/notification-settings';
 
 // Use auto dynamic rendering to avoid chunk loading issues
@@ -59,17 +58,12 @@ export default function SettingsPage() {
   const isLoadingState = isLoading || isFetching || !roles;
   const utils = trpc.useUtils();
 
-  // Get WebSocket client for broadcasting cache invalidation
-  const realtime = useRealtime();
-
   const createRoleMutation = trpc.roles.create.useMutation({
     onSuccess: async () => {
       setNewRoleName('');
       setNewRoleColor('#3B82F6');
       // Comprehensive cache invalidation for all role-dependent queries
       await invalidateRoleQueries(utils);
-      // Broadcast to other tabs/devices via WebSocket
-      realtime.broadcastUpdate('project', 'roles', { action: 'create' });
     },
   });
 
@@ -78,8 +72,6 @@ export default function SettingsPage() {
       setEditingRole(null);
       // Comprehensive cache invalidation for all role-dependent queries
       await invalidateRoleQueries(utils);
-      // Broadcast to other tabs/devices via WebSocket
-      realtime.broadcastUpdate('project', 'roles', { action: 'update' });
     },
   });
 
@@ -87,8 +79,6 @@ export default function SettingsPage() {
     onSuccess: async () => {
       // Comprehensive cache invalidation for all role-dependent queries
       await invalidateRoleQueries(utils);
-      // Broadcast to other tabs/devices via WebSocket
-      realtime.broadcastUpdate('project', 'roles', { action: 'delete' });
     },
   });
 

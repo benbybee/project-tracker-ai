@@ -4,7 +4,6 @@ import { authOptions } from '@/server/auth';
 import { db } from '@/server/db';
 import { projects, tasks, tickets } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { getWebSocketClient } from '@/lib/ws-client';
 
 // POST { ticketId, tasks: [{ title, description?, projectId?, projectNameNew? }] }
 export async function POST(req: Request) {
@@ -83,21 +82,6 @@ export async function POST(req: Request) {
         updatedAt: new Date(),
       })
       .where(eq(tickets.id, ticketId));
-
-    // Broadcast real-time update
-    try {
-      const wsClient = getWebSocketClient();
-      if (wsClient && wsClient.isConnected()) {
-        wsClient.broadcastUpdate('task', ticketId, {
-          type: 'task_created',
-          entityType: 'task',
-          entityId: ticketId,
-          data: { ticketId, count: createdTasks.length },
-        });
-      }
-    } catch (wsError) {
-      console.error('Failed to broadcast real-time update:', wsError);
-    }
 
     return NextResponse.json({
       ok: true,

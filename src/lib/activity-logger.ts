@@ -1,6 +1,5 @@
 import { db } from '@/server/db';
 import { activityLog, notifications } from '@/server/db/schema';
-import { getWebSocketClient } from './ws-client';
 
 interface LogActivityParams {
   userId: string;
@@ -61,9 +60,6 @@ export class ActivityLogger {
         })
         .returning();
 
-      // Broadcast activity to real-time clients
-      this.broadcastActivity(activity);
-
       return activity;
     } catch (error) {
       console.error('[ActivityLogger] Failed to log activity:', error);
@@ -90,9 +86,6 @@ export class ActivityLogger {
         })
         .returning();
 
-      // Broadcast notification to real-time clients
-      this.broadcastNotification(notification);
-
       return notification;
     } catch (error) {
       console.error('[ActivityLogger] Failed to create notification:', error);
@@ -113,46 +106,6 @@ export class ActivityLogger {
     const notification = await this.createNotification(notificationParams);
 
     return { activity, notification };
-  }
-
-  /**
-   * Broadcast activity to WebSocket clients
-   */
-  private broadcastActivity(activity: any) {
-    try {
-      if (typeof window !== 'undefined') {
-        // Client-side broadcast
-        const wsClient = getWebSocketClient();
-        wsClient.send({
-          type: 'activity',
-          data: activity,
-          timestamp: Date.now(),
-        });
-      }
-    } catch (error) {
-      // WebSocket may not be available - that's okay
-      console.debug('[ActivityLogger] WebSocket broadcast skipped:', error);
-    }
-  }
-
-  /**
-   * Broadcast notification to WebSocket clients
-   */
-  private broadcastNotification(notification: any) {
-    try {
-      if (typeof window !== 'undefined') {
-        // Client-side broadcast
-        const wsClient = getWebSocketClient();
-        wsClient.send({
-          type: 'notification',
-          data: notification,
-          timestamp: Date.now(),
-        });
-      }
-    } catch (error) {
-      // WebSocket may not be available - that's okay
-      console.debug('[ActivityLogger] WebSocket broadcast skipped:', error);
-    }
   }
 
   /**

@@ -70,7 +70,7 @@ export async function invalidateTaskQueries(utils: TRPCUtils): Promise<void> {
 }
 
 /**
- * Cache invalidation event types for WebSocket broadcasting
+ * Cache invalidation event types
  */
 export type CacheInvalidationTarget = 'roles' | 'projects' | 'tasks' | 'all';
 
