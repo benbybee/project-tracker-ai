@@ -17,6 +17,10 @@ const ProjectCreate = z.object({
   goLiveDate: z.string().optional(), // ISO
   repoUrl: z.string().optional(),
   stagingUrl: z.string().optional(),
+  // WordPress one-click login fields
+  wpOneClickEnabled: z.boolean().optional(),
+  wpAdminEmail: z.string().email().optional(),
+  wpApiKey: z.string().optional(),
 });
 
 export const projectsRouter = createTRPCRouter({
@@ -65,6 +69,9 @@ export const projectsRouter = createTRPCRouter({
           stagingUrl: projects.stagingUrl,
           checklistJson: projects.checklistJson,
           websiteStatus: projects.websiteStatus,
+          wpOneClickEnabled: projects.wpOneClickEnabled,
+          wpAdminEmail: projects.wpAdminEmail,
+          wpApiKey: projects.wpApiKey,
           createdAt: projects.createdAt,
           updatedAt: projects.updatedAt,
           role: {
@@ -98,6 +105,9 @@ export const projectsRouter = createTRPCRouter({
           stagingUrl: projects.stagingUrl,
           checklistJson: projects.checklistJson,
           websiteStatus: projects.websiteStatus,
+          wpOneClickEnabled: projects.wpOneClickEnabled,
+          wpAdminEmail: projects.wpAdminEmail,
+          wpApiKey: projects.wpApiKey,
           createdAt: projects.createdAt,
           updatedAt: projects.updatedAt,
           role: {
@@ -145,6 +155,10 @@ export const projectsRouter = createTRPCRouter({
           stagingUrl: input.stagingUrl ?? null,
           // Set initial websiteStatus for website projects
           websiteStatus: input.type === 'website' ? 'discovery' : null,
+          // WordPress one-click login fields
+          wpOneClickEnabled: input.wpOneClickEnabled ?? false,
+          wpAdminEmail: input.wpAdminEmail ?? null,
+          wpApiKey: input.wpApiKey ?? null,
         })
         .returning();
 
@@ -201,6 +215,10 @@ export const projectsRouter = createTRPCRouter({
             'blocked',
           ])
           .optional(),
+        // WordPress one-click login fields
+        wpOneClickEnabled: z.boolean().optional(),
+        wpAdminEmail: z.string().email().optional(),
+        wpApiKey: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {

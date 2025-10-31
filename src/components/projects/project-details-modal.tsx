@@ -22,6 +22,7 @@ import {
   Globe,
   Check,
   ChevronRight,
+  Key,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/glass-card';
 import { cn } from '@/lib/utils';
@@ -99,6 +100,12 @@ export function ProjectDetailsModal({
     if (projectId) {
       router.push(`/projects/${projectId}`);
       onClose();
+    }
+  };
+
+  const handleWordPressLogin = () => {
+    if (projectId) {
+      window.open(`/api/wordpress/login?projectId=${projectId}`, '_blank');
     }
   };
 
@@ -184,6 +191,16 @@ export function ProjectDetailsModal({
                   <Plus className="h-4 w-4" />
                   Add Task
                 </Button>
+                {project.wpOneClickEnabled && (
+                  <Button
+                    variant="outline"
+                    onClick={handleWordPressLogin}
+                    className="flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30"
+                  >
+                    <Key className="h-4 w-4" />
+                    Open WordPress Site
+                  </Button>
+                )}
                 {project.type === 'website' && (
                   <Button
                     variant="outline"

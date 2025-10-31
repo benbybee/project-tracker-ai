@@ -81,6 +81,10 @@ export const projects = pgTable('projects', {
   websiteStatus: text('website_status', {
     enum: ['discovery', 'development', 'client_review', 'completed', 'blocked'],
   }),
+  // WordPress one-click login fields
+  wpOneClickEnabled: boolean('wp_one_click_enabled').default(false),
+  wpAdminEmail: text('wp_admin_email'),
+  wpApiKey: text('wp_api_key'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

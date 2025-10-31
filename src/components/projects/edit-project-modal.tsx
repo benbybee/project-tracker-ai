@@ -22,6 +22,10 @@ const EditProjectSchema = z.object({
   description: z.string().optional(),
   type: z.enum(['general', 'website']),
   roleId: z.string().optional(),
+  // WordPress one-click login fields
+  wpOneClickEnabled: z.boolean().optional(),
+  wpAdminEmail: z.string().email('Must be a valid email').optional().or(z.literal('')),
+  wpApiKey: z.string().optional(),
 });
 
 type EditProjectFields = z.infer<typeof EditProjectSchema>;
@@ -35,6 +39,9 @@ interface EditProjectModalProps {
     description?: string | null;
     type: 'general' | 'website';
     roleId?: string | null;
+    wpOneClickEnabled?: boolean | null;
+    wpAdminEmail?: string | null;
+    wpApiKey?: string | null;
   };
   onSuccess: () => void;
 }
@@ -70,6 +77,7 @@ export function EditProjectModal({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<EditProjectFields>({
     resolver: zodResolver(EditProjectSchema),
     defaultValues: {
@@ -77,8 +85,13 @@ export function EditProjectModal({
       description: project.description || '',
       type: project.type,
       roleId: project.roleId || '',
+      wpOneClickEnabled: project.wpOneClickEnabled || false,
+      wpAdminEmail: project.wpAdminEmail || '',
+      wpApiKey: project.wpApiKey || '',
     },
   });
+
+  const wpOneClickEnabled = watch('wpOneClickEnabled');
 
   // Reset form when project changes
   useEffect(() => {
@@ -87,6 +100,9 @@ export function EditProjectModal({
       description: project.description || '',
       type: project.type,
       roleId: project.roleId || '',
+      wpOneClickEnabled: project.wpOneClickEnabled || false,
+      wpAdminEmail: project.wpAdminEmail || '',
+      wpApiKey: project.wpApiKey || '',
     });
   }, [project, reset]);
 
@@ -99,6 +115,9 @@ export function EditProjectModal({
       description: data.description || undefined,
       type: data.type,
       roleId: data.roleId || undefined,
+      wpOneClickEnabled: data.wpOneClickEnabled,
+      wpAdminEmail: data.wpAdminEmail || undefined,
+      wpApiKey: data.wpApiKey || undefined,
     });
   };
 
@@ -169,6 +188,75 @@ export function EditProjectModal({
                   ))}
                 </Select>
               </div>
+            </div>
+
+            {/* WordPress One-Click Login Section */}
+            <div className="space-y-4 border rounded-lg p-4 bg-purple-50 mt-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="wpOneClickEnabled"
+                  {...register('wpOneClickEnabled')}
+                  className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                />
+                <label
+                  htmlFor="wpOneClickEnabled"
+                  className="text-sm font-medium text-purple-900 cursor-pointer"
+                >
+                  Enable One-Click WordPress Login
+                </label>
+              </div>
+
+              {wpOneClickEnabled && (
+                <>
+                  <p className="text-xs text-purple-700">
+                    Configure WordPress Magic Login Pro integration for seamless authentication.
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label
+                        htmlFor="wpAdminEmail"
+                        className="block text-sm font-medium text-purple-800 mb-2"
+                      >
+                        WordPress Admin Email *
+                      </label>
+                      <Input
+                        {...register('wpAdminEmail')}
+                        type="email"
+                        placeholder="admin@example.com"
+                        className="w-full"
+                      />
+                      {errors.wpAdminEmail && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.wpAdminEmail.message}
+                        </p>
+                      )}
+                      <p className="text-xs text-purple-600 mt-1">
+                        The email of the WordPress user to log in as
+                      </p>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="wpApiKey"
+                        className="block text-sm font-medium text-purple-800 mb-2"
+                      >
+                        WordPress API Key *
+                      </label>
+                      <Input
+                        {...register('wpApiKey')}
+                        type="password"
+                        placeholder="Enter Magic Login Pro API key"
+                        className="w-full"
+                      />
+                      <p className="text-xs text-purple-600 mt-1">
+                        API key from Magic Login Pro plugin settings
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

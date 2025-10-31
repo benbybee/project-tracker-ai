@@ -13,6 +13,7 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
+  Key,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
@@ -37,6 +38,9 @@ type Project = {
   repoUrl?: string | null;
   stagingUrl?: string | null;
   goLiveDate?: string | null;
+  wpOneClickEnabled?: boolean | null;
+  wpAdminEmail?: string | null;
+  wpApiKey?: string | null;
 };
 
 export function ProjectHeader({
@@ -106,6 +110,13 @@ export function ProjectHeader({
     setIsDeleteModalOpen(false);
   };
 
+  const handleWordPressLogin = () => {
+    // Open WordPress login in a new window
+    window.open(
+      `/api/wordpress/login?projectId=${project.id}`,
+      '_blank'
+    );
+  };
   return (
     <div className="relative overflow-hidden rounded-[var(--radius-xl)] shadow-soft">
       {/* Gradient hero background */}
@@ -208,6 +219,18 @@ export function ProjectHeader({
                 New Task
               </GradientButton>
 
+              {/* WordPress Login Button */}
+              {project.wpOneClickEnabled && (
+                <Button
+                  variant="outline"
+                  onClick={handleWordPressLogin}
+                  className="w-full sm:w-auto bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30"
+                >
+                  <Key className="h-4 w-4" />
+                  <span className="ml-2">Open WordPress Site</span>
+                </Button>
+              )}
+
               {/* Project Type Conversion Buttons */}
               {!isWebsite ? (
                 <Button
@@ -288,6 +311,14 @@ export function ProjectHeader({
                 label="DNS Status"
                 value={project.dnsStatus}
               />
+              {project.wpOneClickEnabled && (
+                <MetaCard
+                  icon={Key}
+                  label="WordPress Admin"
+                  value="One-Click Login"
+                  onClick={handleWordPressLogin}
+                />
+              )}
             </div>
           )}
         </GlassCard>
@@ -350,33 +381,47 @@ function MetaCard({
   label,
   value,
   href,
+  onClick,
 }: {
   icon: React.ElementType;
   label: string;
   value?: string | null;
   href?: string;
+  onClick?: () => void;
 }) {
-  return (
-    <GlassCard className="py-3 px-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl border border-white/40 bg-white/50 backdrop-blur flex items-center justify-center">
-          <Icon className="h-4 w-4" />
-        </div>
-        <div>
-          <div className="text-xs text-slate-500">{label}</div>
-          {href && value ? (
-            <a
-              href={href}
-              target="_blank"
-              className="text-sm font-medium underline underline-offset-2"
-            >
-              {value}
-            </a>
-          ) : (
-            <div className="text-sm font-medium">{value ?? '—'}</div>
-          )}
-        </div>
+  const content = (
+    <div className="flex items-center gap-3">
+      <div className="h-9 w-9 rounded-xl border border-white/40 bg-white/50 backdrop-blur flex items-center justify-center">
+        <Icon className="h-4 w-4" />
       </div>
+      <div>
+        <div className="text-xs text-slate-500">{label}</div>
+        {href && value ? (
+          <a
+            href={href}
+            target="_blank"
+            className="text-sm font-medium underline underline-offset-2"
+          >
+            {value}
+          </a>
+        ) : (
+          <div className={cn("text-sm font-medium", onClick && "text-purple-600 cursor-pointer")}>
+            {value ?? '—'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <GlassCard 
+      className={cn(
+        "py-3 px-4 flex items-center justify-between",
+        onClick && "cursor-pointer hover:bg-purple-50/50 transition-colors"
+      )}
+      onClick={onClick}
+    >
+      {content}
     </GlassCard>
   );
 }
