@@ -79,13 +79,13 @@ export function ChatPanel({ projectId, className = '' }: ChatPanelProps) {
 
   // Listen for real-time chat events
   useEffect(() => {
-    const unsubscribeMessage = onChatMessage((message) => {
+    const unsubscribeMessage = onChatMessage((message: any) => {
       if (message.threadId === selectedThreadId) {
         refetchMessages();
       }
     });
 
-    const unsubscribeTyping = onChatTyping((typing) => {
+    const unsubscribeTyping = onChatTyping((typing: any) => {
       if (typing.threadId === selectedThreadId) {
         // In a real app, you'd manage typing users properly
         if (typing.isTyping) {

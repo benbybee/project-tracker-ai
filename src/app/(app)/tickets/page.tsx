@@ -60,7 +60,7 @@ export default function TicketsPage() {
 
   // Listen for real-time updates
   useEffect(() => {
-    const unsubscribeActivity = realtime.onActivity((activity) => {
+    const unsubscribeActivity = realtime.onActivity((activity: any) => {
       // Refresh tickets when tasks are created or updated
       if (
         activity.type === 'task_created' ||

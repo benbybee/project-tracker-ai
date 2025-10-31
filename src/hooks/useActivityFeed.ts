@@ -31,7 +31,7 @@ export function useActivityFeed(projectId?: string) {
 
   // Listen for real-time activities
   useEffect(() => {
-    const unsubscribe = onActivity((activity) => {
+    const unsubscribe = onActivity((activity: any) => {
       setActivities((prev) => [activity, ...prev]);
     });
 

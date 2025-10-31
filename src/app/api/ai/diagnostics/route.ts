@@ -80,7 +80,9 @@ export async function GET() {
         const openai = new OpenAI({ apiKey });
         const response = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: 'Say "OK" if you can read this.' }],
+          messages: [
+            { role: 'user', content: 'Say "OK" if you can read this.' },
+          ],
           max_tokens: 10,
         });
 
@@ -127,7 +129,7 @@ export async function GET() {
 
     // 3. Test Database Connection
     try {
-      const result = await db.execute(sql`SELECT 1 as test`);
+      await db.execute(sql`SELECT 1 as test`);
       results.push({
         service: 'Database',
         status: 'ok',
@@ -234,4 +236,3 @@ export async function GET() {
     );
   }
 }
-

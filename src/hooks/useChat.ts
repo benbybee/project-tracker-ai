@@ -112,7 +112,7 @@ export function useChat(threadId: string) {
 
   // Listen for real-time messages
   useEffect(() => {
-    const unsubscribe = onChatMessage((message) => {
+    const unsubscribe = onChatMessage((message: any) => {
       if (message.threadId === threadId) {
         // Handle incoming message (silently)
       }

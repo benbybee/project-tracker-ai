@@ -183,14 +183,16 @@ export function AiInsightsPanel() {
                 Most Productive Hours
               </h4>
               <div className="flex gap-2">
-                {insights.patterns.productiveHours.slice(0, 3).map((hour) => (
-                  <div
-                    key={hour}
-                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg text-sm font-semibold"
-                  >
-                    {hour}:00
-                  </div>
-                ))}
+                {insights.patterns.productiveHours
+                  .slice(0, 3)
+                  .map((hour: number) => (
+                    <div
+                      key={hour}
+                      className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg text-sm font-semibold"
+                    >
+                      {hour}:00
+                    </div>
+                  ))}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">
                 Schedule important tasks during these hours
@@ -285,17 +287,19 @@ export function AiInsightsPanel() {
           </div>
 
           <div className="space-y-2">
-            {insights.workload.recommendations.map((rec, index) => (
-              <p
-                key={index}
-                className="text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2"
-              >
-                <span className="text-orange-600 dark:text-orange-400 mt-0.5">
-                  •
-                </span>
-                <span>{rec}</span>
-              </p>
-            ))}
+            {insights.workload.recommendations.map(
+              (rec: string, index: number) => (
+                <p
+                  key={index}
+                  className="text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2"
+                >
+                  <span className="text-orange-600 dark:text-orange-400 mt-0.5">
+                    •
+                  </span>
+                  <span>{rec}</span>
+                </p>
+              )
+            )}
           </div>
         </div>
       </div>
@@ -320,7 +324,7 @@ export function AiInsightsPanel() {
           <div className="space-y-3">
             {insights.highRiskTasks
               .filter((t): t is NonNullable<typeof t> => t !== null)
-              .map((riskTask) => (
+              .map((riskTask: any) => (
                 <div
                   key={riskTask.taskId}
                   className={`
@@ -359,10 +363,11 @@ export function AiInsightsPanel() {
                       </div>
 
                       <div className="flex flex-wrap gap-2 mb-2">
-                        {riskTask.riskFactors.map((factor, index) => (
-                          <span
-                            key={index}
-                            className={`
+                        {riskTask.riskFactors.map(
+                          (factor: any, index: number) => (
+                            <span
+                              key={index}
+                              className={`
                             px-2 py-1 rounded-lg text-xs font-medium
                             ${
                               factor.severity === 'high'
@@ -372,10 +377,11 @@ export function AiInsightsPanel() {
                                   : 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
                             }
                           `}
-                          >
-                            {factor.factor}
-                          </span>
-                        ))}
+                            >
+                              {factor.factor}
+                            </span>
+                          )
+                        )}
                       </div>
                     </div>
                   </div>
@@ -386,14 +392,16 @@ export function AiInsightsPanel() {
                         <h5 className="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">
                           Risk Factors:
                         </h5>
-                        {riskTask.riskFactors.map((factor, index) => (
-                          <p
-                            key={index}
-                            className="text-sm text-slate-700 dark:text-slate-300 ml-2"
-                          >
-                            • {factor.description}
-                          </p>
-                        ))}
+                        {riskTask.riskFactors.map(
+                          (factor: any, index: number) => (
+                            <p
+                              key={index}
+                              className="text-sm text-slate-700 dark:text-slate-300 ml-2"
+                            >
+                              • {factor.description}
+                            </p>
+                          )
+                        )}
                       </div>
 
                       {riskTask.recommendations.length > 0 && (
@@ -401,14 +409,16 @@ export function AiInsightsPanel() {
                           <h5 className="text-xs font-semibold text-slate-900 dark:text-slate-100 mb-1">
                             Recommendations:
                           </h5>
-                          {riskTask.recommendations.map((rec, index) => (
-                            <p
-                              key={index}
-                              className="text-sm text-slate-700 dark:text-slate-300 ml-2"
-                            >
-                              • {rec}
-                            </p>
-                          ))}
+                          {riskTask.recommendations.map(
+                            (rec: string, index: number) => (
+                              <p
+                                key={index}
+                                className="text-sm text-slate-700 dark:text-slate-300 ml-2"
+                              >
+                                • {rec}
+                              </p>
+                            )
+                          )}
                         </div>
                       )}
                     </div>

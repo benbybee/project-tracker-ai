@@ -56,7 +56,9 @@ export async function POST(req: Request) {
             gte(taskAnalytics.createdAt, thirtyDaysAgo)
           )
         );
-      console.error('[AI Analytics Chat] Completion stats fetched successfully');
+      console.error(
+        '[AI Analytics Chat] Completion stats fetched successfully'
+      );
     } catch (error: any) {
       console.error('[AI Analytics Chat] Error fetching completion stats:', {
         error: error.message,
@@ -147,8 +149,8 @@ export async function POST(req: Request) {
     // Build context for AI
     const analyticsContext = {
       completionStats: {
-        totalCompleted: Number(completionStats[0]?.count || 0),
-        avgDuration: Math.round(Number(completionStats[0]?.avgDuration || 0)),
+        totalCompleted: Number(completionStats?.count || 0),
+        avgDuration: Math.round(Number(completionStats?.avgDuration || 0)),
       },
       patterns: patterns
         ? {
@@ -224,7 +226,7 @@ Provide helpful, actionable insights based on this data. Be conversational but p
     try {
       console.error('[AI Analytics Chat] Initializing OpenAI client...');
       const openai = getOpenAIClient();
-      
+
       console.error('[AI Analytics Chat] Calling OpenAI API...');
       completion = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',

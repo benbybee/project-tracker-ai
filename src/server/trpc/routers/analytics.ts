@@ -426,8 +426,11 @@ export const analyticsRouter = createTRPCRouter({
 
   // Get AI-powered insights and predictions
   getAiInsights: protectedProcedure.query(async ({ ctx }) => {
-    console.error('[Analytics.getAiInsights] Starting for user:', ctx.session.user.id);
-    
+    console.error(
+      '[Analytics.getAiInsights] Starting for user:',
+      ctx.session.user.id
+    );
+
     try {
       const { patternAnalyzer } = await import('@/lib/ai/pattern-analyzer');
       const { predictiveEngine } = await import('@/lib/ai/predictive-engine');
@@ -443,19 +446,28 @@ export const analyticsRouter = createTRPCRouter({
         // If no patterns exist, analyze them first
         userPatterns = patterns;
         if (!userPatterns) {
-          console.error('[Analytics.getAiInsights] No patterns found, analyzing...');
+          console.error(
+            '[Analytics.getAiInsights] No patterns found, analyzing...'
+          );
           try {
             userPatterns = await patternAnalyzer.analyzeUserPatterns(userId);
-            console.error('[Analytics.getAiInsights] Patterns analyzed successfully');
+            console.error(
+              '[Analytics.getAiInsights] Patterns analyzed successfully'
+            );
           } catch (error: any) {
-            console.error('[Analytics.getAiInsights] Error analyzing patterns:', {
-              error: error.message,
-              stack: error.stack,
-            });
+            console.error(
+              '[Analytics.getAiInsights] Error analyzing patterns:',
+              {
+                error: error.message,
+                stack: error.stack,
+              }
+            );
             userPatterns = null;
           }
         } else {
-          console.error('[Analytics.getAiInsights] Patterns fetched successfully');
+          console.error(
+            '[Analytics.getAiInsights] Patterns fetched successfully'
+          );
         }
       } catch (error: any) {
         console.error('[Analytics.getAiInsights] Error fetching patterns:', {
@@ -470,7 +482,9 @@ export const analyticsRouter = createTRPCRouter({
       try {
         console.error('[Analytics.getAiInsights] Analyzing workload...');
         workloadAnalysis = await predictiveEngine.analyzeWorkload(userId);
-        console.error('[Analytics.getAiInsights] Workload analyzed successfully');
+        console.error(
+          '[Analytics.getAiInsights] Workload analyzed successfully'
+        );
       } catch (error: any) {
         console.error('[Analytics.getAiInsights] Error analyzing workload:', {
           error: error.message,
@@ -484,7 +498,9 @@ export const analyticsRouter = createTRPCRouter({
       try {
         console.error('[Analytics.getAiInsights] Fetching weekly forecast...');
         weeklyForecast = await predictiveEngine.getWeeklyForecast(userId);
-        console.error('[Analytics.getAiInsights] Weekly forecast fetched successfully');
+        console.error(
+          '[Analytics.getAiInsights] Weekly forecast fetched successfully'
+        );
       } catch (error: any) {
         console.error('[Analytics.getAiInsights] Error fetching forecast:', {
           error: error.message,
@@ -494,7 +510,7 @@ export const analyticsRouter = createTRPCRouter({
       }
 
       // Get high-risk tasks with error handling
-      let highRiskTasks = [];
+      let highRiskTasks: any[] = [];
       try {
         console.error('[Analytics.getAiInsights] Fetching active tasks...');
         const activeTasks = await db
@@ -512,13 +528,18 @@ export const analyticsRouter = createTRPCRouter({
         console.error('[Analytics.getAiInsights] Assessing task risks...');
         const riskAssessments = await Promise.all(
           activeTasks.map((task) =>
-            predictiveEngine.assessTaskRisk(userId, task.id).catch((error: any) => {
-              console.error('[Analytics.getAiInsights] Risk assessment failed for task:', {
-                taskId: task.id,
-                error: error.message,
-              });
-              return null;
-            })
+            predictiveEngine
+              .assessTaskRisk(userId, task.id)
+              .catch((error: any) => {
+                console.error(
+                  '[Analytics.getAiInsights] Risk assessment failed for task:',
+                  {
+                    taskId: task.id,
+                    error: error.message,
+                  }
+                );
+                return null;
+              })
           )
         );
 
@@ -527,13 +548,16 @@ export const analyticsRouter = createTRPCRouter({
             (r) => r && (r.riskLevel === 'high' || r.riskLevel === 'critical')
           )
           .slice(0, 5);
-        
+
         console.error('[Analytics.getAiInsights] Risk assessments completed');
       } catch (error: any) {
-        console.error('[Analytics.getAiInsights] Error with risk assessments:', {
-          error: error.message,
-          stack: error.stack,
-        });
+        console.error(
+          '[Analytics.getAiInsights] Error with risk assessments:',
+          {
+            error: error.message,
+            stack: error.stack,
+          }
+        );
         // Continue with empty high risk tasks
         highRiskTasks = [];
       }

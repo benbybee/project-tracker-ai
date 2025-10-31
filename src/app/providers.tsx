@@ -28,20 +28,27 @@ function KeyboardShortcutsProvider({ children }: { children: ReactNode }) {
 // Stub implementation of useRealtime hook
 // This is a placeholder until real-time functionality is implemented
 export function useRealtime() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const noop = (..._args: any[]) => {};
+  const noopUnsubscribe =
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (..._args: any[]) =>
+      () => {};
+
   return {
-    onNotification: () => () => {},
-    broadcastNotification: () => {},
-    onChatMessage: () => () => {},
-    broadcastChatMessage: () => {},
-    onActivity: () => () => {},
-    broadcastActivity: () => {},
-    startTyping: () => {},
-    stopTyping: () => {},
-    updatePresence: () => {},
-    onlineUsers: [],
+    onNotification: noopUnsubscribe,
+    broadcastNotification: noop,
+    onChatMessage: noopUnsubscribe,
+    broadcastChatMessage: noop,
+    onActivity: noopUnsubscribe,
+    broadcastActivity: noop,
+    startTyping: noop,
+    stopTyping: noop,
+    updatePresence: noop,
+    onlineUsers: [] as any[],
     isConnected: false,
-    broadcastChatTyping: () => {},
-    onChatTyping: () => () => {},
+    broadcastChatTyping: noop,
+    onChatTyping: noopUnsubscribe,
   };
 }
 

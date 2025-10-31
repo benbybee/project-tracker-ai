@@ -94,7 +94,9 @@ const navGroups: NavGroup[] = [
 ];
 
 // Extract all nav hrefs for checking more specific routes
-const navHrefs = navGroups.flatMap((group) => group.items.map((item) => item.href));
+const navHrefs = navGroups.flatMap((group) =>
+  group.items.map((item) => item.href)
+);
 
 // NavItem component with proper active state detection
 function NavItem({
@@ -210,7 +212,9 @@ function NavGroup({
   // Load collapsed state from localStorage
   useEffect(() => {
     if (group.collapsible && !isCompact) {
-      const savedState = localStorage.getItem(`sidebar-group-collapsed-${group.id}`);
+      const savedState = localStorage.getItem(
+        `sidebar-group-collapsed-${group.id}`
+      );
       if (savedState !== null) {
         setIsCollapsed(JSON.parse(savedState));
       }
@@ -229,7 +233,10 @@ function NavGroup({
     if (group.collapsible) {
       const newState = !isCollapsed;
       setIsCollapsed(newState);
-      localStorage.setItem(`sidebar-group-collapsed-${group.id}`, JSON.stringify(newState));
+      localStorage.setItem(
+        `sidebar-group-collapsed-${group.id}`,
+        JSON.stringify(newState)
+      );
     }
   };
 
@@ -237,9 +244,7 @@ function NavGroup({
   if (isCompact && !isMobile) {
     return (
       <>
-        {group.id !== 'home' && (
-          <div className="h-px bg-white/10 my-2 mx-3" />
-        )}
+        {group.id !== 'home' && <div className="h-px bg-white/10 my-2 mx-3" />}
         {group.items.map((item) => (
           <NavItem
             key={item.href}
@@ -442,7 +447,10 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-2 p-3 overflow-y-auto flex-1" aria-label="Main">
+        <nav
+          className="flex flex-col gap-2 p-3 overflow-y-auto flex-1"
+          aria-label="Main"
+        >
           {navGroups.map((group) => (
             <NavGroup
               key={group.id}

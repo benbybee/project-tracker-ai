@@ -61,7 +61,7 @@ export function useNotifications() {
 
   // Listen for real-time notifications
   useEffect(() => {
-    const unsubscribe = onNotification((notification) => {
+    const unsubscribe = onNotification((notification: any) => {
       setNotifications((prev) => [notification, ...prev]);
       if (!notification.read) {
         setUnreadCount((prev) => prev + 1);
