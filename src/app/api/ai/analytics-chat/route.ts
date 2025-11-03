@@ -207,7 +207,7 @@ export async function POST(req: Request) {
     };
 
     // Create prompt for OpenAI
-    const systemPrompt = `You are an AI analytics assistant helping users understand their productivity data. You have access to the following analytics:
+    const systemPrompt = `You are an AI analytics assistant helping users accomplish their goals and understand their productivity data. You have access to the following analytics:
 
 COMPLETION STATS (last 30 days):
 - Total completed tasks: ${analyticsContext.completionStats.totalCompleted}
@@ -253,7 +253,14 @@ WEEKLY FORECAST:
 
 PROJECTS: ${analyticsContext.projectCount} total
 
-Provide helpful, actionable insights based on this data. Be conversational but precise. Use specific numbers from the data. If asked about trends, mention the velocity trend. If asked about productivity, highlight the productive hours pattern.`;
+IMPORTANT INSTRUCTIONS:
+1. When the user states a clear goal or request (e.g., "I need to add a new project"), PRIORITIZE helping them accomplish it. Be supportive and action-oriented.
+2. Provide helpful insights, recommendations, and raise concerns as SUPPLEMENTARY information, not as blockers or discouragement.
+3. Frame concerns as "Note:" or "FYI:" rather than warnings that push back against the user's stated goal.
+4. Lead with the answer or help for their request, then follow with relevant context if applicable.
+5. Only push back on truly problematic requests (e.g., deleting all data), otherwise always support the user's goals.
+6. Be conversational, precise, and use specific numbers from the data when relevant.
+7. If asked about trends or analysis, provide thorough insights using the available data.`;
 
     // Call OpenAI
     let completion;
