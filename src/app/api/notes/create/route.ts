@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     let projectId: string;
     let title: string;
     let content: string;
-    let noteType = 'text';
+    let noteType: 'text' | 'audio' = 'text';
     let audioUrl: string | null = null;
     let audioDuration: number | null = null;
     let files: File[] = [];
@@ -31,7 +31,8 @@ export async function POST(req: Request) {
       projectId = String(formData.get('projectId') || '');
       title = String(formData.get('title') || '');
       content = String(formData.get('content') || '');
-      noteType = String(formData.get('noteType') || 'text');
+      const noteTypeValue = formData.get('noteType');
+      noteType = noteTypeValue === 'audio' ? 'audio' : 'text';
       const audioUrlValue = formData.get('audioUrl');
       audioUrl = audioUrlValue ? String(audioUrlValue) : null;
       const audioDurationValue = formData.get('audioDuration');
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
       projectId = body.projectId;
       title = body.title;
       content = body.content;
-      noteType = body.noteType || 'text';
+      noteType = body.noteType === 'audio' ? 'audio' : 'text';
       audioUrl = body.audioUrl || null;
       audioDuration = body.audioDuration || null;
     }
