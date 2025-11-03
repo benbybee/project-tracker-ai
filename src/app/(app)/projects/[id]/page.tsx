@@ -11,7 +11,7 @@ import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
 import { ProjectHeaderCompact } from '@/components/projects/project-header-compact';
 import { ProjectMetricsGrid } from '@/components/projects/project-metrics-grid';
 import { ProjectQuickActions } from '@/components/projects/project-quick-actions';
-import { ProjectAiChatModal } from '@/components/projects/project-ai-chat-modal';
+import { UnifiedAiChatModal } from '@/components/ai/unified-ai-chat-modal';
 import { QuickAddTask } from '@/components/projects/quick-add-task';
 import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { ProjectNotesSection } from '@/components/projects/ProjectNotesSection';
@@ -167,11 +167,14 @@ export default function ProjectDetailPage() {
         />
 
         {/* AI Chat Modal */}
-        <ProjectAiChatModal
+        <UnifiedAiChatModal
           isOpen={aiChatOpen}
           onClose={() => setAiChatOpen(false)}
-          projectId={projectId}
-          projectName={project.name}
+          context={{
+            mode: 'project',
+            projectId: projectId,
+            projectName: project.name,
+          }}
         />
       </div>
     </div>

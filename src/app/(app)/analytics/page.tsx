@@ -18,7 +18,7 @@ import { TimeDistributionChart } from '@/components/analytics/time-distribution-
 import { ProductiveHoursHeatmap } from '@/components/analytics/productive-hours-heatmap';
 import { CompletionStreakCalendar } from '@/components/analytics/completion-streak-calendar';
 import { AiInsightsPanel } from '@/components/analytics/ai-insights-panel';
-import { AiAnalyticsChat } from '@/components/analytics/ai-analytics-chat';
+import { UnifiedAiChatEmbedded } from '@/components/ai/unified-ai-chat-embedded';
 import {
   DATE_RANGE_PRESETS,
   calculateStreak,
@@ -312,7 +312,12 @@ export default function AnalyticsPage() {
       {activeTab === 'ai-insights' && <AiInsightsPanel />}
 
       {/* AI Chat Tab */}
-      {activeTab === 'ai-chat' && <AiAnalyticsChat className="h-[800px]" />}
+      {activeTab === 'ai-chat' && (
+        <UnifiedAiChatEmbedded
+          context={{ mode: 'analytics' }}
+          height="h-[800px]"
+        />
+      )}
     </div>
   );
 }
