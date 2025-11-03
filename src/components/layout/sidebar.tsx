@@ -409,8 +409,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       <aside
         className={cn(
           'group fixed left-0 top-0 h-dvh z-40 transition-all duration-300',
-          isMobile 
-            ? 'bg-white dark:bg-gray-900' 
+          isMobile
+            ? 'bg-white dark:bg-gray-900'
             : 'bg-white/55 dark:bg-white/10 backdrop-blur-2xl',
           'border-r border-white/20 shadow-[0_8px_30px_rgba(0,0,0,.08)]',
           isMobile && !isMobileOpen && '-translate-x-full',
