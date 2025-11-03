@@ -410,16 +410,18 @@ async function executeTool(
   try {
     switch (toolName) {
       case 'list_projects': {
-        let query = db
-          .select()
-          .from(projects)
-          .where(eq(projects.userId, userId));
+        const conditions = [eq(projects.userId, userId)];
 
         if (args.type) {
-          query = query.where(eq(projects.type, args.type));
+          conditions.push(eq(projects.type, args.type));
         }
 
-        const projectList = await query.limit(50);
+        const projectList = await db
+          .select()
+          .from(projects)
+          .where(and(...conditions))
+          .limit(50);
+
         return {
           success: true,
           data: {

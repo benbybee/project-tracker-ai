@@ -149,7 +149,7 @@ function NavItem({
       prefetch={true}
       className={cn(
         'group relative flex items-center gap-3 rounded-xl px-4 py-3 transition-colors duration-200',
-        'text-white hover:text-white',
+        'text-foreground hover:text-foreground',
         'hover:bg-white/10 active:bg-white/20 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
         isActive &&
           'bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg'
@@ -269,7 +269,7 @@ function NavGroup({
             onClick={toggleCollapsed}
             className={cn(
               'flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
-              'text-white hover:text-white',
+              'text-foreground hover:text-foreground',
               'focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded-lg'
             )}
             aria-expanded={!isCollapsed}
@@ -307,7 +307,7 @@ function NavGroup({
       ) : (
         <>
           {group.id !== 'home' && (
-            <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white">
+            <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-foreground">
               {group.label}
             </div>
           )}
