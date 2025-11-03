@@ -409,7 +409,9 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       <aside
         className={cn(
           'group fixed left-0 top-0 h-dvh z-40 transition-all duration-300',
-          'bg-white/55 dark:bg-white/10 backdrop-blur-2xl',
+          isMobile 
+            ? 'bg-white dark:bg-gray-900' 
+            : 'bg-white/55 dark:bg-white/10 backdrop-blur-2xl',
           'border-r border-white/20 shadow-[0_8px_30px_rgba(0,0,0,.08)]',
           isMobile && !isMobileOpen && '-translate-x-full',
           isMobile ? 'w-full' : isCompact ? 'w-[84px]' : 'w-[256px]'
@@ -453,7 +455,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-white/20 transition-colors"
               aria-label="Close menu"
             >
-              <X className="h-5 w-5 text-white" />
+              <X className="h-5 w-5 text-foreground" />
             </button>
           )}
 
@@ -493,7 +495,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             onClick={triggerCommandPalette}
             className={cn(
               'group flex items-center gap-3 rounded-xl px-4 py-3 w-full transition-all duration-200',
-              'text-white hover:text-white',
+              'text-foreground hover:text-foreground',
               'hover:bg-white/10 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50'
             )}
             aria-label="Open command palette"
@@ -520,7 +522,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             onClick={() => signOut({ callbackUrl: '/sign-in' })}
             className={cn(
               'group flex items-center gap-3 rounded-xl px-4 py-3 w-full transition-all duration-200',
-              'text-white hover:text-red-400',
+              'text-foreground hover:text-red-400',
               'hover:bg-red-500/10 focus:bg-red-50/50 focus:outline-none focus:ring-2 focus:ring-red-500/50'
             )}
             aria-label="Logout"
