@@ -337,6 +337,11 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
   const isMobileOpen = isOpen; // Use prop instead of local state
 
+  // Debug logging for mobile sidebar state
+  useEffect(() => {
+    console.log('📂 Sidebar state - isOpen:', isOpen, 'isMobile:', isMobile, 'isMobileOpen:', isMobileOpen);
+  }, [isOpen, isMobile, isMobileOpen]);
+
   // Check for mobile/tablet screens
   useEffect(() => {
     const checkMobile = () => {
@@ -385,7 +390,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       {/* Mobile overlay */}
       {isMobile && isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-35"
           onClick={onClose}
         />
       )}

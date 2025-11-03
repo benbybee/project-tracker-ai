@@ -40,7 +40,7 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
   ];
 
   return (
-    <footer className="lg:hidden fixed bottom-0 inset-x-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/20 z-40">
+    <footer className="lg:hidden fixed bottom-0 inset-x-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/20 z-50">
       <nav
         className="flex justify-around items-center h-16"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
@@ -53,8 +53,8 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
               <button
                 key={item.label}
                 onClick={(e) => {
-                  e.preventDefault();
                   e.stopPropagation();
+                  console.log('🔘 Menu button clicked');
                   item.onClick();
                 }}
                 className={cn(

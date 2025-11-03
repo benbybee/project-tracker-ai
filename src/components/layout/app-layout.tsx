@@ -70,7 +70,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Footer Navigation */}
       {isMobileViewport && (
-        <MobileFooterNav onMenuClick={() => setMobileSidebarOpen(true)} />
+        <MobileFooterNav
+          onMenuClick={() => {
+            console.log('📱 Opening mobile sidebar, current state:', mobileSidebarOpen);
+            setMobileSidebarOpen(true);
+          }}
+        />
       )}
     </div>
   );

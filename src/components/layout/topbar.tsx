@@ -29,7 +29,7 @@ export function Topbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-white/70 backdrop-blur border-b">
+    <header className="sticky top-0 z-30 bg-white/70 backdrop-blur border-b">
       <div className="mx-auto flex items-center gap-2 px-4 py-2">
         {/* Mobile menu button removed - now in mobile footer navigation */}
 
