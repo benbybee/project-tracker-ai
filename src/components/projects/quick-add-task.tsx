@@ -21,7 +21,7 @@ export function QuickAddTask({
   });
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 pt-6 pb-4">
       <Input
         placeholder="Quick add task…"
         value={title}

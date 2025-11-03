@@ -139,6 +139,7 @@ export default function ProjectDetailPage() {
           wpOneClickEnabled={project.wpOneClickEnabled}
           onNewTask={() => setCreateModalOpen(true)}
           onAiChat={() => setAiChatOpen(true)}
+          className="pt-6"
         />
 
         {/* Kanban Board Section */}
