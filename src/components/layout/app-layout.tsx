@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
 import { MobileFooterNav } from '@/components/mobile/mobile-footer-nav';
@@ -10,6 +10,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const isMobileViewport = useMobileViewport();
+
+  // Stable callback to prevent unnecessary re-renders
+  const handleCloseSidebar = useCallback(() => {
+    setMobileSidebarOpen(false);
+  }, []);
 
   // Check for mobile/tablet screens and update sidebar width
   useEffect(() => {
@@ -51,7 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-[100dvh]">
       <Sidebar
         isOpen={mobileSidebarOpen}
-        onClose={() => setMobileSidebarOpen(false)}
+        onClose={handleCloseSidebar}
       />
       <div
         className="transition-all duration-300 px-4 py-4 md:pr-3 md:pl-0"

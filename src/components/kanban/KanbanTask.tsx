@@ -138,16 +138,16 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
         />
 
         {/* Header with title and badges */}
-        <div className="flex items-start justify-between gap-2">
-          <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 truncate flex items-center gap-1">
+        <div className="flex items-start justify-between gap-2 min-w-0">
+          <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 break-words flex items-center gap-1">
             {task.isRecurring && (
-              <span title="Recurring task">
+              <span title="Recurring task" className="flex-shrink-0">
                 <Repeat className="h-3 w-3 text-blue-600 shrink-0" />
               </span>
             )}
-            {task.title}
+            <span className="break-words">{task.title}</span>
           </h4>
-          <div className="flex gap-1 shrink-0 flex-wrap">
+          <div className="flex gap-1 shrink-0 flex-wrap max-w-[40%]">
             {overdue && (
               <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 font-medium">
                 Overdue
@@ -189,21 +189,21 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
         )}
 
         {/* Footer metadata */}
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center flex-wrap gap-2 text-xs text-gray-500 min-w-0">
           {task.projectName && (
-            <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+            <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 truncate max-w-full">
               {task.projectName}
             </span>
           )}
           {task.role && (
-            <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+            <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 truncate">
               {typeof task.role === 'string' ? task.role : task.role.name}
             </span>
           )}
           {due && task.dueDate && (
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 flex-shrink-0">
               <CalendarDays className="h-3 w-3" />
-              {due.toLocaleDateString()}
+              <span className="whitespace-nowrap">{due.toLocaleDateString()}</span>
             </span>
           )}
         </div>

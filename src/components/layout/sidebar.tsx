@@ -366,10 +366,13 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   // Close mobile sidebar when route changes
   useEffect(() => {
-    if (isMobile && onClose) {
+    // Only close if sidebar is actually open AND pathname changed
+    // Don't close on initial mount or when sidebar is already closed
+    if (isMobile && isMobileOpen && onClose) {
       onClose();
     }
-  }, [pathname, isMobile, onClose]);
+    // Only depend on pathname to avoid closing on other state changes
+  }, [pathname]);
 
   // Load compact state from localStorage
   useEffect(() => {

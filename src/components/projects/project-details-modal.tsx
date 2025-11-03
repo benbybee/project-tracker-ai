@@ -198,7 +198,9 @@ export function ProjectDetailsModal({
                     className="flex items-center gap-2 flex-shrink-0 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30"
                   >
                     <Key className="h-4 w-4" />
-                    <span className="whitespace-nowrap">Open WordPress Site</span>
+                    <span className="whitespace-nowrap">
+                      Open WordPress Site
+                    </span>
                   </Button>
                 )}
                 {project.type === 'website' && (
@@ -373,7 +375,7 @@ function TaskListItem({ task, onClick }: { task: any; onClick: () => void }) {
     <div
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors',
+        'flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors',
         isCompleted && 'opacity-60'
       )}
     >
@@ -390,39 +392,37 @@ function TaskListItem({ task, onClick }: { task: any; onClick: () => void }) {
 
       {/* Task info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <p
             className={cn(
-              'font-medium text-sm',
+              'font-medium text-sm truncate',
               isCompleted ? 'line-through text-gray-500' : 'text-gray-900'
             )}
           >
             {task.title}
           </p>
           {overdue && !isCompleted && (
-            <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 font-medium">
+            <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 font-medium flex-shrink-0 whitespace-nowrap">
               Overdue
             </span>
           )}
           {dueToday && !isCompleted && (
-            <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700 font-medium">
+            <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700 font-medium flex-shrink-0 whitespace-nowrap">
               Due Today
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-0.5">
-          {task.description && (
-            <p className="text-xs text-gray-600 truncate">{task.description}</p>
-          )}
-        </div>
+        {task.description && (
+          <p className="text-xs text-gray-600 truncate mt-0.5">{task.description}</p>
+        )}
       </div>
 
       {/* Due date and role */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
         {task.dueDate && (
           <span
             className={cn(
-              'text-xs px-2 py-1 rounded',
+              'text-xs px-2 py-1 rounded whitespace-nowrap',
               overdue && !isCompleted
                 ? 'text-red-600 bg-red-50'
                 : 'text-gray-600 bg-gray-100'
@@ -433,7 +433,7 @@ function TaskListItem({ task, onClick }: { task: any; onClick: () => void }) {
         )}
         {task.role && (
           <span
-            className="text-xs px-2 py-1 rounded"
+            className="text-xs px-2 py-1 rounded whitespace-nowrap"
             style={{
               backgroundColor: `${task.role.color}15`,
               color: task.role.color,

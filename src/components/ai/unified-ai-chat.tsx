@@ -10,8 +10,6 @@ import {
   AlertCircle,
   Lightbulb,
   FileText,
-  CheckCircle,
-  XCircle,
   User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -97,7 +95,7 @@ const PROJECT_PROMPTS: QuickPrompt[] = [
 const GENERAL_PROMPTS: QuickPrompt[] = [
   {
     icon: Lightbulb,
-    label: 'Today\'s focus',
+    label: "Today's focus",
     prompt: 'What should I work on today?',
   },
   {
@@ -217,7 +215,8 @@ export function UnifiedAiChat({
 
   const getHeaderSubtitle = () => {
     if (context?.projectName) return context.projectName;
-    if (context?.mode === 'analytics') return 'Ask questions about your productivity data';
+    if (context?.mode === 'analytics')
+      return 'Ask questions about your productivity data';
     return 'Your intelligent productivity assistant';
   };
 
@@ -397,4 +396,3 @@ export function UnifiedAiChat({
     </div>
   );
 }
-

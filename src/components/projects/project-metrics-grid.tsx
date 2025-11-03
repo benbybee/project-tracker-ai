@@ -46,10 +46,10 @@ export function ProjectMetricsGrid({
   const { progress, velocity, health } = metrics;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full min-w-0">
       {/* Progress Card */}
-      <GlassCard className="p-5 relative overflow-hidden group hover:shadow-lg transition-shadow">
-        <div className="relative z-10">
+      <GlassCard className="p-4 sm:p-5 relative overflow-hidden group hover:shadow-lg transition-shadow min-w-0">
+        <div className="relative z-10 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">
               Progress
@@ -105,8 +105,8 @@ export function ProjectMetricsGrid({
       </GlassCard>
 
       {/* Velocity Card */}
-      <GlassCard className="p-5 relative overflow-hidden group hover:shadow-lg transition-shadow">
-        <div className="relative z-10">
+      <GlassCard className="p-4 sm:p-5 relative overflow-hidden group hover:shadow-lg transition-shadow min-w-0">
+        <div className="relative z-10 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">
               Velocity
@@ -170,8 +170,8 @@ export function ProjectMetricsGrid({
       </GlassCard>
 
       {/* Health Card */}
-      <GlassCard className="p-5 relative overflow-hidden group hover:shadow-lg transition-shadow">
-        <div className="relative z-10">
+      <GlassCard className="p-4 sm:p-5 relative overflow-hidden group hover:shadow-lg transition-shadow min-w-0">
+        <div className="relative z-10 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">
               Health
@@ -258,10 +258,10 @@ export function ProjectMetricsGrid({
 
       {/* AI Quick Access Card */}
       <GlassCard
-        className="p-5 relative overflow-hidden group hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-900/20 dark:to-pink-900/20"
+        className="p-4 sm:p-5 relative overflow-hidden group hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-900/20 dark:to-pink-900/20 min-w-0"
         onClick={onAiChatOpen}
       >
-        <div className="relative z-10">
+        <div className="relative z-10 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-purple-700 dark:text-purple-400">
               AI Assistant

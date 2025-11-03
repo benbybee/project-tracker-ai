@@ -209,7 +209,7 @@ export function KanbanBoard({
   return (
     <>
       {/* Role Filter Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Tasks</h2>
         <KanbanFilters
           roles={uniqueRoles}
@@ -224,7 +224,7 @@ export function KanbanBoard({
         onDragEnd={onDragEnd}
         collisionDetection={closestCenter}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full min-w-0 overflow-x-auto">
           {columns.map((status) => {
             const items = tasksByCol[status] || [];
             return (

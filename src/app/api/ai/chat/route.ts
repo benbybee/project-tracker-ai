@@ -7,7 +7,6 @@ import { taskAnalytics, tasks, projects } from '@/server/db/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import { patternAnalyzer } from '@/lib/ai/pattern-analyzer';
 import { predictiveEngine } from '@/lib/ai/predictive-engine';
-import { agentEngine } from '@/lib/ai/agent-engine';
 
 const getOpenAIClient = () => {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -23,11 +22,6 @@ interface ChatContext {
   projectName?: string;
 }
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -39,7 +33,10 @@ export async function POST(req: Request) {
     const { message, context, history } = await req.json();
 
     if (!message || typeof message !== 'string') {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Message is required' },
+        { status: 400 }
+      );
     }
 
     const userId = session.user.id;
@@ -114,7 +111,7 @@ export async function POST(req: Request) {
     }
 
     console.error('[AI Unified Chat] Request completed successfully');
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: response,
       context: contextData,
     });
@@ -433,4 +430,3 @@ CAPABILITIES:
 
 Be conversational, actionable, and data-driven. Help the user stay productive and organized.`;
 }
-

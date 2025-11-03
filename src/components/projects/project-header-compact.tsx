@@ -52,14 +52,14 @@ export function ProjectHeaderCompact({ project }: ProjectHeaderCompactProps) {
 
   return (
     <>
-      <GlassCard className="p-6 mb-6">
+      <GlassCard className="p-4 sm:p-6 mb-6 overflow-hidden">
         <div className="flex flex-col gap-4">
           {/* Header Row */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               {/* Title and Badges */}
               <div className="flex items-center gap-2 flex-wrap mb-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 truncate">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 truncate">
                   {project.name}
                 </h1>
                 <span
@@ -132,25 +132,25 @@ export function ProjectHeaderCompact({ project }: ProjectHeaderCompactProps) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditModalOpen(true)}
-                className="h-9 bg-white/50 hover:bg-white/80 dark:bg-slate-800/50 dark:hover:bg-slate-800/80"
+                className="h-9 flex-1 sm:flex-none bg-white/50 hover:bg-white/80 dark:bg-slate-800/50 dark:hover:bg-slate-800/80"
               >
                 <Edit className="h-4 w-4" />
-                <span className="ml-2 hidden sm:inline">Edit</span>
+                <span className="ml-2">Edit</span>
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="h-9 bg-red-50 hover:bg-red-100 text-red-600 border-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:border-red-800"
+                className="h-9 flex-1 sm:flex-none bg-red-50 hover:bg-red-100 text-red-600 border-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:border-red-800"
               >
                 <Trash2 className="h-4 w-4" />
-                <span className="ml-2 hidden sm:inline">Delete</span>
+                <span className="ml-2">Delete</span>
               </Button>
             </div>
           </div>

@@ -46,10 +46,10 @@ export function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-xl bg-white/80 backdrop-blur-sm p-4 border border-gray-200 min-h-[500px] transition-all ${isOver ? 'ring-2 ring-blue-500 bg-blue-50 shadow-md' : 'shadow-sm'}`}
+      className={`rounded-xl bg-white/80 backdrop-blur-sm p-3 sm:p-4 border border-gray-200 min-h-[500px] transition-all min-w-0 ${isOver ? 'ring-2 ring-blue-500 bg-blue-50 shadow-md' : 'shadow-sm'}`}
     >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-sm uppercase tracking-wide text-gray-800">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <h3 className="font-semibold text-xs sm:text-sm uppercase tracking-wide text-gray-800 truncate">
           {columnTitle.replace('_', ' ')}
         </h3>
         <span className="text-xs text-gray-600 font-semibold bg-gray-100 px-2.5 py-1 rounded-full">
