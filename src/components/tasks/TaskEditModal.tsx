@@ -141,7 +141,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
               Project *
             </label>
             <Select
-              value={form.projectId}
+              value={form.projectId || undefined}
               onValueChange={(value) => updateForm({ projectId: value })}
             >
               <SelectTrigger>
