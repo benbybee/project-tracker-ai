@@ -147,7 +147,7 @@ export function TaskTemplateModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {mode === 'save' ? 'Save as Template' : 'Use Template'}

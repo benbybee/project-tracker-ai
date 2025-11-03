@@ -81,7 +81,7 @@ export function FilePreview({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 bg-gray-900">
+      <DialogContent className="sm:max-w-6xl h-[90vh] p-0 gap-0 bg-gray-900">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gray-800 border-b border-gray-700">
           <div className="flex-1 min-w-0 mr-4">

@@ -32,6 +32,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
   const [deleting, setDeleting] = useState(false);
 
   const utils = trpc.useUtils();
+  const { data: projects } = trpc.projects.list.useQuery({});
   const updateTask = trpc.tasks.update.useMutation({
     onSuccess: () => {
       utils.tasks.list.invalidate();
@@ -62,6 +63,11 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
       return;
     }
 
+    if (!form.projectId) {
+      alert('Please select a project');
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -72,6 +78,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
         status: form.status,
         dueDate: form.dueDate,
         priorityScore: form.priorityScore?.toString() as '1' | '2' | '3' | '4',
+        projectId: form.projectId,
       });
 
       onClose();
@@ -126,6 +133,28 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
               placeholder="Enter task title"
               autoFocus
             />
+          </div>
+
+          {/* Project */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Project *
+            </label>
+            <Select
+              value={form.projectId}
+              onValueChange={(value) => updateForm({ projectId: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects?.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Description */}

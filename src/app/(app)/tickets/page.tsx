@@ -752,8 +752,8 @@ function TicketDetailsModal({
   onAcceptSelected: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="mx-4 w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white shadow-xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-3xl max-h-[calc(100dvh-2rem)] rounded-2xl bg-white shadow-xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold">{ticket.projectName}</h2>
           <button
@@ -764,7 +764,7 @@ function TicketDetailsModal({
           </button>
         </div>
 
-        <div className="p-4 max-h-[calc(90vh-80px)] overflow-y-auto">
+        <div className="p-4 sm:p-6 max-h-[calc(100dvh-10rem)] overflow-y-auto">
           <div className="space-y-4">
             <header className="flex items-start justify-between gap-3">
               <div>

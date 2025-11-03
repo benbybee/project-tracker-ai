@@ -1,5 +1,14 @@
 export type NoteType = 'text' | 'audio';
 
+export type NoteAttachment = {
+  id: string;
+  noteId: string;
+  createdAt: string;
+  fileName: string;
+  fileSize?: number | null;
+  url?: string | null;
+};
+
 export type Note = {
   id: string;
   userId: string;
@@ -14,6 +23,7 @@ export type Note = {
   updatedAt: string;
   // Joined fields
   projectName?: string;
+  attachments?: NoteAttachment[];
 };
 
 export type CreateNoteInput = {

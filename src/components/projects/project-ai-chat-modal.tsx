@@ -141,7 +141,7 @@ export function ProjectAiChatModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-3xl h-[85vh] flex flex-col"
+        className="w-full max-w-3xl h-[85dvh] max-h-[calc(100dvh-2rem)] flex flex-col"
       >
         <GlassCard className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
@@ -185,7 +185,7 @@ export function ProjectAiChatModal({
                 </p>
 
                 {/* Quick Prompts */}
-                <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
                   {QUICK_PROMPTS.map((prompt) => {
                     const Icon = prompt.icon;
                     return (

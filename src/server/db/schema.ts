@@ -317,7 +317,7 @@ export const notes = pgTable('notes', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const notesRelations = relations(notes, ({ one }) => ({
+export const notesRelations = relations(notes, ({ one, many }) => ({
   user: one(users, {
     fields: [notes.userId],
     references: [users.id],
@@ -326,10 +326,26 @@ export const notesRelations = relations(notes, ({ one }) => ({
     fields: [notes.projectId],
     references: [projects.id],
   }),
+  attachments: many(noteAttachments),
 }));
 
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
+
+// Note Attachments table
+export const noteAttachments = pgTable('note_attachments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  noteId: uuid('note_id')
+    .notNull()
+    .references(() => notes.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  fileName: text('file_name').notNull(),
+  fileSize: bigint('file_size', { mode: 'number' }),
+  url: text('url'),
+});
+
+export type NoteAttachment = typeof noteAttachments.$inferSelect;
+export type NewNoteAttachment = typeof noteAttachments.$inferInsert;
 
 // Task Templates table
 export const taskTemplates = pgTable('task_templates', {

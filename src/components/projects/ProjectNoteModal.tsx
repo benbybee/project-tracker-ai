@@ -19,6 +19,8 @@ import {
   Square,
   Trash2,
   Loader2,
+  Paperclip,
+  X,
 } from 'lucide-react';
 import type { Note } from '@/types/note';
 
@@ -46,6 +48,7 @@ export function ProjectNoteModal({
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   const {
     isRecording,
@@ -68,10 +71,12 @@ export function ProjectNoteModal({
         setTitle(editNote.title);
         setContent(editNote.content);
         setMode(editNote.noteType);
+        setAttachments([]);
       } else {
         setTitle('');
         setContent('');
         setMode('text');
+        setAttachments([]);
         clearRecording();
       }
     }
@@ -81,6 +86,15 @@ export function ProjectNoteModal({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachments((prev) => [...prev, ...files]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleTranscribe = async () => {
@@ -133,24 +147,60 @@ export function ProjectNoteModal({
       const endpoint = editNote ? '/api/notes/update' : '/api/notes/create';
       const method = editNote ? 'PUT' : 'POST';
 
-      const body: any = editNote
-        ? { id: editNote.id, title, content }
-        : {
-            projectId,
-            title,
-            content,
-            noteType: mode,
-            audioDuration: mode === 'audio' ? duration : null,
-          };
+      // For editing, always use JSON (attachments not supported for edits yet)
+      if (editNote) {
+        const response = await fetch(endpoint, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editNote.id, title, content }),
+        });
 
-      const response = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+        if (!response.ok) {
+          throw new Error('Failed to save note');
+        }
+      } else {
+        // For creating new notes, use FormData if there are attachments
+        if (attachments.length > 0) {
+          const formData = new FormData();
+          formData.append('projectId', projectId);
+          formData.append('title', title);
+          formData.append('content', content);
+          formData.append('noteType', mode);
+          if (mode === 'audio' && duration) {
+            formData.append('audioDuration', duration.toString());
+          }
 
-      if (!response.ok) {
-        throw new Error('Failed to save note');
+          // Add all attachments
+          attachments.forEach((file) => {
+            formData.append('files', file);
+          });
+
+          const response = await fetch(endpoint, {
+            method,
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to save note');
+          }
+        } else {
+          // Use JSON if no attachments
+          const response = await fetch(endpoint, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              projectId,
+              title,
+              content,
+              noteType: mode,
+              audioDuration: mode === 'audio' ? duration : null,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to save note');
+          }
+        }
       }
 
       onSaved();
@@ -167,7 +217,7 @@ export function ProjectNoteModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{editNote ? 'Edit Note' : 'Create Note'}</DialogTitle>
         </DialogHeader>
@@ -343,6 +393,65 @@ export function ProjectNoteModal({
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* File Attachments (only for new notes) */}
+          {!editNote && (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Attachments (optional)
+              </label>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="project-note-file-input"
+                  />
+                  <label
+                    htmlFor="project-note-file-input"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    <span className="text-sm font-medium">Add Files</span>
+                  </label>
+                  {attachments.length > 0 && (
+                    <span className="text-sm text-gray-600">
+                      {attachments.length} file{attachments.length !== 1 ? 's' : ''} selected
+                    </span>
+                  )}
+                </div>
+
+                {/* Display selected files */}
+                {attachments.length > 0 && (
+                  <div className="space-y-1">
+                    {attachments.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Paperclip className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          <span className="text-sm truncate">{file.name}</span>
+                          <span className="text-xs text-gray-500 flex-shrink-0">
+                            ({(file.size / 1024).toFixed(1)} KB)
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => removeAttachment(index)}
+                          className="p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
+                          type="button"
+                        >
+                          <X className="h-4 w-4 text-gray-500" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
