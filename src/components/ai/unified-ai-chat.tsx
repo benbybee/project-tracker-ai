@@ -14,12 +14,15 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ConfirmationModal, ConfirmationData } from './ConfirmationModal';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'tool';
   content: string;
   timestamp: Date;
+  tool_call_id?: string;
   action?: {
     type: string;
     label: string;
@@ -130,8 +133,13 @@ export function UnifiedAiChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationData, setConfirmationData] = useState<ConfirmationData | null>(null);
+  const [pendingToolCallId, setPendingToolCallId] = useState<string | null>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const quickPrompts = getQuickPromptsForContext(context);
 
@@ -156,6 +164,9 @@ export function UnifiedAiChat({
 
     try {
       let responseText: string;
+      let needsConfirmation = false;
+      let confirmData: ConfirmationData | null = null;
+      let toolCallId: string | null = null;
 
       if (onSendMessage) {
         // Use custom message handler if provided
@@ -178,6 +189,9 @@ export function UnifiedAiChat({
 
         const data = await response.json();
         responseText = data.message || data.response;
+        needsConfirmation = data.needsConfirmation || false;
+        confirmData = data.confirmationData || null;
+        toolCallId = data.toolCallId || null;
       }
 
       const assistantMessage: Message = {
@@ -188,6 +202,13 @@ export function UnifiedAiChat({
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // If action needs confirmation, show modal
+      if (needsConfirmation && confirmData) {
+        setConfirmationData(confirmData);
+        setPendingToolCallId(toolCallId);
+        setShowConfirmation(true);
+      }
     } catch (error) {
       console.error('AI chat error:', error);
       const errorMessage: Message = {
@@ -201,6 +222,70 @@ export function UnifiedAiChat({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmationData) return;
+
+    setIsExecuting(true);
+
+    try {
+      const response = await fetch('/api/ai/chat/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmationData }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to execute action');
+      }
+
+      // Show success message
+      toast({
+        title: 'Success',
+        description: data.message,
+      });
+
+      // Add success message to chat
+      const successMessage: Message = {
+        id: `msg-${Date.now()}`,
+        role: 'assistant',
+        content: data.message,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, successMessage]);
+
+      // Close modal
+      setShowConfirmation(false);
+      setConfirmationData(null);
+      setPendingToolCallId(null);
+    } catch (error: any) {
+      console.error('Action execution error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to execute action',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  const handleReject = () => {
+    setShowConfirmation(false);
+    setConfirmationData(null);
+    setPendingToolCallId(null);
+
+    // Add rejection message
+    const rejectionMessage: Message = {
+      id: `msg-${Date.now()}`,
+      role: 'assistant',
+      content: 'Action canceled. Is there anything else I can help you with?',
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, rejectionMessage]);
   };
 
   const handleQuickPrompt = (prompt: string) => {
@@ -221,12 +306,20 @@ export function UnifiedAiChat({
   };
 
   return (
-    <div
-      className={cn(
-        'bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col',
-        className
-      )}
-    >
+    <>
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        confirmationData={confirmationData}
+        onConfirm={handleConfirm}
+        onReject={handleReject}
+        isExecuting={isExecuting}
+      />
+      <div
+        className={cn(
+          'bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col',
+          className
+        )}
+      >
       {/* Header */}
       {showHeader && (
         <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-700">
@@ -394,5 +487,6 @@ export function UnifiedAiChat({
         </form>
       </div>
     </div>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import PWAInit from '@/components/system/PWAInit';
 import { NotificationProvider } from '@/components/notifications/NotificationProvider';
 import { Providers } from './providers';
 import { validateEnv } from '@/lib/env';
+import { Toaster } from '@/components/ui/toaster';
 
 // Validate environment variables at runtime (server-side only)
 // Skip during build phase to allow deployment with env vars set in platform
@@ -127,6 +128,7 @@ export default function RootLayout({
             {/* Ensure SW is registered on the client for static asset caching */}
             <PWAInit />
             {children}
+            <Toaster />
           </NotificationProvider>
         </Providers>
       </body>

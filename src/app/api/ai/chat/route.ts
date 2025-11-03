@@ -3,8 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import OpenAI from 'openai';
 import { db } from '@/server/db';
-import { taskAnalytics, tasks, projects } from '@/server/db/schema';
-import { eq, and, gte, sql } from 'drizzle-orm';
+import { taskAnalytics, tasks, projects, roles } from '@/server/db/schema';
+import { eq, and, gte, sql, ilike, or } from 'drizzle-orm';
 import { patternAnalyzer } from '@/lib/ai/pattern-analyzer';
 import { predictiveEngine } from '@/lib/ai/predictive-engine';
 
@@ -20,6 +20,741 @@ interface ChatContext {
   mode?: 'analytics' | 'project' | 'general';
   projectId?: string;
   projectName?: string;
+}
+
+// Tool definitions for OpenAI function calling
+const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+  {
+    type: 'function',
+    function: {
+      name: 'create_project',
+      description: 'Create a new project in the system',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Project name (minimum 2 characters)',
+          },
+          type: {
+            type: 'string',
+            enum: ['general', 'website'],
+            description: 'Project type: general or website',
+          },
+          description: {
+            type: 'string',
+            description: 'Project description (optional)',
+          },
+          roleName: {
+            type: 'string',
+            description: 'Name of the role to assign (optional, will be looked up)',
+          },
+          domain: {
+            type: 'string',
+            description: 'Website domain (optional, for website projects)',
+          },
+        },
+        required: ['name', 'type'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_project',
+      description: 'Update an existing project',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectName: {
+            type: 'string',
+            description: 'Name of the project to update (will be matched)',
+          },
+          name: {
+            type: 'string',
+            description: 'New name for the project (optional)',
+          },
+          description: {
+            type: 'string',
+            description: 'New description (optional)',
+          },
+          domain: {
+            type: 'string',
+            description: 'Website domain (optional)',
+          },
+          pinned: {
+            type: 'boolean',
+            description: 'Pin/unpin the project (optional)',
+          },
+        },
+        required: ['projectName'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_project',
+      description: 'Delete a project from the system',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectName: {
+            type: 'string',
+            description: 'Name of the project to delete (will be matched)',
+          },
+        },
+        required: ['projectName'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_task',
+      description: 'Create a new task in a project',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectName: {
+            type: 'string',
+            description: 'Name of the project to create task in (will be matched)',
+          },
+          title: {
+            type: 'string',
+            description: 'Task title (minimum 2 characters)',
+          },
+          description: {
+            type: 'string',
+            description: 'Task description (optional)',
+          },
+          dueDate: {
+            type: 'string',
+            description: 'Due date in YYYY-MM-DD format (optional)',
+          },
+          priorityScore: {
+            type: 'string',
+            enum: ['1', '2', '3', '4'],
+            description: 'Priority: 1=low, 2=medium, 3=high, 4=urgent (default: 2)',
+          },
+          status: {
+            type: 'string',
+            enum: ['not_started', 'in_progress', 'blocked', 'completed'],
+            description: 'Task status (default: not_started)',
+          },
+        },
+        required: ['projectName', 'title'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_task',
+      description: 'Update an existing task',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskTitle: {
+            type: 'string',
+            description: 'Title of the task to update (will be matched)',
+          },
+          projectName: {
+            type: 'string',
+            description: 'Project name for context (optional, helps with disambiguation)',
+          },
+          title: {
+            type: 'string',
+            description: 'New title (optional)',
+          },
+          description: {
+            type: 'string',
+            description: 'New description (optional)',
+          },
+          dueDate: {
+            type: 'string',
+            description: 'New due date in YYYY-MM-DD format (optional)',
+          },
+          priorityScore: {
+            type: 'string',
+            enum: ['1', '2', '3', '4'],
+            description: 'New priority (optional)',
+          },
+          status: {
+            type: 'string',
+            enum: ['not_started', 'in_progress', 'blocked', 'completed'],
+            description: 'New status (optional)',
+          },
+        },
+        required: ['taskTitle'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_task',
+      description: 'Delete a task',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskTitle: {
+            type: 'string',
+            description: 'Title of the task to delete (will be matched)',
+          },
+          projectName: {
+            type: 'string',
+            description: 'Project name for context (optional, helps with disambiguation)',
+          },
+        },
+        required: ['taskTitle'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_role',
+      description: 'Create a new role/category',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Role name',
+          },
+          color: {
+            type: 'string',
+            description: 'Color hex code (e.g., #3B82F6)',
+          },
+        },
+        required: ['name', 'color'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_role',
+      description: 'Update an existing role',
+      parameters: {
+        type: 'object',
+        properties: {
+          roleName: {
+            type: 'string',
+            description: 'Name of the role to update (will be matched)',
+          },
+          name: {
+            type: 'string',
+            description: 'New name (optional)',
+          },
+          color: {
+            type: 'string',
+            description: 'New color hex code (optional)',
+          },
+        },
+        required: ['roleName'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_role',
+      description: 'Delete a role',
+      parameters: {
+        type: 'object',
+        properties: {
+          roleName: {
+            type: 'string',
+            description: 'Name of the role to delete (will be matched)',
+          },
+        },
+        required: ['roleName'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_projects',
+      description: 'List all projects, optionally filtered',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            enum: ['general', 'website'],
+            description: 'Filter by project type (optional)',
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_tasks',
+      description: 'List tasks, optionally filtered',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectName: {
+            type: 'string',
+            description: 'Filter by project name (optional)',
+          },
+          status: {
+            type: 'string',
+            enum: ['not_started', 'in_progress', 'blocked', 'completed'],
+            description: 'Filter by status (optional)',
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_roles',
+      description: 'List all roles/categories',
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+    },
+  },
+];
+
+// Entity resolution functions for fuzzy matching by name
+async function findProjectByName(userId: string, projectName: string) {
+  const matches = await db
+    .select()
+    .from(projects)
+    .where(
+      and(
+        eq(projects.userId, userId),
+        or(
+          ilike(projects.name, `%${projectName}%`),
+          ilike(projects.name, projectName)
+        )
+      )
+    )
+    .limit(5);
+
+  return matches;
+}
+
+async function findTaskByTitle(userId: string, taskTitle: string, projectName?: string) {
+  let conditions = [
+    eq(tasks.userId, userId),
+    eq(tasks.archived, false),
+    or(
+      ilike(tasks.title, `%${taskTitle}%`),
+      ilike(tasks.title, taskTitle)
+    )
+  ];
+
+  // If projectName provided, filter by it
+  if (projectName) {
+    const projectMatches = await findProjectByName(userId, projectName);
+    if (projectMatches.length > 0) {
+      conditions.push(eq(tasks.projectId, projectMatches[0].id));
+    }
+  }
+
+  const matches = await db
+    .select()
+    .from(tasks)
+    .where(and(...conditions))
+    .limit(5);
+
+  return matches;
+}
+
+async function findRoleByName(userId: string, roleName: string) {
+  const matches = await db
+    .select()
+    .from(roles)
+    .where(
+      and(
+        eq(roles.userId, userId),
+        or(
+          ilike(roles.name, `%${roleName}%`),
+          ilike(roles.name, roleName)
+        )
+      )
+    )
+    .limit(5);
+
+  return matches;
+}
+
+// Tool execution handlers
+async function executeTool(
+  toolName: string,
+  args: any,
+  userId: string
+): Promise<{ success: boolean; data?: any; error?: string; needsConfirmation?: boolean; confirmationData?: any }> {
+  try {
+    switch (toolName) {
+      case 'list_projects': {
+        let query = db.select().from(projects).where(eq(projects.userId, userId));
+        
+        if (args.type) {
+          query = query.where(eq(projects.type, args.type));
+        }
+        
+        const projectList = await query.limit(50);
+        return {
+          success: true,
+          data: {
+            projects: projectList.map(p => ({
+              id: p.id,
+              name: p.name,
+              type: p.type,
+              description: p.description,
+              pinned: p.pinned,
+            })),
+            count: projectList.length,
+          },
+        };
+      }
+
+      case 'list_tasks': {
+        let conditions = [eq(tasks.userId, userId), eq(tasks.archived, false)];
+        
+        if (args.projectName) {
+          const projectMatches = await findProjectByName(userId, args.projectName);
+          if (projectMatches.length === 0) {
+            return { success: false, error: `No project found matching "${args.projectName}"` };
+          }
+          if (projectMatches.length > 1) {
+            return {
+              success: false,
+              error: `Multiple projects match "${args.projectName}": ${projectMatches.map(p => p.name).join(', ')}. Please be more specific.`,
+            };
+          }
+          conditions.push(eq(tasks.projectId, projectMatches[0].id));
+        }
+        
+        if (args.status) {
+          conditions.push(eq(tasks.status, args.status));
+        }
+        
+        const taskList = await db
+          .select()
+          .from(tasks)
+          .where(and(...conditions))
+          .limit(50);
+          
+        return {
+          success: true,
+          data: {
+            tasks: taskList.map(t => ({
+              id: t.id,
+              title: t.title,
+              status: t.status,
+              priority: t.priorityScore,
+              dueDate: t.dueDate,
+            })),
+            count: taskList.length,
+          },
+        };
+      }
+
+      case 'list_roles': {
+        const roleList = await db
+          .select()
+          .from(roles)
+          .where(eq(roles.userId, userId));
+          
+        return {
+          success: true,
+          data: {
+            roles: roleList.map(r => ({
+              id: r.id,
+              name: r.name,
+              color: r.color,
+            })),
+            count: roleList.length,
+          },
+        };
+      }
+
+      case 'create_project': {
+        // Resolve role if provided
+        let roleId = null;
+        if (args.roleName) {
+          const roleMatches = await findRoleByName(userId, args.roleName);
+          if (roleMatches.length === 0) {
+            return { success: false, error: `No role found matching "${args.roleName}"` };
+          }
+          if (roleMatches.length > 1) {
+            return {
+              success: false,
+              error: `Multiple roles match "${args.roleName}": ${roleMatches.map(r => r.name).join(', ')}. Please be more specific.`,
+            };
+          }
+          roleId = roleMatches[0].id;
+        }
+
+        // Return data for confirmation
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'create_project',
+            details: {
+              name: args.name,
+              type: args.type,
+              description: args.description || '',
+              roleId,
+              roleName: args.roleName || null,
+              domain: args.domain || null,
+            },
+          },
+        };
+      }
+
+      case 'update_project': {
+        const projectMatches = await findProjectByName(userId, args.projectName);
+        
+        if (projectMatches.length === 0) {
+          return { success: false, error: `No project found matching "${args.projectName}"` };
+        }
+        
+        if (projectMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple projects match "${args.projectName}": ${projectMatches.map(p => p.name).join(', ')}. Please specify which one.`,
+          };
+        }
+
+        const project = projectMatches[0];
+        const updates: any = {};
+        
+        if (args.name) updates.name = args.name;
+        if (args.description !== undefined) updates.description = args.description;
+        if (args.domain !== undefined) updates.domain = args.domain;
+        if (args.pinned !== undefined) updates.pinned = args.pinned;
+
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'update_project',
+            projectId: project.id,
+            projectName: project.name,
+            details: updates,
+          },
+        };
+      }
+
+      case 'delete_project': {
+        const projectMatches = await findProjectByName(userId, args.projectName);
+        
+        if (projectMatches.length === 0) {
+          return { success: false, error: `No project found matching "${args.projectName}"` };
+        }
+        
+        if (projectMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple projects match "${args.projectName}": ${projectMatches.map(p => p.name).join(', ')}. Please specify which one.`,
+          };
+        }
+
+        const project = projectMatches[0];
+
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'delete_project',
+            projectId: project.id,
+            projectName: project.name,
+            projectType: project.type,
+          },
+        };
+      }
+
+      case 'create_task': {
+        const projectMatches = await findProjectByName(userId, args.projectName);
+        
+        if (projectMatches.length === 0) {
+          return { success: false, error: `No project found matching "${args.projectName}"` };
+        }
+        
+        if (projectMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple projects match "${args.projectName}": ${projectMatches.map(p => p.name).join(', ')}. Please specify which one.`,
+          };
+        }
+
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'create_task',
+            projectId: projectMatches[0].id,
+            projectName: projectMatches[0].name,
+            details: {
+              title: args.title,
+              description: args.description || '',
+              dueDate: args.dueDate || null,
+              priorityScore: args.priorityScore || '2',
+              status: args.status || 'not_started',
+            },
+          },
+        };
+      }
+
+      case 'update_task': {
+        const taskMatches = await findTaskByTitle(userId, args.taskTitle, args.projectName);
+        
+        if (taskMatches.length === 0) {
+          return { success: false, error: `No task found matching "${args.taskTitle}"` };
+        }
+        
+        if (taskMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple tasks match "${args.taskTitle}": ${taskMatches.map(t => t.title).join(', ')}. Please be more specific or provide the project name.`,
+          };
+        }
+
+        const task = taskMatches[0];
+        const updates: any = {};
+        
+        if (args.title) updates.title = args.title;
+        if (args.description !== undefined) updates.description = args.description;
+        if (args.dueDate !== undefined) updates.dueDate = args.dueDate;
+        if (args.priorityScore) updates.priorityScore = args.priorityScore;
+        if (args.status) updates.status = args.status;
+
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'update_task',
+            taskId: task.id,
+            taskTitle: task.title,
+            details: updates,
+          },
+        };
+      }
+
+      case 'delete_task': {
+        const taskMatches = await findTaskByTitle(userId, args.taskTitle, args.projectName);
+        
+        if (taskMatches.length === 0) {
+          return { success: false, error: `No task found matching "${args.taskTitle}"` };
+        }
+        
+        if (taskMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple tasks match "${args.taskTitle}": ${taskMatches.map(t => t.title).join(', ')}. Please be more specific or provide the project name.`,
+          };
+        }
+
+        const task = taskMatches[0];
+
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'delete_task',
+            taskId: task.id,
+            taskTitle: task.title,
+          },
+        };
+      }
+
+      case 'create_role': {
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'create_role',
+            details: {
+              name: args.name,
+              color: args.color,
+            },
+          },
+        };
+      }
+
+      case 'update_role': {
+        const roleMatches = await findRoleByName(userId, args.roleName);
+        
+        if (roleMatches.length === 0) {
+          return { success: false, error: `No role found matching "${args.roleName}"` };
+        }
+        
+        if (roleMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple roles match "${args.roleName}": ${roleMatches.map(r => r.name).join(', ')}. Please specify which one.`,
+          };
+        }
+
+        const role = roleMatches[0];
+        const updates: any = {};
+        
+        if (args.name) updates.name = args.name;
+        if (args.color) updates.color = args.color;
+
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'update_role',
+            roleId: role.id,
+            roleName: role.name,
+            details: updates,
+          },
+        };
+      }
+
+      case 'delete_role': {
+        const roleMatches = await findRoleByName(userId, args.roleName);
+        
+        if (roleMatches.length === 0) {
+          return { success: false, error: `No role found matching "${args.roleName}"` };
+        }
+        
+        if (roleMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple roles match "${args.roleName}": ${roleMatches.map(r => r.name).join(', ')}. Please specify which one.`,
+          };
+        }
+
+        const role = roleMatches[0];
+
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'delete_role',
+            roleId: role.id,
+            roleName: role.name,
+          },
+        };
+      }
+
+      default:
+        return { success: false, error: `Unknown tool: ${toolName}` };
+    }
+  } catch (error: any) {
+    console.error(`[Tool Execution] Error in ${toolName}:`, error);
+    return { success: false, error: error.message || 'Tool execution failed' };
+  }
 }
 
 export async function POST(req: Request) {
@@ -42,7 +777,7 @@ export async function POST(req: Request) {
     const userId = session.user.id;
     const chatContext: ChatContext = context || { mode: 'general' };
 
-    console.error('[AI Unified Chat] Processing request:', {
+    console.log('[AI Unified Chat] Processing request:', {
       userId,
       mode: chatContext.mode,
       projectId: chatContext.projectId,
@@ -53,12 +788,10 @@ export async function POST(req: Request) {
     let contextData: any = {};
 
     if (chatContext.mode === 'analytics') {
-      // Analytics context
       const analyticsData = await gatherAnalyticsContext(userId);
       contextData = analyticsData;
       systemPrompt = buildAnalyticsSystemPrompt(analyticsData);
     } else if (chatContext.mode === 'project' && chatContext.projectId) {
-      // Project context
       const projectData = await gatherProjectContext(
         userId,
         chatContext.projectId
@@ -66,7 +799,6 @@ export async function POST(req: Request) {
       contextData = projectData;
       systemPrompt = buildProjectSystemPrompt(projectData);
     } else {
-      // General context
       const generalData = await gatherGeneralContext(userId);
       contextData = generalData;
       systemPrompt = buildGeneralSystemPrompt(generalData);
@@ -83,10 +815,18 @@ export async function POST(req: Request) {
     // Add conversation history if provided
     if (history && Array.isArray(history)) {
       for (const msg of history.slice(-10)) {
-        messages.push({
-          role: msg.role,
-          content: msg.content,
-        });
+        if (msg.role === 'tool') {
+          messages.push({
+            role: 'tool',
+            content: msg.content,
+            tool_call_id: msg.tool_call_id,
+          });
+        } else {
+          messages.push({
+            role: msg.role,
+            content: msg.content || '',
+          });
+        }
       }
     }
 
@@ -96,21 +836,117 @@ export async function POST(req: Request) {
       content: message,
     });
 
-    // Call OpenAI
+    // Call OpenAI with tools
     const completion = await getOpenAIClient().chat.completions.create({
       model: 'gpt-4o-mini',
       messages,
+      tools: TOOLS,
+      tool_choice: 'auto',
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 1500,
     });
 
-    const response = completion.choices[0]?.message?.content;
+    const responseMessage = completion.choices[0]?.message;
+
+    if (!responseMessage) {
+      throw new Error('No response from AI');
+    }
+
+    // Check if AI wants to call tools
+    if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+      const toolCall = responseMessage.tool_calls[0];
+      const toolName = toolCall.function.name;
+      const toolArgs = JSON.parse(toolCall.function.arguments);
+
+      console.log('[AI Unified Chat] Tool call:', toolName, toolArgs);
+
+      // Execute the tool
+      const toolResult = await executeTool(toolName, toolArgs, userId);
+
+      // If tool needs confirmation, return special response
+      if (toolResult.needsConfirmation) {
+        return NextResponse.json({
+          message: responseMessage.content || '',
+          needsConfirmation: true,
+          confirmationData: toolResult.confirmationData,
+          context: contextData,
+          toolCallId: toolCall.id,
+        });
+      }
+
+      // If tool succeeded without confirmation (list operations), include result
+      if (toolResult.success) {
+        // Add tool response to conversation and get AI's interpretation
+        messages.push({
+          role: 'assistant',
+          content: responseMessage.content,
+          tool_calls: [toolCall],
+        });
+        
+        messages.push({
+          role: 'tool',
+          content: JSON.stringify(toolResult.data),
+          tool_call_id: toolCall.id,
+        });
+
+        // Get AI's interpretation of the tool result
+        const followUpCompletion = await getOpenAIClient().chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages,
+          temperature: 0.7,
+          max_tokens: 1000,
+        });
+
+        const finalResponse = followUpCompletion.choices[0]?.message?.content || JSON.stringify(toolResult.data);
+
+        return NextResponse.json({
+          message: finalResponse,
+          context: contextData,
+          toolExecuted: toolName,
+        });
+      }
+
+      // If tool failed, return error message
+      if (!toolResult.success) {
+        // Add tool error to conversation and let AI respond
+        messages.push({
+          role: 'assistant',
+          content: responseMessage.content,
+          tool_calls: [toolCall],
+        });
+        
+        messages.push({
+          role: 'tool',
+          content: JSON.stringify({ error: toolResult.error }),
+          tool_call_id: toolCall.id,
+        });
+
+        // Get AI's response to the error
+        const errorCompletion = await getOpenAIClient().chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages,
+          temperature: 0.7,
+          max_tokens: 1000,
+        });
+
+        const errorResponse = errorCompletion.choices[0]?.message?.content || toolResult.error;
+
+        return NextResponse.json({
+          message: errorResponse,
+          context: contextData,
+          toolError: true,
+        });
+      }
+    }
+
+    // No tool calls, return regular response
+    const response = responseMessage.content;
 
     if (!response) {
       throw new Error('No response from AI');
     }
 
-    console.error('[AI Unified Chat] Request completed successfully');
+    console.log('[AI Unified Chat] Request completed successfully');
     return NextResponse.json({
       message: response,
       context: contextData,
@@ -373,6 +1209,18 @@ WEEKLY FORECAST:
 
 PROJECTS: ${data.projectCount} total
 
+AVAILABLE ACTIONS:
+You can perform actions on behalf of the user using the available tools. When the user requests an action:
+1. Gather any missing required information by asking follow-up questions
+2. Use natural language references (project names, task titles, etc.) - you don't need IDs
+3. Be conversational when gathering data ("What type of project?" instead of "type parameter required")
+4. Once you have all required info, call the appropriate tool
+
+Examples:
+- "Create a project called Website Redesign" → Ask for type (general/website), then create
+- "Update the Marketing project to add domain example.com" → Find project by name, then update
+- "Delete the old task about documentation" → Find task by fuzzy title match, confirm, then delete
+
 Provide helpful, actionable insights based on this data. Be conversational but precise. Use specific numbers from the data.`;
 }
 
@@ -404,6 +1252,18 @@ Your role is to:
 3. Help identify and resolve blockers
 4. Generate status updates
 5. Answer questions about the project
+6. Create, update, or manage tasks and projects when requested
+
+AVAILABLE ACTIONS:
+You can create, update, and delete tasks and projects. When the user requests an action:
+- Gather missing information conversationally
+- Use natural names (no IDs needed)
+- Be helpful and proactive
+
+Examples:
+- "Add a task for updating the homepage" → Create task in this project
+- "Mark the design task as completed" → Update task status
+- "Delete the old meeting notes task" → Find and delete the task
 
 Be concise, actionable, and helpful. Use data from the project context above.`;
 }
@@ -427,6 +1287,21 @@ CAPABILITIES:
 - Provide insights on workload and priorities
 - Answer questions about tasks and projects
 - Offer strategic advice on time management
+- Create, update, and delete projects, tasks, and roles
+
+TAKING ACTIONS:
+When the user asks you to do something (create, update, delete):
+1. Ask follow-up questions to gather any missing required information
+2. Be conversational and helpful ("What type of project is this?" not "Missing type parameter")
+3. Use the project/task/role names provided - you don't need IDs
+4. Once you have all info, use the appropriate tool
+5. The system will ask the user to confirm before executing
+
+Examples:
+- User: "Create a project for me" → You: "I'd be happy to create a project! What would you like to call it, and should it be a general project or a website project?"
+- User: "Add a task to the Marketing project" → You: "What should the task be called?"
+- User: "Update the homepage task to high priority" → Use update_task with taskTitle="homepage", priorityScore="3"
+- User: "Delete the old project" → You: "Which project would you like to delete?" or use fuzzy match if clear from context
 
 Be conversational, actionable, and data-driven. Help the user stay productive and organized.`;
 }
