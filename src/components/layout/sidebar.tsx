@@ -11,7 +11,6 @@ import {
   CalendarDays,
   Calendar,
   Settings,
-  Command,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -27,7 +26,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { triggerCommandPalette } from '@/lib/sidebar-utils';
 
 interface NavItem {
   href: string;
@@ -86,11 +84,6 @@ const navGroups: NavGroup[] = [
       { href: '/summary', label: 'Summary', icon: BarChart3 },
       { href: '/completed', label: 'Completed', icon: Archive },
     ],
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    items: [{ href: '/settings', label: 'Settings', icon: Settings }],
   },
 ];
 
@@ -489,34 +482,34 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           ))}
         </nav>
 
-        {/* Command Palette & Logout Buttons */}
+        {/* Settings & Logout Buttons */}
         <div className="mt-auto p-3 border-t border-white/10 space-y-1">
-          <button
-            onClick={triggerCommandPalette}
+          <Link
+            href="/settings"
             className={cn(
-              'group flex items-center gap-3 rounded-xl px-4 py-3 w-full transition-all duration-200',
+              'group flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200',
               'text-foreground hover:text-foreground',
-              'hover:bg-white/10 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50'
+              'hover:bg-white/10 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
+              pathname === '/settings' &&
+                'bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg'
             )}
-            aria-label="Open command palette"
+            aria-label="Settings"
           >
-            <Command className="h-5 w-5 flex-shrink-0" />
+            <Settings className="h-5 w-5 flex-shrink-0" />
             <AnimatePresence>
               {!isMobile && isCompact ? null : (
-                <motion.div
+                <motion.span
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: 'auto' }}
                   exit={{ opacity: 0, width: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center gap-2 overflow-hidden"
+                  transition={{ duration: 0.15 }}
+                  className="font-medium overflow-hidden whitespace-nowrap"
                 >
-                  <kbd className="rounded px-1.5 py-0.5 text-xs bg-white/60 border border-white/40 backdrop-blur-sm text-slate-900">
-                    Ctrl+K
-                  </kbd>
-                </motion.div>
+                  Settings
+                </motion.span>
               )}
             </AnimatePresence>
-          </button>
+          </Link>
 
           <button
             onClick={() => signOut({ callbackUrl: '/sign-in' })}
