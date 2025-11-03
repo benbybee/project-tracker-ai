@@ -189,15 +189,16 @@ export function CreateProjectModal({
                     control={control}
                     render={({ field }) => (
                       <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
+                        value={field.value || undefined}
+                        onValueChange={(value) => {
+                          field.onChange(value || '');
+                        }}
                         disabled={isSubmitting}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a role (optional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No role</SelectItem>
                           {roles.map((role) => (
                             <SelectItem key={role.id} value={role.id}>
                               {role.name}

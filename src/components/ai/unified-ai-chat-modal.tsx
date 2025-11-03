@@ -51,7 +51,7 @@ export function UnifiedAiChatModal({
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6"
           onClick={(e) => {
             // Close on backdrop click
             if (e.target === e.currentTarget) {
@@ -63,7 +63,8 @@ export function UnifiedAiChatModal({
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="w-full max-w-3xl h-[85dvh] max-h-[calc(100dvh-2rem)] flex flex-col"
+            className="w-full max-w-3xl flex flex-col"
+            style={{ maxHeight: 'calc(100vh - 3rem)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <GlassCard className="flex-1 flex flex-col overflow-hidden relative">
