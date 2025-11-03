@@ -203,7 +203,9 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
           {due && task.dueDate && (
             <span className="flex items-center gap-1 flex-shrink-0">
               <CalendarDays className="h-3 w-3" />
-              <span className="whitespace-nowrap">{due.toLocaleDateString()}</span>
+              <span className="whitespace-nowrap">
+                {due.toLocaleDateString()}
+              </span>
             </span>
           )}
         </div>

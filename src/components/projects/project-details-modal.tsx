@@ -413,7 +413,9 @@ function TaskListItem({ task, onClick }: { task: any; onClick: () => void }) {
           )}
         </div>
         {task.description && (
-          <p className="text-xs text-gray-600 truncate mt-0.5">{task.description}</p>
+          <p className="text-xs text-gray-600 truncate mt-0.5">
+            {task.description}
+          </p>
         )}
       </div>
 

@@ -54,10 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-[100dvh]">
-      <Sidebar
-        isOpen={mobileSidebarOpen}
-        onClose={handleCloseSidebar}
-      />
+      <Sidebar isOpen={mobileSidebarOpen} onClose={handleCloseSidebar} />
       <div
         className="transition-all duration-300 px-4 py-4 md:pr-3 md:pl-0"
         style={{
