@@ -1,15 +1,18 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Keyboard } from 'lucide-react';
-import { GradientButton } from '@/components/ui/gradient-button';
+import { useRouter } from 'next/navigation';
+import { Keyboard, CheckSquare, FolderPlus, Bot, FileText } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TaskModal } from '@/components/tasks/TaskModal';
+import { NoteModal } from '@/components/notes/NoteModal';
 import { trpc } from '@/lib/trpc';
 import { getModKey } from '@/lib/keyboard-utils';
 
 export function Topbar() {
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [modKey, setModKey] = useState('Ctrl');
 
   // Fetch projects to get a default project ID
@@ -29,14 +32,48 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-30 bg-white/70 backdrop-blur border-b">
-      <div className="mx-auto flex items-center gap-2 px-4 py-2">
-        {/* Mobile menu button removed - now in mobile footer navigation */}
+      <div className="mx-auto flex items-center justify-end gap-2 px-4 py-2">
+        {/* Quick Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Add Task */}
+          <button
+            onClick={() => setTaskModalOpen(true)}
+            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="Add Task"
+          >
+            <CheckSquare className="w-5 h-5" />
+          </button>
 
-        <input
-          className="flex-1 min-w-0 rounded-lg border px-3 py-2 text-sm"
-          placeholder={isMobile ? 'Search...' : `Search (${modKey}+K)`}
-        />
-        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Add Project */}
+          <button
+            onClick={() => router.push('/projects/new')}
+            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="Add Project"
+          >
+            <FolderPlus className="w-5 h-5" />
+          </button>
+
+          {/* Ask AI */}
+          <button
+            onClick={() => router.push('/ai-chat')}
+            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="Ask AI"
+          >
+            <Bot className="w-5 h-5" />
+          </button>
+
+          {/* Add Note */}
+          <button
+            onClick={() => setNoteModalOpen(true)}
+            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="Add Note"
+          >
+            <FileText className="w-5 h-5" />
+          </button>
+
+          {/* Separator */}
+          <div className="w-px h-6 bg-slate-300" />
+
           {/* Keyboard shortcuts hint - desktop only */}
           {!isMobile && (
             <button
@@ -57,19 +94,9 @@ export function Topbar() {
               <span className="font-medium">{modKey}+/</span>
             </button>
           )}
+
+          {/* Notifications */}
           <NotificationBell />
-          <GradientButton
-            onClick={() => setTaskModalOpen(true)}
-            className="hidden sm:block"
-          >
-            New Task
-          </GradientButton>
-          <GradientButton
-            onClick={() => setTaskModalOpen(true)}
-            className="sm:hidden px-3"
-          >
-            +
-          </GradientButton>
         </div>
       </div>
 
@@ -79,6 +106,17 @@ export function Topbar() {
           projectId={defaultProjectId}
           isOpen={taskModalOpen}
           onClose={() => setTaskModalOpen(false)}
+        />
+      )}
+
+      {/* Note Creation Modal */}
+      {noteModalOpen && (
+        <NoteModal
+          isOpen={noteModalOpen}
+          onClose={() => setNoteModalOpen(false)}
+          onSaved={() => {
+            // Optionally refresh notes or show success message
+          }}
         />
       )}
     </header>
