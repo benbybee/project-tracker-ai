@@ -134,8 +134,8 @@ export function UnifiedAiChat({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [confirmationData, setConfirmationData] = useState<ConfirmationData | null>(null);
-  const [pendingToolCallId, setPendingToolCallId] = useState<string | null>(null);
+  const [confirmationData, setConfirmationData] =
+    useState<ConfirmationData | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -166,7 +166,6 @@ export function UnifiedAiChat({
       let responseText: string;
       let needsConfirmation = false;
       let confirmData: ConfirmationData | null = null;
-      let toolCallId: string | null = null;
 
       if (onSendMessage) {
         // Use custom message handler if provided
@@ -191,7 +190,6 @@ export function UnifiedAiChat({
         responseText = data.message || data.response;
         needsConfirmation = data.needsConfirmation || false;
         confirmData = data.confirmationData || null;
-        toolCallId = data.toolCallId || null;
       }
 
       const assistantMessage: Message = {
@@ -206,7 +204,6 @@ export function UnifiedAiChat({
       // If action needs confirmation, show modal
       if (needsConfirmation && confirmData) {
         setConfirmationData(confirmData);
-        setPendingToolCallId(toolCallId);
         setShowConfirmation(true);
       }
     } catch (error) {
@@ -260,7 +257,6 @@ export function UnifiedAiChat({
       // Close modal
       setShowConfirmation(false);
       setConfirmationData(null);
-      setPendingToolCallId(null);
     } catch (error: any) {
       console.error('Action execution error:', error);
       toast({
@@ -276,7 +272,6 @@ export function UnifiedAiChat({
   const handleReject = () => {
     setShowConfirmation(false);
     setConfirmationData(null);
-    setPendingToolCallId(null);
 
     // Add rejection message
     const rejectionMessage: Message = {
@@ -320,173 +315,173 @@ export function UnifiedAiChat({
           className
         )}
       >
-      {/* Header */}
-      {showHeader && (
-        <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-700">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
-              {getHeaderTitle()}
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
-              {getHeaderSubtitle()}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px]">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-8">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-4">
-              <Sparkles className="h-8 w-8 text-white" />
+        {/* Header */}
+        {showHeader && (
+          <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-700">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-              How can I help you today?
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md">
-              {context?.mode === 'analytics'
-                ? 'Ask me anything about your productivity patterns, task completion, or performance metrics.'
-                : context?.mode === 'project'
-                  ? 'I can help analyze your project health, suggest tasks, identify blockers, or generate status updates.'
-                  : 'I can help you manage tasks, create projects, analyze your productivity, and more.'}
-            </p>
-
-            {/* Quick Prompts */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
-              {quickPrompts.map((prompt) => {
-                const Icon = prompt.icon;
-                return (
-                  <motion.button
-                    key={prompt.label}
-                    onClick={() => handleQuickPrompt(prompt.prompt)}
-                    className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-colors text-left"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Icon className="h-5 w-5 text-purple-500 mb-2" />
-                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                      {prompt.label}
-                    </div>
-                  </motion.button>
-                );
-              })}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                {getHeaderTitle()}
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                {getHeaderSubtitle()}
+              </p>
             </div>
           </div>
-        ) : (
-          <AnimatePresence>
-            {messages.map((message) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={cn(
-                  'flex gap-3',
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                )}
-              >
-                {message.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="h-4 w-4 text-white" />
-                  </div>
-                )}
-                <div
+        )}
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px]">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center p-8">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-4">
+                <Sparkles className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                How can I help you today?
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md">
+                {context?.mode === 'analytics'
+                  ? 'Ask me anything about your productivity patterns, task completion, or performance metrics.'
+                  : context?.mode === 'project'
+                    ? 'I can help analyze your project health, suggest tasks, identify blockers, or generate status updates.'
+                    : 'I can help you manage tasks, create projects, analyze your productivity, and more.'}
+              </p>
+
+              {/* Quick Prompts */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
+                {quickPrompts.map((prompt) => {
+                  const Icon = prompt.icon;
+                  return (
+                    <motion.button
+                      key={prompt.label}
+                      onClick={() => handleQuickPrompt(prompt.prompt)}
+                      className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-colors text-left"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Icon className="h-5 w-5 text-purple-500 mb-2" />
+                      <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                        {prompt.label}
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <AnimatePresence>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className={cn(
-                    'max-w-[80%] rounded-2xl px-4 py-3',
-                    message.role === 'user'
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                      : 'bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100'
+                    'flex gap-3',
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
                   )}
                 >
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {message.content}
-                  </p>
-                  <p
+                  {message.role === 'assistant' && (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  <div
                     className={cn(
-                      'text-xs mt-2 opacity-60',
+                      'max-w-[80%] rounded-2xl px-4 py-3',
                       message.role === 'user'
-                        ? 'text-white'
-                        : 'text-slate-600 dark:text-slate-400'
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                        : 'bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100'
                     )}
                   >
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-                {message.role === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                      {message.content}
+                    </p>
+                    <p
+                      className={cn(
+                        'text-xs mt-2 opacity-60',
+                        message.role === 'user'
+                          ? 'text-white'
+                          : 'text-slate-600 dark:text-slate-400'
+                      )}
+                    >
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
                   </div>
-                )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        )}
+                  {message.role === 'user' && (
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          )}
 
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex gap-3"
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-3"
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <div className="bg-slate-100 dark:bg-slate-900 rounded-2xl px-4 py-3 flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin text-purple-500" />
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                  Thinking...
+                </span>
+              </div>
+            </motion.div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="border-t border-slate-200 dark:border-slate-700 p-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="flex gap-2"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <div className="bg-slate-100 dark:bg-slate-900 rounded-2xl px-4 py-3 flex items-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-purple-500" />
-              <span className="text-sm text-slate-600 dark:text-slate-400">
-                Thinking...
-              </span>
-            </div>
-          </motion.div>
-        )}
-
-        <div ref={messagesEndRef} />
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={
+                context?.mode === 'analytics'
+                  ? 'Ask about your productivity...'
+                  : context?.mode === 'project'
+                    ? 'Ask about this project...'
+                    : 'What can I help you with?'
+              }
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
+            />
+            <Button
+              type="submit"
+              disabled={!input.trim() || isLoading}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6"
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
+            </Button>
+          </form>
+        </div>
       </div>
-
-      {/* Input Area */}
-      <div className="border-t border-slate-200 dark:border-slate-700 p-4">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="flex gap-2"
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={
-              context?.mode === 'analytics'
-                ? 'Ask about your productivity...'
-                : context?.mode === 'project'
-                  ? 'Ask about this project...'
-                  : 'What can I help you with?'
-            }
-            disabled={isLoading}
-            className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
-          />
-          <Button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6"
-          >
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </Button>
-        </form>
-      </div>
-    </div>
     </>
   );
 }

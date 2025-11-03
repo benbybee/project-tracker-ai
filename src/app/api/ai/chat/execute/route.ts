@@ -47,7 +47,11 @@ export async function POST(req: Request) {
         await upsertEmbedding({
           entityType: 'project',
           entityId: project.id,
-          text: [project.name, project.description || '', project.domain || ''].join('\n'),
+          text: [
+            project.name,
+            project.description || '',
+            project.domain || '',
+          ].join('\n'),
         });
 
         // Log activity
@@ -96,7 +100,11 @@ export async function POST(req: Request) {
         await upsertEmbedding({
           entityType: 'project',
           entityId: project.id,
-          text: [project.name, project.description || '', project.domain || ''].join('\n'),
+          text: [
+            project.name,
+            project.description || '',
+            project.domain || '',
+          ].join('\n'),
         });
 
         // Log activity
@@ -204,10 +212,7 @@ export async function POST(req: Request) {
             updatedAt: new Date(),
           })
           .where(
-            and(
-              eq(tasks.id, confirmationData.taskId),
-              eq(tasks.userId, userId)
-            )
+            and(eq(tasks.id, confirmationData.taskId), eq(tasks.userId, userId))
           )
           .returning();
 
@@ -249,10 +254,7 @@ export async function POST(req: Request) {
         const [task] = await db
           .delete(tasks)
           .where(
-            and(
-              eq(tasks.id, confirmationData.taskId),
-              eq(tasks.userId, userId)
-            )
+            and(eq(tasks.id, confirmationData.taskId), eq(tasks.userId, userId))
           )
           .returning();
 
@@ -311,10 +313,7 @@ export async function POST(req: Request) {
             updatedAt: new Date(),
           })
           .where(
-            and(
-              eq(roles.id, confirmationData.roleId),
-              eq(roles.userId, userId)
-            )
+            and(eq(roles.id, confirmationData.roleId), eq(roles.userId, userId))
           )
           .returning();
 
@@ -340,10 +339,7 @@ export async function POST(req: Request) {
         const [role] = await db
           .delete(roles)
           .where(
-            and(
-              eq(roles.id, confirmationData.roleId),
-              eq(roles.userId, userId)
-            )
+            and(eq(roles.id, confirmationData.roleId), eq(roles.userId, userId))
           )
           .returning();
 
@@ -374,4 +370,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

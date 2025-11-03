@@ -73,7 +73,10 @@ function getActionTitle(action: string, data: ConfirmationData): string {
   }
 }
 
-function getActionDetails(action: string, data: ConfirmationData): React.ReactNode {
+function getActionDetails(
+  action: string,
+  data: ConfirmationData
+): React.ReactNode {
   const details = data.details;
 
   switch (action) {
@@ -91,7 +94,9 @@ function getActionDetails(action: string, data: ConfirmationData): React.ReactNo
           {details.description && (
             <div className="flex justify-between">
               <span className="text-slate-600">Description:</span>
-              <span className="font-medium text-right">{details.description}</span>
+              <span className="font-medium text-right">
+                {details.description}
+              </span>
             </div>
           )}
           {details.domain && (
@@ -115,7 +120,11 @@ function getActionDetails(action: string, data: ConfirmationData): React.ReactNo
                 {key.replace(/([A-Z])/g, ' $1').trim()}:
               </span>
               <span className="font-medium text-right">
-                {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
+                {typeof value === 'boolean'
+                  ? value
+                    ? 'Yes'
+                    : 'No'
+                  : String(value)}
               </span>
             </div>
           ))}
@@ -160,7 +169,9 @@ function getActionDetails(action: string, data: ConfirmationData): React.ReactNo
           {details.description && (
             <div className="flex justify-between">
               <span className="text-slate-600">Description:</span>
-              <span className="font-medium text-right">{details.description}</span>
+              <span className="font-medium text-right">
+                {details.description}
+              </span>
             </div>
           )}
           {details.dueDate && (
@@ -247,7 +258,10 @@ export function ConfirmationModal({
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-slate-900 mb-1">
-                      {getActionTitle(confirmationData.action, confirmationData)}
+                      {getActionTitle(
+                        confirmationData.action,
+                        confirmationData
+                      )}
                     </h3>
                     <p className="text-sm text-slate-600">
                       Please review and confirm this action
@@ -306,4 +320,3 @@ export function ConfirmationModal({
     </AnimatePresence>
   );
 }
-

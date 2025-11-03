@@ -47,7 +47,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
           roleName: {
             type: 'string',
-            description: 'Name of the role to assign (optional, will be looked up)',
+            description:
+              'Name of the role to assign (optional, will be looked up)',
           },
           domain: {
             type: 'string',
@@ -118,7 +119,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         properties: {
           projectName: {
             type: 'string',
-            description: 'Name of the project to create task in (will be matched)',
+            description:
+              'Name of the project to create task in (will be matched)',
           },
           title: {
             type: 'string',
@@ -135,7 +137,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           priorityScore: {
             type: 'string',
             enum: ['1', '2', '3', '4'],
-            description: 'Priority: 1=low, 2=medium, 3=high, 4=urgent (default: 2)',
+            description:
+              'Priority: 1=low, 2=medium, 3=high, 4=urgent (default: 2)',
           },
           status: {
             type: 'string',
@@ -161,7 +164,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
           projectName: {
             type: 'string',
-            description: 'Project name for context (optional, helps with disambiguation)',
+            description:
+              'Project name for context (optional, helps with disambiguation)',
           },
           title: {
             type: 'string',
@@ -204,7 +208,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
           projectName: {
             type: 'string',
-            description: 'Project name for context (optional, helps with disambiguation)',
+            description:
+              'Project name for context (optional, helps with disambiguation)',
           },
         },
         required: ['taskTitle'],
@@ -347,14 +352,15 @@ async function findProjectByName(userId: string, projectName: string) {
   return matches;
 }
 
-async function findTaskByTitle(userId: string, taskTitle: string, projectName?: string) {
+async function findTaskByTitle(
+  userId: string,
+  taskTitle: string,
+  projectName?: string
+) {
   let conditions = [
     eq(tasks.userId, userId),
     eq(tasks.archived, false),
-    or(
-      ilike(tasks.title, `%${taskTitle}%`),
-      ilike(tasks.title, taskTitle)
-    )
+    or(ilike(tasks.title, `%${taskTitle}%`), ilike(tasks.title, taskTitle)),
   ];
 
   // If projectName provided, filter by it
@@ -381,10 +387,7 @@ async function findRoleByName(userId: string, roleName: string) {
     .where(
       and(
         eq(roles.userId, userId),
-        or(
-          ilike(roles.name, `%${roleName}%`),
-          ilike(roles.name, roleName)
-        )
+        or(ilike(roles.name, `%${roleName}%`), ilike(roles.name, roleName))
       )
     )
     .limit(5);
@@ -397,21 +400,30 @@ async function executeTool(
   toolName: string,
   args: any,
   userId: string
-): Promise<{ success: boolean; data?: any; error?: string; needsConfirmation?: boolean; confirmationData?: any }> {
+): Promise<{
+  success: boolean;
+  data?: any;
+  error?: string;
+  needsConfirmation?: boolean;
+  confirmationData?: any;
+}> {
   try {
     switch (toolName) {
       case 'list_projects': {
-        let query = db.select().from(projects).where(eq(projects.userId, userId));
-        
+        let query = db
+          .select()
+          .from(projects)
+          .where(eq(projects.userId, userId));
+
         if (args.type) {
           query = query.where(eq(projects.type, args.type));
         }
-        
+
         const projectList = await query.limit(50);
         return {
           success: true,
           data: {
-            projects: projectList.map(p => ({
+            projects: projectList.map((p) => ({
               id: p.id,
               name: p.name,
               type: p.type,
@@ -425,35 +437,41 @@ async function executeTool(
 
       case 'list_tasks': {
         let conditions = [eq(tasks.userId, userId), eq(tasks.archived, false)];
-        
+
         if (args.projectName) {
-          const projectMatches = await findProjectByName(userId, args.projectName);
+          const projectMatches = await findProjectByName(
+            userId,
+            args.projectName
+          );
           if (projectMatches.length === 0) {
-            return { success: false, error: `No project found matching "${args.projectName}"` };
+            return {
+              success: false,
+              error: `No project found matching "${args.projectName}"`,
+            };
           }
           if (projectMatches.length > 1) {
             return {
               success: false,
-              error: `Multiple projects match "${args.projectName}": ${projectMatches.map(p => p.name).join(', ')}. Please be more specific.`,
+              error: `Multiple projects match "${args.projectName}": ${projectMatches.map((p) => p.name).join(', ')}. Please be more specific.`,
             };
           }
           conditions.push(eq(tasks.projectId, projectMatches[0].id));
         }
-        
+
         if (args.status) {
           conditions.push(eq(tasks.status, args.status));
         }
-        
+
         const taskList = await db
           .select()
           .from(tasks)
           .where(and(...conditions))
           .limit(50);
-          
+
         return {
           success: true,
           data: {
-            tasks: taskList.map(t => ({
+            tasks: taskList.map((t) => ({
               id: t.id,
               title: t.title,
               status: t.status,
@@ -470,11 +488,11 @@ async function executeTool(
           .select()
           .from(roles)
           .where(eq(roles.userId, userId));
-          
+
         return {
           success: true,
           data: {
-            roles: roleList.map(r => ({
+            roles: roleList.map((r) => ({
               id: r.id,
               name: r.name,
               color: r.color,
@@ -490,12 +508,15 @@ async function executeTool(
         if (args.roleName) {
           const roleMatches = await findRoleByName(userId, args.roleName);
           if (roleMatches.length === 0) {
-            return { success: false, error: `No role found matching "${args.roleName}"` };
+            return {
+              success: false,
+              error: `No role found matching "${args.roleName}"`,
+            };
           }
           if (roleMatches.length > 1) {
             return {
               success: false,
-              error: `Multiple roles match "${args.roleName}": ${roleMatches.map(r => r.name).join(', ')}. Please be more specific.`,
+              error: `Multiple roles match "${args.roleName}": ${roleMatches.map((r) => r.name).join(', ')}. Please be more specific.`,
             };
           }
           roleId = roleMatches[0].id;
@@ -520,24 +541,31 @@ async function executeTool(
       }
 
       case 'update_project': {
-        const projectMatches = await findProjectByName(userId, args.projectName);
-        
+        const projectMatches = await findProjectByName(
+          userId,
+          args.projectName
+        );
+
         if (projectMatches.length === 0) {
-          return { success: false, error: `No project found matching "${args.projectName}"` };
+          return {
+            success: false,
+            error: `No project found matching "${args.projectName}"`,
+          };
         }
-        
+
         if (projectMatches.length > 1) {
           return {
             success: false,
-            error: `Multiple projects match "${args.projectName}": ${projectMatches.map(p => p.name).join(', ')}. Please specify which one.`,
+            error: `Multiple projects match "${args.projectName}": ${projectMatches.map((p) => p.name).join(', ')}. Please specify which one.`,
           };
         }
 
         const project = projectMatches[0];
         const updates: any = {};
-        
+
         if (args.name) updates.name = args.name;
-        if (args.description !== undefined) updates.description = args.description;
+        if (args.description !== undefined)
+          updates.description = args.description;
         if (args.domain !== undefined) updates.domain = args.domain;
         if (args.pinned !== undefined) updates.pinned = args.pinned;
 
@@ -554,16 +582,22 @@ async function executeTool(
       }
 
       case 'delete_project': {
-        const projectMatches = await findProjectByName(userId, args.projectName);
-        
+        const projectMatches = await findProjectByName(
+          userId,
+          args.projectName
+        );
+
         if (projectMatches.length === 0) {
-          return { success: false, error: `No project found matching "${args.projectName}"` };
+          return {
+            success: false,
+            error: `No project found matching "${args.projectName}"`,
+          };
         }
-        
+
         if (projectMatches.length > 1) {
           return {
             success: false,
-            error: `Multiple projects match "${args.projectName}": ${projectMatches.map(p => p.name).join(', ')}. Please specify which one.`,
+            error: `Multiple projects match "${args.projectName}": ${projectMatches.map((p) => p.name).join(', ')}. Please specify which one.`,
           };
         }
 
@@ -582,16 +616,22 @@ async function executeTool(
       }
 
       case 'create_task': {
-        const projectMatches = await findProjectByName(userId, args.projectName);
-        
+        const projectMatches = await findProjectByName(
+          userId,
+          args.projectName
+        );
+
         if (projectMatches.length === 0) {
-          return { success: false, error: `No project found matching "${args.projectName}"` };
+          return {
+            success: false,
+            error: `No project found matching "${args.projectName}"`,
+          };
         }
-        
+
         if (projectMatches.length > 1) {
           return {
             success: false,
-            error: `Multiple projects match "${args.projectName}": ${projectMatches.map(p => p.name).join(', ')}. Please specify which one.`,
+            error: `Multiple projects match "${args.projectName}": ${projectMatches.map((p) => p.name).join(', ')}. Please specify which one.`,
           };
         }
 
@@ -614,24 +654,32 @@ async function executeTool(
       }
 
       case 'update_task': {
-        const taskMatches = await findTaskByTitle(userId, args.taskTitle, args.projectName);
-        
+        const taskMatches = await findTaskByTitle(
+          userId,
+          args.taskTitle,
+          args.projectName
+        );
+
         if (taskMatches.length === 0) {
-          return { success: false, error: `No task found matching "${args.taskTitle}"` };
+          return {
+            success: false,
+            error: `No task found matching "${args.taskTitle}"`,
+          };
         }
-        
+
         if (taskMatches.length > 1) {
           return {
             success: false,
-            error: `Multiple tasks match "${args.taskTitle}": ${taskMatches.map(t => t.title).join(', ')}. Please be more specific or provide the project name.`,
+            error: `Multiple tasks match "${args.taskTitle}": ${taskMatches.map((t) => t.title).join(', ')}. Please be more specific or provide the project name.`,
           };
         }
 
         const task = taskMatches[0];
         const updates: any = {};
-        
+
         if (args.title) updates.title = args.title;
-        if (args.description !== undefined) updates.description = args.description;
+        if (args.description !== undefined)
+          updates.description = args.description;
         if (args.dueDate !== undefined) updates.dueDate = args.dueDate;
         if (args.priorityScore) updates.priorityScore = args.priorityScore;
         if (args.status) updates.status = args.status;
@@ -649,16 +697,23 @@ async function executeTool(
       }
 
       case 'delete_task': {
-        const taskMatches = await findTaskByTitle(userId, args.taskTitle, args.projectName);
-        
+        const taskMatches = await findTaskByTitle(
+          userId,
+          args.taskTitle,
+          args.projectName
+        );
+
         if (taskMatches.length === 0) {
-          return { success: false, error: `No task found matching "${args.taskTitle}"` };
+          return {
+            success: false,
+            error: `No task found matching "${args.taskTitle}"`,
+          };
         }
-        
+
         if (taskMatches.length > 1) {
           return {
             success: false,
-            error: `Multiple tasks match "${args.taskTitle}": ${taskMatches.map(t => t.title).join(', ')}. Please be more specific or provide the project name.`,
+            error: `Multiple tasks match "${args.taskTitle}": ${taskMatches.map((t) => t.title).join(', ')}. Please be more specific or provide the project name.`,
           };
         }
 
@@ -691,21 +746,24 @@ async function executeTool(
 
       case 'update_role': {
         const roleMatches = await findRoleByName(userId, args.roleName);
-        
+
         if (roleMatches.length === 0) {
-          return { success: false, error: `No role found matching "${args.roleName}"` };
+          return {
+            success: false,
+            error: `No role found matching "${args.roleName}"`,
+          };
         }
-        
+
         if (roleMatches.length > 1) {
           return {
             success: false,
-            error: `Multiple roles match "${args.roleName}": ${roleMatches.map(r => r.name).join(', ')}. Please specify which one.`,
+            error: `Multiple roles match "${args.roleName}": ${roleMatches.map((r) => r.name).join(', ')}. Please specify which one.`,
           };
         }
 
         const role = roleMatches[0];
         const updates: any = {};
-        
+
         if (args.name) updates.name = args.name;
         if (args.color) updates.color = args.color;
 
@@ -723,15 +781,18 @@ async function executeTool(
 
       case 'delete_role': {
         const roleMatches = await findRoleByName(userId, args.roleName);
-        
+
         if (roleMatches.length === 0) {
-          return { success: false, error: `No role found matching "${args.roleName}"` };
+          return {
+            success: false,
+            error: `No role found matching "${args.roleName}"`,
+          };
         }
-        
+
         if (roleMatches.length > 1) {
           return {
             success: false,
-            error: `Multiple roles match "${args.roleName}": ${roleMatches.map(r => r.name).join(', ')}. Please specify which one.`,
+            error: `Multiple roles match "${args.roleName}": ${roleMatches.map((r) => r.name).join(', ')}. Please specify which one.`,
           };
         }
 
@@ -882,7 +943,7 @@ export async function POST(req: Request) {
           content: responseMessage.content,
           tool_calls: [toolCall],
         });
-        
+
         messages.push({
           role: 'tool',
           content: JSON.stringify(toolResult.data),
@@ -890,14 +951,17 @@ export async function POST(req: Request) {
         });
 
         // Get AI's interpretation of the tool result
-        const followUpCompletion = await getOpenAIClient().chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages,
-          temperature: 0.7,
-          max_tokens: 1000,
-        });
+        const followUpCompletion =
+          await getOpenAIClient().chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages,
+            temperature: 0.7,
+            max_tokens: 1000,
+          });
 
-        const finalResponse = followUpCompletion.choices[0]?.message?.content || JSON.stringify(toolResult.data);
+        const finalResponse =
+          followUpCompletion.choices[0]?.message?.content ||
+          JSON.stringify(toolResult.data);
 
         return NextResponse.json({
           message: finalResponse,
@@ -914,7 +978,7 @@ export async function POST(req: Request) {
           content: responseMessage.content,
           tool_calls: [toolCall],
         });
-        
+
         messages.push({
           role: 'tool',
           content: JSON.stringify({ error: toolResult.error }),
@@ -922,14 +986,17 @@ export async function POST(req: Request) {
         });
 
         // Get AI's response to the error
-        const errorCompletion = await getOpenAIClient().chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages,
-          temperature: 0.7,
-          max_tokens: 1000,
-        });
+        const errorCompletion = await getOpenAIClient().chat.completions.create(
+          {
+            model: 'gpt-4o-mini',
+            messages,
+            temperature: 0.7,
+            max_tokens: 1000,
+          }
+        );
 
-        const errorResponse = errorCompletion.choices[0]?.message?.content || toolResult.error;
+        const errorResponse =
+          errorCompletion.choices[0]?.message?.content || toolResult.error;
 
         return NextResponse.json({
           message: errorResponse,
