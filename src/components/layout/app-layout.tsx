@@ -75,10 +75,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <MobileFooterNav
           onMenuClick={() => {
             console.log(
-              '📱 Opening mobile sidebar, current state:',
+              '📱 Toggling mobile sidebar, current state:',
               mobileSidebarOpen
             );
-            setMobileSidebarOpen(true);
+            setMobileSidebarOpen(!mobileSidebarOpen);
           }}
         />
       )}
