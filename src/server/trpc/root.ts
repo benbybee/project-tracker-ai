@@ -8,7 +8,6 @@ import { dashboardRouter } from './routers/dashboard';
 import { realtimeRouter } from './routers/realtime';
 import { notificationsRouter } from './routers/notifications';
 import { activityRouter } from './routers/activity';
-import { chatRouter } from './routers/chat';
 import { analyticsRouter } from './routers/analytics';
 import { userRouter } from './routers/user';
 import { templatesRouter } from './routers/templates';
@@ -29,7 +28,6 @@ export const appRouter = createTRPCRouter({
   realtime: realtimeRouter,
   notifications: notificationsRouter,
   activity: activityRouter,
-  chat: chatRouter,
   analytics: analyticsRouter,
   user: userRouter,
   templates: templatesRouter,

@@ -117,7 +117,7 @@ export function ProjectDetailsModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="w-full sm:max-w-3xl max-w-[calc(100vw-2rem)] overflow-x-hidden">
           {projectLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -125,12 +125,12 @@ export function ProjectDetailsModal({
           ) : project ? (
             <>
               <DialogHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <DialogTitle className="text-2xl flex items-center gap-2">
-                      {project.name}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <DialogTitle className="text-xl sm:text-2xl flex flex-wrap items-center gap-2">
+                      <span className="truncate">{project.name}</span>
                       {project.type === 'website' && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700 flex-shrink-0">
                           <Globe className="h-3 w-3 mr-1" />
                           Website
                         </span>
@@ -152,10 +152,10 @@ export function ProjectDetailsModal({
                     variant="outline"
                     size="sm"
                     onClick={handleViewFullProject}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto justify-center"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    View Full Project
+                    <span className="whitespace-nowrap">View Full Project</span>
                   </Button>
                 </div>
               </DialogHeader>
@@ -183,22 +183,22 @@ export function ProjectDetailsModal({
               </GlassCard>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 mt-4">
+              <div className="flex flex-wrap items-center gap-2 mt-4">
                 <Button
                   onClick={() => setCreateTaskOpen(true)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 flex-shrink-0"
                 >
                   <Plus className="h-4 w-4" />
-                  Add Task
+                  <span className="whitespace-nowrap">Add Task</span>
                 </Button>
                 {project.wpOneClickEnabled && (
                   <Button
                     variant="outline"
                     onClick={handleWordPressLogin}
-                    className="flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30"
+                    className="flex items-center gap-2 flex-shrink-0 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30"
                   >
                     <Key className="h-4 w-4" />
-                    Open WordPress Site
+                    <span className="whitespace-nowrap">Open WordPress Site</span>
                   </Button>
                 )}
                 {project.type === 'website' && (
@@ -206,6 +206,7 @@ export function ProjectDetailsModal({
                     variant="outline"
                     onClick={handleConvertToGeneral}
                     disabled={convertToGeneralMutation.isPending}
+                    className="flex-shrink-0 whitespace-nowrap"
                   >
                     {convertToGeneralMutation.isPending
                       ? 'Converting...'

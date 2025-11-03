@@ -495,9 +495,8 @@ export const slackIntegrationsRelations = relations(
 export type SlackIntegration = typeof slackIntegrations.$inferSelect;
 export type NewSlackIntegration = typeof slackIntegrations.$inferInsert;
 
-// Import notification, activity, chat, analytics, and comments schemas
+// Import notification, activity, analytics, and comments schemas
 export * from './schema/notifications';
 export * from './schema/activity';
-export * from './schema/chat';
 export * from './schema/analytics';
 export * from './schema/comments';
