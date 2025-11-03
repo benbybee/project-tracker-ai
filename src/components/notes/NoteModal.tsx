@@ -444,7 +444,8 @@ export function NoteModal({
                   </label>
                   {attachments.length > 0 && (
                     <span className="text-sm text-gray-600">
-                      {attachments.length} file{attachments.length !== 1 ? 's' : ''} selected
+                      {attachments.length} file
+                      {attachments.length !== 1 ? 's' : ''} selected
                     </span>
                   )}
                 </div>
