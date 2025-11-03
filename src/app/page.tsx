@@ -8,13 +8,14 @@ export const dynamic = 'force-dynamic';
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   useEffect(() => {
     // Check if launched from PWA (standalone mode or from home screen)
-    const isPWA = searchParams.get('source') === 'pwa' || 
-                  window.matchMedia('(display-mode: standalone)').matches ||
-                  (window.navigator as any).standalone === true; // iOS Safari
-    
+    const isPWA =
+      searchParams.get('source') === 'pwa' ||
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true; // iOS Safari
+
     if (isPWA) {
       // For PWA launches, use replace to avoid browser history issues
       router.replace('/dashboard');

@@ -10,11 +10,13 @@ export function isStandalone(): boolean {
   if (typeof window === 'undefined') return false;
 
   // Chrome/Android
-  const isDisplayStandalone = window.matchMedia('(display-mode: standalone)').matches;
-  
+  const isDisplayStandalone = window.matchMedia(
+    '(display-mode: standalone)'
+  ).matches;
+
   // iOS Safari
   const isIOSStandalone = (window.navigator as any).standalone === true;
-  
+
   return isDisplayStandalone || isIOSStandalone;
 }
 
@@ -23,8 +25,10 @@ export function isStandalone(): boolean {
  */
 export function isIOS(): boolean {
   if (typeof window === 'undefined') return false;
-  
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+  );
 }
 
 /**
@@ -39,7 +43,7 @@ export function isIOSPWA(): boolean {
  */
 export function isPWAInstallable(): boolean {
   if (typeof window === 'undefined') return false;
-  
+
   // Check if beforeinstallprompt event was fired (Android/Chrome)
   return 'BeforeInstallPromptEvent' in window || isIOS();
 }
@@ -47,7 +51,11 @@ export function isPWAInstallable(): boolean {
 /**
  * Gets display mode information
  */
-export function getDisplayMode(): 'standalone' | 'fullscreen' | 'minimal-ui' | 'browser' {
+export function getDisplayMode():
+  | 'standalone'
+  | 'fullscreen'
+  | 'minimal-ui'
+  | 'browser' {
   if (typeof window === 'undefined') return 'browser';
 
   if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -69,28 +77,35 @@ export function preventIOSBounce() {
   if (!isIOSPWA()) return;
 
   document.body.style.overscrollBehavior = 'none';
-  
+
   // Prevent pull-to-refresh on iOS
   let lastTouchY = 0;
   let preventPullToRefresh = false;
 
-  document.addEventListener('touchstart', (e) => {
-    if (e.touches.length !== 1) return;
-    lastTouchY = e.touches[0].clientY;
-    preventPullToRefresh = window.pageYOffset === 0;
-  }, { passive: false });
+  document.addEventListener(
+    'touchstart',
+    (e) => {
+      if (e.touches.length !== 1) return;
+      lastTouchY = e.touches[0].clientY;
+      preventPullToRefresh = window.pageYOffset === 0;
+    },
+    { passive: false }
+  );
 
-  document.addEventListener('touchmove', (e) => {
-    const touchY = e.touches[0].clientY;
-    const touchYDelta = touchY - lastTouchY;
-    lastTouchY = touchY;
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      const touchY = e.touches[0].clientY;
+      const touchYDelta = touchY - lastTouchY;
+      lastTouchY = touchY;
 
-    if (preventPullToRefresh) {
-      // Only prevent if pulling down
-      if (touchYDelta > 0) {
-        e.preventDefault();
+      if (preventPullToRefresh) {
+        // Only prevent if pulling down
+        if (touchYDelta > 0) {
+          e.preventDefault();
+        }
       }
-    }
-  }, { passive: false });
+    },
+    { passive: false }
+  );
 }
-
