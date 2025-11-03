@@ -7,29 +7,21 @@
   "crons": [
     { "path": "/api/maintenance/archive-completed", "schedule": "59 23 * * 0" },
     { "path": "/api/ai/patterns/cron", "schedule": "0 0 * * 0" },
-    { "path": "/api/slack/daily-standup", "schedule": "0 9 * * 1-5" }
+    { "path": "/api/slack/daily-standup", "schedule": "0 9 * * 1-5" },
+    { "path": "/api/notifications/check-due-dates", "schedule": "0 8 * * *" }
   ],
   "regions": ["iad1"],
   "headers": [
     {
-      "source": "/service-worker-simple.js",
+      "source": "/manifest.json",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
         },
         {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        }
-      ]
-    },
-    {
-      "source": "/manifest.json",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "key": "Content-Type",
+          "value": "application/manifest+json"
         }
       ]
     },

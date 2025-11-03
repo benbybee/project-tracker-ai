@@ -6,6 +6,7 @@ import { patternAnalyzer } from '@/lib/ai/pattern-analyzer';
 import { db } from '@/server/db';
 import { tasks } from '@/server/db/schema';
 import { eq, or, lte } from 'drizzle-orm';
+import { activityLogger } from '@/lib/activity-logger';
 
 export async function POST(req: Request) {
   try {
@@ -53,6 +54,37 @@ export async function POST(req: Request) {
         patterns: patterns || undefined,
       }
     );
+
+    // Create notifications for high-priority suggestions
+    if (suggestions && suggestions.length > 0) {
+      for (const suggestion of suggestions) {
+        // Only notify for high-priority suggestions to avoid notification fatigue
+        if (suggestion.priority === 'high') {
+          try {
+            await activityLogger.createNotification({
+              userId: session.user.id,
+              type: 'ai_suggestion',
+              title: '🤖 AI Suggestion',
+              message: suggestion.message || suggestion.title,
+              link: suggestion.action?.link || '/dashboard',
+              metadata: {
+                suggestion: {
+                  type: suggestion.type,
+                  title: suggestion.title,
+                  priority: suggestion.priority,
+                },
+              },
+            });
+          } catch (notifError) {
+            // Don't fail the whole request if notification fails
+            console.error(
+              '[AI Suggest] Failed to create notification:',
+              notifError
+            );
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,

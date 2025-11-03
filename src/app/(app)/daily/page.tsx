@@ -16,6 +16,23 @@ import { parseDateAsLocal } from '@/lib/date-utils';
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
 
+// Helper function to sort tasks by priority (highest first)
+function sortByPriority(taskList: Task[]): Task[] {
+  return [...taskList].sort((a, b) => {
+    const priorityA = a.priorityScore ? Number(a.priorityScore) : 2;
+    const priorityB = b.priorityScore ? Number(b.priorityScore) : 2;
+    return priorityB - priorityA; // Descending: 4, 3, 2, 1
+  });
+}
+
+// Helper function to calculate days a task has been in current status
+function getDaysInStatus(task: Task): number {
+  if (!task.updatedAt) return 0;
+  const updatedDate = new Date(task.updatedAt);
+  const now = new Date();
+  return Math.floor((now.getTime() - updatedDate.getTime()) / 86400000);
+}
+
 export default function DailyPlannerPage() {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<Task | null>(null);
@@ -47,26 +64,67 @@ export default function DailyPlannerPage() {
     return { start, end };
   }, []);
 
-  const todayTasks = useMemo(
-    () =>
-      tasks.filter((t) => {
-        if (!t.dueDate || t.status === 'completed') return false;
-        const taskDate = parseDateAsLocal(t.dueDate);
-        return taskDate >= start && taskDate < end;
-      }),
-    [tasks, start, end]
-  );
+  // Urgent: Tasks blocked or in QA/Launch for 2+ days
+  const urgentFollowupTasks = useMemo(() => {
+    const urgent = tasks.filter((t) => {
+      if (t.status === 'completed') return false;
+      const isStuckStatus = ['blocked', 'qa', 'launch'].includes(t.status);
+      if (!isStuckStatus) return false;
+      const daysInStatus = getDaysInStatus(t);
+      return daysInStatus >= 2;
+    });
+    return sortByPriority(urgent);
+  }, [tasks]);
 
-  const next3 = useMemo(
-    () =>
-      tasks.filter((t) => {
-        if (!t.dueDate || t.status === 'completed') return false;
-        const taskDate = parseDateAsLocal(t.dueDate);
-        const threeDaysLater = new Date(end.getTime() + 3 * 86400000);
-        return taskDate >= end && taskDate < threeDaysLater;
-      }),
-    [tasks, end]
-  );
+  // Past due tasks
+  const pastDueTasks = useMemo(() => {
+    const pastDue = tasks.filter((t) => {
+      if (!t.dueDate || t.status === 'completed') return false;
+      const taskDate = parseDateAsLocal(t.dueDate);
+      return taskDate < start;
+    });
+    return sortByPriority(pastDue);
+  }, [tasks, start]);
+
+  const todayTasks = useMemo(() => {
+    const today = tasks.filter((t) => {
+      if (!t.dueDate || t.status === 'completed') return false;
+      const taskDate = parseDateAsLocal(t.dueDate);
+      return taskDate >= start && taskDate < end;
+    });
+    return sortByPriority(today);
+  }, [tasks, start, end]);
+
+  // Stagnant tasks - no updates in 7+ days
+  const stagnantTasks = useMemo(() => {
+    const stagnant = tasks.filter((t) => {
+      if (t.status === 'completed') return false;
+      const incompleteStatuses = [
+        'not_started',
+        'in_progress',
+        'blocked',
+        'content',
+        'design',
+        'dev',
+        'qa',
+        'launch',
+      ];
+      if (!incompleteStatuses.includes(t.status)) return false;
+      const daysStale = getDaysInStatus(t);
+      return daysStale >= 7;
+    });
+    return sortByPriority(stagnant);
+  }, [tasks]);
+
+  const next3 = useMemo(() => {
+    const upcoming = tasks.filter((t) => {
+      if (!t.dueDate || t.status === 'completed') return false;
+      const taskDate = parseDateAsLocal(t.dueDate);
+      const threeDaysLater = new Date(end.getTime() + 3 * 86400000);
+      return taskDate >= end && taskDate < threeDaysLater;
+    });
+    return sortByPriority(upcoming);
+  }, [tasks, end]);
 
   function onSelect(id: string, val: boolean) {
     setSelected((prev) => ({ ...prev, [id]: val }));
@@ -104,7 +162,7 @@ export default function DailyPlannerPage() {
         <PageHeader
           icon={Calendar}
           title="Daily Planner"
-          subtitle="Focus on today's tasks and plan ahead for the next 3 days"
+          subtitle="Track overdue, blocked, and upcoming tasks with priority-based planning"
           actions={
             <button
               disabled={!selectedIds.length}
@@ -155,6 +213,45 @@ export default function DailyPlannerPage() {
           <BulkBar ids={selectedIds} clear={() => setSelected({})} />
         )}
 
+        {/* Urgent Follow-up Section */}
+        {urgentFollowupTasks.length > 0 && (
+          <Section
+            title={`🚨 Urgent: Needs Follow-up (${urgentFollowupTasks.length})`}
+            variant="urgent"
+          >
+            <div className="space-y-2">
+              {urgentFollowupTasks.map((t) => (
+                <DailyTaskRow
+                  key={t.id}
+                  task={t}
+                  selected={!!selected[t.id]}
+                  onSelect={onSelect}
+                  onOpen={setEditing}
+                  showFollowUpAction={true}
+                  daysInStatus={getDaysInStatus(t)}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Past Due Section */}
+        {pastDueTasks.length > 0 && (
+          <Section title={`Past Due (${pastDueTasks.length})`} variant="danger">
+            <div className="space-y-2">
+              {pastDueTasks.map((t) => (
+                <DailyTaskRow
+                  key={t.id}
+                  task={t}
+                  selected={!!selected[t.id]}
+                  onSelect={onSelect}
+                  onOpen={setEditing}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+
         <Section title={`Today (${todayTasks.length})`}>
           <div className="space-y-2">
             {todayTasks.length > 0 ? (
@@ -172,6 +269,30 @@ export default function DailyPlannerPage() {
             )}
           </div>
         </Section>
+
+        {/* Stagnant Tasks Section */}
+        {stagnantTasks.length > 0 && (
+          <Section
+            title={`Stagnant Tasks (${stagnantTasks.length})`}
+            variant="warning"
+          >
+            <p className="text-sm text-gray-600 mb-3">
+              Tasks with no updates in 7+ days
+            </p>
+            <div className="space-y-2">
+              {stagnantTasks.map((t) => (
+                <DailyTaskRow
+                  key={t.id}
+                  task={t}
+                  selected={!!selected[t.id]}
+                  onSelect={onSelect}
+                  onOpen={setEditing}
+                  daysInStatus={getDaysInStatus(t)}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
 
         <Section title={`Next 3 Days (${next3.length})`}>
           <div className="space-y-2">
@@ -208,13 +329,24 @@ export default function DailyPlannerPage() {
 function Section({
   title,
   children,
+  variant = 'default',
 }: {
   title: string;
   children: React.ReactNode;
+  variant?: 'default' | 'urgent' | 'danger' | 'warning';
 }) {
+  const variantStyles = {
+    default: 'text-gray-800',
+    urgent: 'text-red-700 bg-red-50 -mx-2 px-2 py-2 rounded-lg',
+    danger: 'text-red-600',
+    warning: 'text-amber-700',
+  };
+
   return (
     <section>
-      <h2 className="mb-3 font-semibold text-gray-800">{title}</h2>
+      <h2 className={`mb-3 font-semibold ${variantStyles[variant]}`}>
+        {title}
+      </h2>
       {children}
     </section>
   );

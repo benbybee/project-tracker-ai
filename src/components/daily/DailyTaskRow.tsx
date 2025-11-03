@@ -10,6 +10,8 @@ interface DailyTaskRowProps {
   selected: boolean;
   onSelect: (id: string, next: boolean) => void;
   onOpen: (t: Task) => void;
+  showFollowUpAction?: boolean;
+  daysInStatus?: number;
 }
 
 export default function DailyTaskRow({
@@ -17,9 +19,18 @@ export default function DailyTaskRow({
   selected,
   onSelect,
   onOpen,
+  showFollowUpAction = false,
+  daysInStatus = 0,
 }: DailyTaskRowProps) {
   const utils = trpc.useUtils();
   const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      utils.dashboard.get.invalidate();
+    },
+  });
+
+  const createTask = trpc.tasks.create.useMutation({
     onSuccess: () => {
       utils.tasks.list.invalidate();
       utils.dashboard.get.invalidate();
@@ -33,6 +44,10 @@ export default function DailyTaskRow({
     ? (Date.now() - new Date(task.updatedAt).getTime()) / 86400000
     : 0;
   const stale = daysStale > 7;
+
+  // Calculate days overdue
+  const daysOverdue =
+    due && overdue ? Math.floor((Date.now() - due.getTime()) / 86400000) : 0;
 
   const p = task.priorityScore
     ? (Number(task.priorityScore) as 1 | 2 | 3 | 4)
@@ -61,6 +76,23 @@ export default function DailyTaskRow({
       .toISOString()
       .split('T')[0];
     await update({ dueDate: newDue });
+  }
+
+  async function createFollowUp() {
+    if (!task.projectId) {
+      alert('Cannot create follow-up: task has no project');
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    await createTask.mutateAsync({
+      projectId: task.projectId,
+      title: `Follow up on: ${task.title}`,
+      description: `Follow-up for task: ${task.title}\nOriginal task ID: ${task.id}\nStatus: ${task.status}`,
+      dueDate: today,
+      priorityScore: '4', // High priority
+      status: 'not_started',
+    });
   }
 
   return (
@@ -92,9 +124,9 @@ export default function DailyTaskRow({
             {task.title}
           </span>
           <div className="flex items-center gap-1 flex-shrink-0">
-            {overdue && (
+            {overdue && daysOverdue > 0 && (
               <span className="rounded-full bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5">
-                Overdue
+                {daysOverdue} {daysOverdue === 1 ? 'day' : 'days'} overdue
               </span>
             )}
             {dueToday && (
@@ -102,9 +134,15 @@ export default function DailyTaskRow({
                 Due Today
               </span>
             )}
-            {stale && (
+            {showFollowUpAction && daysInStatus > 0 && (
+              <span className="rounded-full bg-orange-100 text-orange-700 text-xs font-medium px-2 py-0.5">
+                {daysInStatus} {daysInStatus === 1 ? 'day' : 'days'} in{' '}
+                {task.status}
+              </span>
+            )}
+            {stale && !showFollowUpAction && (
               <span className="rounded-full bg-gray-100 text-gray-600 text-xs px-2 py-0.5">
-                Stale
+                Stale {Math.floor(daysStale)}d
               </span>
             )}
           </div>
@@ -122,6 +160,15 @@ export default function DailyTaskRow({
       </button>
       {/* Quick actions */}
       <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+        {showFollowUpAction && (
+          <button
+            onClick={createFollowUp}
+            className="rounded bg-blue-600 text-white px-3 py-1 text-xs hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
+            title="Create follow-up task due today"
+          >
+            Create Follow-up
+          </button>
+        )}
         <select
           aria-label="Status"
           className="border border-gray-300 rounded px-2 py-1 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"

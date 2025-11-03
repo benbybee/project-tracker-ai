@@ -30,7 +30,10 @@ interface CreateNotificationParams {
     | 'comment_added'
     | 'mention'
     | 'sync_conflict'
-    | 'collaboration';
+    | 'collaboration'
+    | 'task_reminder'
+    | 'due_date_approaching'
+    | 'ai_suggestion';
   title: string;
   message: string;
   link?: string;
