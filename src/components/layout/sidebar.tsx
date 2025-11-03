@@ -339,7 +339,14 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   // Debug logging for mobile sidebar state
   useEffect(() => {
-    console.log('📂 Sidebar state - isOpen:', isOpen, 'isMobile:', isMobile, 'isMobileOpen:', isMobileOpen);
+    console.log(
+      '📂 Sidebar state - isOpen:',
+      isOpen,
+      'isMobile:',
+      isMobile,
+      'isMobileOpen:',
+      isMobileOpen
+    );
   }, [isOpen, isMobile, isMobileOpen]);
 
   // Check for mobile/tablet screens
