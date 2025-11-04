@@ -849,7 +849,7 @@ export async function POST(req: Request) {
     const chatContext: ChatContext = context || { mode: 'general' };
 
     // Handle session creation/retrieval
-    let chatSessionId = sessionId;
+    let chatSessionId: string = sessionId || '';
     if (!chatSessionId) {
       // Create new session with title from original message or cleaned message
       const titleSource = originalMessage || message;
