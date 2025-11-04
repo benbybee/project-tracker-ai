@@ -1084,7 +1084,8 @@ export async function POST(req: Request) {
 
         const finalResponse =
           followUpCompletion.choices[0]?.message?.content ||
-          JSON.stringify(toolResult.data);
+          JSON.stringify(toolResult.data) ||
+          'Operation completed successfully.';
 
         // Save assistant response to database
         await db.insert(aiChatMessages).values({
@@ -1134,7 +1135,9 @@ export async function POST(req: Request) {
         );
 
         const errorResponse =
-          errorCompletion.choices[0]?.message?.content || toolResult.error;
+          errorCompletion.choices[0]?.message?.content ||
+          toolResult.error ||
+          'An error occurred while processing your request.';
 
         // Save error response to database
         await db.insert(aiChatMessages).values({
@@ -1170,7 +1173,7 @@ export async function POST(req: Request) {
     await db.insert(aiChatMessages).values({
       sessionId: chatSessionId,
       role: 'assistant',
-      content: response,
+      content: response as string, // Type assertion safe due to check above
     });
 
     // Update session's lastMessageAt
