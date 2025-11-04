@@ -301,9 +301,9 @@ export function AiChatWidget({
         {/* Sidebar */}
         {(showSidebar || !isMobile) && (
           <motion.div
-            initial={isMobile ? { x: -300 } : false}
-            animate={isMobile ? { x: 0 } : false}
-            exit={isMobile ? { x: -300 } : false}
+            initial={isMobile ? { x: -300 } : undefined}
+            animate={isMobile ? { x: 0 } : undefined}
+            exit={isMobile ? { x: -300 } : undefined}
             className={cn(
               'flex-shrink-0',
               isMobile ? 'absolute inset-0 z-10 w-full' : 'w-64'
