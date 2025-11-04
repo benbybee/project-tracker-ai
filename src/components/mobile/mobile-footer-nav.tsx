@@ -2,23 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, FolderKanban, Menu, MessagesSquare } from 'lucide-react';
+import { CalendarDays, FolderKanban, MessagesSquare, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MobileFooterNavProps {
-  onMenuClick: () => void;
+  onAiChatClick: () => void;
 }
 
-export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
+export function MobileFooterNav({ onAiChatClick }: MobileFooterNavProps) {
   const pathname = usePathname();
 
   const navItems = [
-    {
-      icon: Menu,
-      label: 'Menu',
-      onClick: onMenuClick,
-      active: false,
-    },
     {
       icon: FolderKanban,
       label: 'Projects',
@@ -36,6 +30,12 @@ export function MobileFooterNav({ onMenuClick }: MobileFooterNavProps) {
       label: 'Tickets',
       href: '/tickets',
       active: pathname === '/tickets',
+    },
+    {
+      icon: Bot,
+      label: 'AI Chat',
+      onClick: onAiChatClick,
+      active: false,
     },
   ];
 

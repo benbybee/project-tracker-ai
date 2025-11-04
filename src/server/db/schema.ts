@@ -495,6 +495,54 @@ export const slackIntegrationsRelations = relations(
 export type SlackIntegration = typeof slackIntegrations.$inferSelect;
 export type NewSlackIntegration = typeof slackIntegrations.$inferInsert;
 
+// AI Chat Sessions table
+export const aiChatSessions = pgTable('ai_chat_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  lastMessageAt: timestamp('last_message_at').notNull().defaultNow(),
+  isActive: boolean('is_active').default(true),
+});
+
+export const aiChatSessionsRelations = relations(
+  aiChatSessions,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [aiChatSessions.userId],
+      references: [users.id],
+    }),
+    messages: many(aiChatMessages),
+  })
+);
+
+export type AiChatSession = typeof aiChatSessions.$inferSelect;
+export type NewAiChatSession = typeof aiChatSessions.$inferInsert;
+
+// AI Chat Messages table
+export const aiChatMessages = pgTable('ai_chat_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sessionId: uuid('session_id')
+    .notNull()
+    .references(() => aiChatSessions.id, { onDelete: 'cascade' }),
+  role: text('role', { enum: ['user', 'assistant', 'tool'] }).notNull(),
+  content: text('content').notNull(),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const aiChatMessagesRelations = relations(aiChatMessages, ({ one }) => ({
+  session: one(aiChatSessions, {
+    fields: [aiChatMessages.sessionId],
+    references: [aiChatSessions.id],
+  }),
+}));
+
+export type AiChatMessage = typeof aiChatMessages.$inferSelect;
+export type NewAiChatMessage = typeof aiChatMessages.$inferInsert;
+
 // Import notification, activity, analytics, and comments schemas
 export * from './schema/notifications';
 export * from './schema/activity';

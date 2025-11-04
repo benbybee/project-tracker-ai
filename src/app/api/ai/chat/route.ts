@@ -3,7 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import OpenAI from 'openai';
 import { db } from '@/server/db';
-import { taskAnalytics, tasks, projects, roles } from '@/server/db/schema';
+import {
+  taskAnalytics,
+  tasks,
+  projects,
+  roles,
+  aiChatSessions,
+  aiChatMessages,
+} from '@/server/db/schema';
 import { eq, and, gte, sql, ilike, or } from 'drizzle-orm';
 import { patternAnalyzer } from '@/lib/ai/pattern-analyzer';
 import { predictiveEngine } from '@/lib/ai/predictive-engine';
@@ -828,7 +835,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { message, context, history } = await req.json();
+    const { message, context, history, sessionId, tags, originalMessage } =
+      await req.json();
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -839,6 +847,30 @@ export async function POST(req: Request) {
 
     const userId = session.user.id;
     const chatContext: ChatContext = context || { mode: 'general' };
+
+    // Handle session creation/retrieval
+    let chatSessionId = sessionId;
+    if (!chatSessionId) {
+      // Create new session with title from original message or cleaned message
+      const titleSource = originalMessage || message;
+      const sessionTitle =
+        titleSource.substring(0, 50) + (titleSource.length > 50 ? '...' : '');
+      const [newSession] = await db
+        .insert(aiChatSessions)
+        .values({
+          userId,
+          title: sessionTitle,
+        })
+        .returning();
+      chatSessionId = newSession.id;
+    }
+
+    // Save user message to database (use original message with tags)
+    await db.insert(aiChatMessages).values({
+      sessionId: chatSessionId,
+      role: 'user',
+      content: originalMessage || message,
+    });
 
     console.log('[AI Unified Chat] Processing request:', {
       userId,
@@ -865,6 +897,75 @@ export async function POST(req: Request) {
       const generalData = await gatherGeneralContext(userId);
       contextData = generalData;
       systemPrompt = buildGeneralSystemPrompt(generalData);
+    }
+
+    // Add tagged context if tags provided
+    if (tags && Object.keys(tags).length > 0) {
+      let tagContext =
+        '\n\n--- TAGGED CONTEXT (User provided structured data) ---\n';
+
+      if (tags.projects && tags.projects.length > 0) {
+        // Look up project details
+        const taggedProjects = await db
+          .select()
+          .from(projects)
+          .where(
+            and(
+              eq(projects.userId, userId),
+              sql`${projects.id} = ANY(${tags.projects})`
+            )
+          );
+
+        if (taggedProjects.length > 0) {
+          tagContext += `Projects: ${taggedProjects.map((p) => `@${p.name} (ID: ${p.id}, Type: ${p.type})`).join(', ')}\n`;
+        }
+      }
+
+      if (tags.projectName) {
+        tagContext += `New Project Name: /projectname "${tags.projectName}"\n`;
+      }
+
+      if (tags.task) {
+        tagContext += `Task Title: /task "${tags.task}"\n`;
+      }
+
+      if (tags.userRole) {
+        tagContext += `Role/Category: /userole "${tags.userRole}"\n`;
+      }
+
+      if (tags.priority) {
+        const priorityMap: Record<string, string> = {
+          low: '1 (Low)',
+          medium: '2 (Medium)',
+          high: '3 (High)',
+          urgent: '4 (Urgent)',
+        };
+        tagContext += `Priority: /priority ${tags.priority} = priorityScore "${priorityMap[tags.priority] || tags.priority}"\n`;
+      }
+
+      if (tags.dueDate) {
+        tagContext += `Due Date: /duedate ${tags.dueDate} (ISO format)\n`;
+      }
+
+      if (tags.status) {
+        tagContext += `Status: /status ${tags.status}\n`;
+      }
+
+      if (tags.notes) {
+        tagContext += `Notes/Description: /notes "${tags.notes}"\n`;
+      }
+
+      tagContext +=
+        '\nIMPORTANT: The user has provided structured context above. Use this information when calling tools to avoid asking unnecessary follow-up questions. For example:\n';
+      tagContext +=
+        '- If @project is tagged, use that project ID/name directly\n';
+      tagContext += '- If /task is provided, use that as the task title\n';
+      tagContext +=
+        '- If /priority is provided, use the corresponding priorityScore\n';
+      tagContext += '- Pre-populate tool parameters with this data\n';
+      tagContext += '--- END TAGGED CONTEXT ---\n';
+
+      systemPrompt += tagContext;
     }
 
     // Prepare messages for OpenAI
@@ -928,12 +1029,32 @@ export async function POST(req: Request) {
 
       // If tool needs confirmation, return special response
       if (toolResult.needsConfirmation) {
+        const confirmMessage = responseMessage.content || '';
+
+        // Save assistant message requesting confirmation
+        await db.insert(aiChatMessages).values({
+          sessionId: chatSessionId,
+          role: 'assistant',
+          content: confirmMessage,
+          metadata: {
+            needsConfirmation: true,
+            confirmationData: toolResult.confirmationData,
+          },
+        });
+
+        // Update session's lastMessageAt
+        await db
+          .update(aiChatSessions)
+          .set({ lastMessageAt: new Date() })
+          .where(eq(aiChatSessions.id, chatSessionId));
+
         return NextResponse.json({
-          message: responseMessage.content || '',
+          message: confirmMessage,
           needsConfirmation: true,
           confirmationData: toolResult.confirmationData,
           context: contextData,
           toolCallId: toolCall.id,
+          sessionId: chatSessionId,
         });
       }
 
@@ -965,10 +1086,25 @@ export async function POST(req: Request) {
           followUpCompletion.choices[0]?.message?.content ||
           JSON.stringify(toolResult.data);
 
+        // Save assistant response to database
+        await db.insert(aiChatMessages).values({
+          sessionId: chatSessionId,
+          role: 'assistant',
+          content: finalResponse,
+          metadata: { toolExecuted: toolName, toolResult: toolResult.data },
+        });
+
+        // Update session's lastMessageAt
+        await db
+          .update(aiChatSessions)
+          .set({ lastMessageAt: new Date() })
+          .where(eq(aiChatSessions.id, chatSessionId));
+
         return NextResponse.json({
           message: finalResponse,
           context: contextData,
           toolExecuted: toolName,
+          sessionId: chatSessionId,
         });
       }
 
@@ -1000,10 +1136,25 @@ export async function POST(req: Request) {
         const errorResponse =
           errorCompletion.choices[0]?.message?.content || toolResult.error;
 
+        // Save error response to database
+        await db.insert(aiChatMessages).values({
+          sessionId: chatSessionId,
+          role: 'assistant',
+          content: errorResponse,
+          metadata: { toolError: true, error: toolResult.error },
+        });
+
+        // Update session's lastMessageAt
+        await db
+          .update(aiChatSessions)
+          .set({ lastMessageAt: new Date() })
+          .where(eq(aiChatSessions.id, chatSessionId));
+
         return NextResponse.json({
           message: errorResponse,
           context: contextData,
           toolError: true,
+          sessionId: chatSessionId,
         });
       }
     }
@@ -1015,10 +1166,24 @@ export async function POST(req: Request) {
       throw new Error('No response from AI');
     }
 
+    // Save assistant response to database
+    await db.insert(aiChatMessages).values({
+      sessionId: chatSessionId,
+      role: 'assistant',
+      content: response,
+    });
+
+    // Update session's lastMessageAt
+    await db
+      .update(aiChatSessions)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(aiChatSessions.id, chatSessionId));
+
     console.log('[AI Unified Chat] Request completed successfully');
     return NextResponse.json({
       message: response,
       context: contextData,
+      sessionId: chatSessionId,
     });
   } catch (error: any) {
     console.error('[AI Unified Chat] Error:', {

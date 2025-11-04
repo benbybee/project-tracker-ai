@@ -1,11 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Keyboard, CheckSquare, FolderPlus, Bot, FileText } from 'lucide-react';
+import { Keyboard, CheckSquare, FolderPlus, FileText } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TaskModal } from '@/components/tasks/TaskModal';
 import { NoteModal } from '@/components/notes/NoteModal';
 import { CreateProjectModal } from '@/components/projects/create-project-modal';
-import { UnifiedAiChatModal } from '@/components/ai/unified-ai-chat-modal';
 import { trpc } from '@/lib/trpc';
 import { getModKey } from '@/lib/keyboard-utils';
 
@@ -13,7 +12,6 @@ export function Topbar() {
   const [isMobile, setIsMobile] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
-  const [aiChatModalOpen, setAiChatModalOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [modKey, setModKey] = useState('Ctrl');
 
@@ -53,15 +51,6 @@ export function Topbar() {
             title="Add Project"
           >
             <FolderPlus className="w-5 h-5" />
-          </button>
-
-          {/* Ask AI */}
-          <button
-            onClick={() => setAiChatModalOpen(true)}
-            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-            title="Ask AI"
-          >
-            <Bot className="w-5 h-5" />
           </button>
 
           {/* Add Note */}
@@ -115,12 +104,6 @@ export function Topbar() {
       <CreateProjectModal
         isOpen={projectModalOpen}
         onClose={() => setProjectModalOpen(false)}
-      />
-
-      {/* AI Chat Modal */}
-      <UnifiedAiChatModal
-        isOpen={aiChatModalOpen}
-        onClose={() => setAiChatModalOpen(false)}
       />
 
       {/* Note Creation Modal */}
