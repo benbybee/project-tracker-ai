@@ -65,7 +65,7 @@ export function filterAutocompleteItems(
       .filter((p) => p.name.toLowerCase().includes(lowerQuery))
       .map((p) => ({
         id: p.id,
-        type: 'project',
+        type: 'project' as const,
         label: p.name,
       }))
       .slice(0, 10); // Limit to 10 items
@@ -76,7 +76,7 @@ export function filterAutocompleteItems(
       .filter((r) => r.name.toLowerCase().includes(lowerQuery))
       .map((r) => ({
         id: r.id,
-        type: 'role',
+        type: 'role' as const,
         label: r.name,
       }))
       .slice(0, 10);
@@ -87,7 +87,7 @@ export function filterAutocompleteItems(
       .filter((c) => c.command.toLowerCase().includes(lowerQuery))
       .map((c) => ({
         id: c.command,
-        type: 'command',
+        type: 'command' as const,
         label: c.command,
         description: c.description,
       }))
