@@ -19,7 +19,9 @@
  * parseDateAsLocal("2025-10-31") // Returns Oct 31, 2025 in local timezone
  * parseDateAsLocal(null) // Returns null
  */
-export function parseDateAsLocal(dateStr: string | null | undefined): Date | null {
+export function parseDateAsLocal(
+  dateStr: string | null | undefined
+): Date | null {
   // Handle null, undefined, or empty string
   if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') {
     return null;
