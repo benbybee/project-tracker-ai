@@ -404,7 +404,7 @@ export const tasksRouter = createTRPCRouter({
         updateData.priorityScore = patch.priorityScore;
       if (patch.isDaily !== undefined) updateData.isDaily = patch.isDaily;
       if ('dueDate' in patch)
-        updateData.dueDate = patch.dueDate ? new Date(patch.dueDate) : null;
+        updateData.dueDate = patch.dueDate || null;
       if (patch.roleId !== undefined) updateData.roleId = patch.roleId;
       if (patch.projectId !== undefined) updateData.projectId = patch.projectId;
 

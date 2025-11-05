@@ -55,7 +55,7 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
     : 0;
   const overdue = !!(due && due.getTime() < Date.now());
   const dueToday = !!(due && new Date().toDateString() === due.toDateString());
-  const stale = daysStale > 7;
+  const stale = daysStale > 7 && !task.dueDate; // Only show stale if no due date
 
   const p = task.priorityScore
     ? (Number(task.priorityScore) as 1 | 2 | 3 | 4)
@@ -200,7 +200,7 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
               {typeof task.role === 'string' ? task.role : task.role.name}
             </span>
           )}
-          {due && task.dueDate && (
+          {task.dueDate && due && (
             <span className="flex items-center gap-1 flex-shrink-0">
               <CalendarDays className="h-3 w-3" />
               <span className="whitespace-nowrap">

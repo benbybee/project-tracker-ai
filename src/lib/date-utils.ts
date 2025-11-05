@@ -13,22 +13,23 @@
  * Parse a date string (YYYY-MM-DD) as a local date, avoiding timezone issues.
  *
  * @param dateStr - Date string in YYYY-MM-DD format
- * @returns Date object in local timezone
+ * @returns Date object in local timezone, or null if invalid
  *
  * @example
  * parseDateAsLocal("2025-10-31") // Returns Oct 31, 2025 in local timezone
+ * parseDateAsLocal(null) // Returns null
  */
-export function parseDateAsLocal(dateStr: string | null | undefined): Date {
+export function parseDateAsLocal(dateStr: string | null | undefined): Date | null {
   // Handle null, undefined, or empty string
   if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') {
-    return new Date(); // Return current date as fallback
+    return null;
   }
 
   const [year, month, day] = dateStr.split('-').map(Number);
 
   // Validate parsed values
   if (isNaN(year) || isNaN(month) || isNaN(day)) {
-    return new Date(); // Return current date as fallback
+    return null;
   }
 
   return new Date(year, month - 1, day);
@@ -39,7 +40,7 @@ export function parseDateAsLocal(dateStr: string | null | undefined): Date {
  *
  * @param dateStr - Date string in YYYY-MM-DD format
  * @param options - Intl.DateTimeFormat options
- * @returns Formatted date string
+ * @returns Formatted date string, or empty string if invalid
  *
  * @example
  * formatDate("2025-10-31") // "10/31/2025"
@@ -50,6 +51,7 @@ export function formatDate(
   options?: Intl.DateTimeFormatOptions
 ): string {
   const date = parseDateAsLocal(dateStr);
+  if (!date) return '';
   return date.toLocaleDateString(undefined, options);
 }
 
@@ -57,7 +59,7 @@ export function formatDate(
  * Get relative date text (Today, Tomorrow, In 3d, 2d late, etc.)
  *
  * @param dateStr - Date string in YYYY-MM-DD format
- * @returns Object with relative text and overdue flag
+ * @returns Object with relative text and overdue flag, or null if invalid
  *
  * @example
  * getRelativeDateText("2025-10-31") // { text: "In 2d", overdue: false }
@@ -65,8 +67,10 @@ export function formatDate(
 export function getRelativeDateText(dateStr: string | null | undefined): {
   text: string;
   overdue: boolean;
-} {
+} | null {
   const date = parseDateAsLocal(dateStr);
+  if (!date) return null;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -100,6 +104,7 @@ export function getRelativeDateText(dateStr: string | null | undefined): {
 export function isToday(dateStr: string | null | undefined): boolean {
   if (!dateStr) return false;
   const date = parseDateAsLocal(dateStr);
+  if (!date) return false;
   const today = new Date();
   return date.toDateString() === today.toDateString();
 }
@@ -113,6 +118,7 @@ export function isToday(dateStr: string | null | undefined): boolean {
 export function isOverdue(dateStr: string | null | undefined): boolean {
   if (!dateStr) return false;
   const date = parseDateAsLocal(dateStr);
+  if (!date) return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

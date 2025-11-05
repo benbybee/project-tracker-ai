@@ -152,9 +152,9 @@ export default function DailyTaskRow({
             {task.description}
           </p>
         )}
-        {task.dueDate && (
+        {task.dueDate && parseDateAsLocal(task.dueDate) && (
           <p className="text-xs text-gray-500 mt-1">
-            Due {format(parseDateAsLocal(task.dueDate), 'MMM d')}
+            Due {format(parseDateAsLocal(task.dueDate)!, 'MMM d')}
           </p>
         )}
       </button>

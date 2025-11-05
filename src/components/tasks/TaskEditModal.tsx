@@ -207,7 +207,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
             <Input
               type="date"
               value={form.dueDate || ''}
-              onChange={(e) => updateForm({ dueDate: e.target.value })}
+              onChange={(e) => updateForm({ dueDate: e.target.value || null })}
             />
           </div>
 

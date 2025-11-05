@@ -81,7 +81,7 @@ export default function DailyPlannerPage() {
     const pastDue = tasks.filter((t) => {
       if (!t.dueDate || t.status === 'completed') return false;
       const taskDate = parseDateAsLocal(t.dueDate);
-      return taskDate < start;
+      return taskDate && taskDate < start;
     });
     return sortByPriority(pastDue);
   }, [tasks, start]);
@@ -90,7 +90,7 @@ export default function DailyPlannerPage() {
     const today = tasks.filter((t) => {
       if (!t.dueDate || t.status === 'completed') return false;
       const taskDate = parseDateAsLocal(t.dueDate);
-      return taskDate >= start && taskDate < end;
+      return taskDate && taskDate >= start && taskDate < end;
     });
     return sortByPriority(today);
   }, [tasks, start, end]);
@@ -121,7 +121,7 @@ export default function DailyPlannerPage() {
       if (!t.dueDate || t.status === 'completed') return false;
       const taskDate = parseDateAsLocal(t.dueDate);
       const threeDaysLater = new Date(end.getTime() + 3 * 86400000);
-      return taskDate >= end && taskDate < threeDaysLater;
+      return taskDate && taskDate >= end && taskDate < threeDaysLater;
     });
     return sortByPriority(upcoming);
   }, [tasks, end]);
