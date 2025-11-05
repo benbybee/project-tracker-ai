@@ -45,9 +45,9 @@ export default function ObsessionMarketingSupportPage() {
       <div className="mx-auto max-w-2xl px-6 py-10">
         {/* Obsession Marketing Logo */}
         <div className="text-center mb-6">
-          <img 
-            src="/icons/5-e1712452664416.png" 
-            alt="Obsession Marketing" 
+          <img
+            src="/icons/5-e1712452664416.png"
+            alt="Obsession Marketing"
             className="mx-auto h-24 w-auto"
           />
         </div>
@@ -231,4 +231,3 @@ export default function ObsessionMarketingSupportPage() {
     </div>
   );
 }
-
