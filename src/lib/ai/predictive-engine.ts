@@ -380,6 +380,7 @@ export class PredictiveEngine {
       urgent: activeTasks.filter((t) => {
         if (!t.dueDate || t.status === 'completed') return false;
         const taskDate = parseDateAsLocal(t.dueDate);
+        if (!taskDate) return false;
         taskDate.setHours(0, 0, 0, 0);
         return taskDate < today;
       }).length,
@@ -537,6 +538,7 @@ export class PredictiveEngine {
     const overdueToday = tasksThisWeek.filter((t) => {
       if (!t.dueDate) return false;
       const taskDate = parseDateAsLocal(t.dueDate);
+      if (!taskDate) return false;
       taskDate.setHours(0, 0, 0, 0);
       return taskDate < todayForComparison;
     });
