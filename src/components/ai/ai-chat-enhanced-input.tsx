@@ -256,13 +256,6 @@ export function AiChatEnhancedInput({
                 'border-red-300 dark:border-red-700 focus:ring-red-500'
             )}
           />
-
-          {/* Help hint */}
-          {!value && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
-              Use @ for projects, / for commands
-            </div>
-          )}
         </div>
 
         <button

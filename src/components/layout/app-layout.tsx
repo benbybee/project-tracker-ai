@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
-import { MobileHeader } from '@/components/mobile/mobile-header';
 import { MobileFooterNav } from '@/components/mobile/mobile-footer-nav';
 import { AiChatFloatingButton } from '@/components/ai/ai-chat-floating-button';
 import { AiChatOverlay } from '@/components/ai/ai-chat-overlay';
@@ -73,9 +72,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-[100dvh]">
       <Sidebar isOpen={mobileSidebarOpen} onClose={handleCloseSidebar} />
 
-      {/* Mobile Header - Only visible on mobile */}
-      {isMobileViewport && <MobileHeader onMenuClick={handleOpenSidebar} />}
-
       <div
         className="transition-all duration-300 px-4 py-4 md:pr-3 md:pl-0"
         style={{
@@ -84,11 +80,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             : sidebarWidth === '84px'
               ? '92px'
               : '264px',
-          paddingTop: isMobileViewport ? 'calc(3.5rem + 1rem)' : '1rem', // Add space for mobile header
           paddingBottom: isMobileViewport ? '80px' : undefined, // Add padding for mobile footer
         }}
       >
-        <Topbar />
+        <Topbar onMenuClick={handleOpenSidebar} />
         <main className="mt-4 grid gap-4">{children}</main>
       </div>
 

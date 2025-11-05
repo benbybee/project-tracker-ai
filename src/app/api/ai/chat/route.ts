@@ -11,7 +11,7 @@ import {
   aiChatSessions,
   aiChatMessages,
 } from '@/server/db/schema';
-import { eq, and, gte, sql, ilike, or } from 'drizzle-orm';
+import { eq, and, gte, sql, ilike, or, inArray } from 'drizzle-orm';
 import { patternAnalyzer } from '@/lib/ai/pattern-analyzer';
 import { predictiveEngine } from '@/lib/ai/predictive-engine';
 
@@ -912,7 +912,7 @@ export async function POST(req: Request) {
           .where(
             and(
               eq(projects.userId, userId),
-              sql`${projects.id} = ANY(${tags.projects})`
+              inArray(projects.id, tags.projects)
             )
           );
 

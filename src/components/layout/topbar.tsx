@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Keyboard, CheckSquare, FolderPlus, FileText } from 'lucide-react';
+import { Keyboard, CheckSquare, FolderPlus, FileText, Menu } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TaskModal } from '@/components/tasks/TaskModal';
 import { NoteModal } from '@/components/notes/NoteModal';
@@ -8,7 +8,11 @@ import { CreateProjectModal } from '@/components/projects/create-project-modal';
 import { trpc } from '@/lib/trpc';
 import { getModKey } from '@/lib/keyboard-utils';
 
-export function Topbar() {
+interface TopbarProps {
+  onMenuClick?: () => void;
+}
+
+export function Topbar({ onMenuClick }: TopbarProps = {}) {
   const [isMobile, setIsMobile] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
@@ -32,9 +36,20 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-30 bg-white/70 backdrop-blur border-b">
-      <div className="mx-auto flex items-center justify-end gap-2 px-4 py-2">
+      <div className="mx-auto flex items-center justify-between gap-2 px-4 py-2">
+        {/* Mobile Hamburger Menu */}
+        {isMobile && onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+        )}
+
         {/* Quick Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           {/* Add Task */}
           <button
             onClick={() => setTaskModalOpen(true)}

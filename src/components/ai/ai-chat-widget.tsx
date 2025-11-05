@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, X, Minimize2, Sparkles, User, Menu } from 'lucide-react';
+import { Loader2, X, Sparkles, User, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AiChatHistorySidebar } from './ai-chat-history-sidebar';
 import { AiChatEnhancedInput } from './ai-chat-enhanced-input';
@@ -47,15 +47,19 @@ export function AiChatWidget({
   const [parsedData, setParsedData] = useState<ParsedMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(!isMobile);
+  const [viewMode, setViewMode] = useState<'chat' | 'history'>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Load sessions on mount
+  // Load sessions on mount and ensure we start in chat mode
   useEffect(() => {
     if (isOpen) {
       loadSessions();
+      setViewMode('chat');
+      if (!currentSessionId) {
+        setMessages([]);
+      }
     }
   }, [isOpen]);
 
@@ -102,9 +106,7 @@ export function AiChatWidget({
       if (response.ok) {
         setMessages(data.messages || []);
         setCurrentSessionId(sessionId);
-        if (isMobile) {
-          setShowSidebar(false);
-        }
+        setViewMode('chat');
       } else {
         throw new Error(data.error || 'Failed to load session');
       }
@@ -121,9 +123,7 @@ export function AiChatWidget({
   const handleNewChat = () => {
     setCurrentSessionId(null);
     setMessages([]);
-    if (isMobile) {
-      setShowSidebar(false);
-    }
+    setViewMode('chat');
     inputRef.current?.focus();
   };
 
@@ -253,39 +253,20 @@ export function AiChatWidget({
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-purple-500 to-pink-500">
-        {isMobile && (
-          <button
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5 text-white" />
-          </button>
-        )}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h3 className="font-semibold text-white">AI Assistant</h3>
-            <p className="text-xs text-white/80">
-              {currentSessionId
-                ? sessions.find((s) => s.id === currentSessionId)?.title ||
-                  'Chat'
-                : 'New Chat'}
-            </p>
-          </div>
+          <h3 className="font-semibold text-white">AI Assistant</h3>
         </div>
         <div className="flex items-center gap-2">
-          {!isMobile && onMinimize && (
-            <button
-              onClick={onMinimize}
-              className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-              aria-label="Minimize"
-            >
-              <Minimize2 className="h-5 w-5 text-white" />
-            </button>
-          )}
+          <button
+            onClick={() => setViewMode(viewMode === 'chat' ? 'history' : 'chat')}
+            className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+            aria-label={viewMode === 'chat' ? 'Chat History' : 'Back to Chat'}
+          >
+            <Menu className="h-5 w-5 text-white" />
+          </button>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-white/20 transition-colors"
@@ -297,32 +278,21 @@ export function AiChatWidget({
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        {(showSidebar || !isMobile) && (
-          <motion.div
-            initial={isMobile ? { x: -300 } : undefined}
-            animate={isMobile ? { x: 0 } : undefined}
-            exit={isMobile ? { x: -300 } : undefined}
-            className={cn(
-              'flex-shrink-0 border-r border-slate-200 dark:border-slate-700',
-              isMobile ? 'absolute inset-0 z-10 w-full' : 'w-48'
-            )}
-          >
-            <AiChatHistorySidebar
-              sessions={sessions}
-              activeSessionId={currentSessionId || undefined}
-              onSelectSession={loadSession}
-              onNewChat={handleNewChat}
-              onDeleteSession={handleDeleteSession}
-              isLoading={isLoadingSessions}
-              className="h-full"
-            />
-          </motion.div>
-        )}
-
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-hidden">
+        {viewMode === 'history' ? (
+          /* History View - Full Width */
+          <AiChatHistorySidebar
+            sessions={sessions}
+            activeSessionId={currentSessionId || undefined}
+            onSelectSession={loadSession}
+            onNewChat={handleNewChat}
+            onDeleteSession={handleDeleteSession}
+            isLoading={isLoadingSessions}
+            className="h-full"
+          />
+        ) : (
+          /* Chat View */
+          <div className="flex flex-col h-full overflow-hidden">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 ? (
@@ -409,7 +379,8 @@ export function AiChatWidget({
               placeholder="What can I help you with?"
             />
           </div>
-        </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
