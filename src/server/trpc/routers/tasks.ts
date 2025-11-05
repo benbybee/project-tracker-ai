@@ -375,7 +375,19 @@ export const tasksRouter = createTRPCRouter({
         },
       });
 
-      return inserted;
+      return {
+        ...inserted,
+        createdAt: inserted.createdAt?.toISOString() ?? null,
+        updatedAt: inserted.updatedAt?.toISOString() ?? null,
+        dueDate: inserted.dueDate ?? null,
+        isDaily: inserted.isDaily ?? undefined,
+        priorityScore: (inserted.priorityScore ?? undefined) as
+          | '1'
+          | '2'
+          | '3'
+          | '4'
+          | undefined,
+      };
     }),
 
   update: protectedProcedure
@@ -453,7 +465,20 @@ export const tasksRouter = createTRPCRouter({
         },
       });
 
-      return updated;
+      return {
+        ...updated,
+        createdAt: updated.createdAt?.toISOString() ?? null,
+        updatedAt: updated.updatedAt?.toISOString() ?? null,
+        blockedAt: updated.blockedAt?.toISOString() ?? null,
+        dueDate: updated.dueDate ?? null, // Explicitly return dueDate
+        isDaily: updated.isDaily ?? undefined,
+        priorityScore: (updated.priorityScore ?? undefined) as
+          | '1'
+          | '2'
+          | '3'
+          | '4'
+          | undefined,
+      };
     }),
 
   reorder: protectedProcedure
@@ -538,7 +563,20 @@ export const tasksRouter = createTRPCRouter({
         },
       });
 
-      return updatedTask;
+      return {
+        ...updatedTask,
+        createdAt: updatedTask.createdAt?.toISOString() ?? null,
+        updatedAt: updatedTask.updatedAt?.toISOString() ?? null,
+        blockedAt: updatedTask.blockedAt?.toISOString() ?? null,
+        dueDate: updatedTask.dueDate ?? null,
+        isDaily: updatedTask.isDaily ?? undefined,
+        priorityScore: (updatedTask.priorityScore ?? undefined) as
+          | '1'
+          | '2'
+          | '3'
+          | '4'
+          | undefined,
+      };
     }),
 
   addSubtask: protectedProcedure
@@ -872,7 +910,19 @@ export const tasksRouter = createTRPCRouter({
             priorityScore: taskData.priorityScore,
           })
           .returning();
-        results.push(inserted);
+        results.push({
+          ...inserted,
+          createdAt: inserted.createdAt?.toISOString() ?? null,
+          updatedAt: inserted.updatedAt?.toISOString() ?? null,
+          dueDate: inserted.dueDate ?? null,
+          isDaily: inserted.isDaily ?? undefined,
+          priorityScore: (inserted.priorityScore ?? undefined) as
+            | '1'
+            | '2'
+            | '3'
+            | '4'
+            | undefined,
+        });
       }
       return results;
     }),
@@ -903,7 +953,20 @@ export const tasksRouter = createTRPCRouter({
           .set(updateData)
           .where(and(eq(tasks.id, id), eq(tasks.userId, ctx.session.user.id)))
           .returning();
-        results.push(updated);
+        results.push({
+          ...updated,
+          createdAt: updated.createdAt?.toISOString() ?? null,
+          updatedAt: updated.updatedAt?.toISOString() ?? null,
+          blockedAt: updated.blockedAt?.toISOString() ?? null,
+          dueDate: updated.dueDate ?? null,
+          isDaily: updated.isDaily ?? undefined,
+          priorityScore: (updated.priorityScore ?? undefined) as
+            | '1'
+            | '2'
+            | '3'
+            | '4'
+            | undefined,
+        });
       }
       return results;
     }),

@@ -49,12 +49,21 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
   // Update form when task prop changes
   useEffect(() => {
     if (open) {
+      console.log('🔍 TaskEditModal opened with task:', {
+        id: task.id,
+        title: task.title,
+        dueDate: task.dueDate,
+        dueDateType: typeof task.dueDate,
+      });
+      
       // Format date to YYYY-MM-DD for HTML5 date input
       const formattedTask = {
         ...task,
         dueDate: task.dueDate || null,
       };
       setForm(formattedTask);
+      
+      console.log('📝 Form initialized with dueDate:', formattedTask.dueDate);
     }
   }, [task, open]);
 
@@ -76,7 +85,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     setSaving(true);
 
     try {
-      await updateTask.mutateAsync({
+      const updatedTask = await updateTask.mutateAsync({
         id: task.id,
         title: form.title.trim(),
         description: form.description,
@@ -85,6 +94,15 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
         priorityScore: form.priorityScore?.toString() as '1' | '2' | '3' | '4',
         projectId: form.projectId,
       });
+
+      console.log('✅ Task updated successfully:', {
+        sent: { dueDate: form.dueDate },
+        received: { dueDate: updatedTask.dueDate }
+      });
+
+      // Wait for cache to invalidate and refetch
+      await utils.tasks.list.invalidate();
+      await utils.dashboard.get.invalidate();
 
       onClose();
     } catch (error) {
