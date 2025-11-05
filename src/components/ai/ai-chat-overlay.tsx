@@ -31,10 +31,7 @@ export function AiChatOverlay({
               stiffness: 300,
               damping: 30,
             }}
-            className={cn(
-              'fixed bottom-6 right-6 z-50',
-              className
-            )}
+            className={cn('fixed bottom-6 right-6 z-50', className)}
           >
             <AiChatWidget
               isOpen={isOpen}
