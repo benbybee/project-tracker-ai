@@ -26,6 +26,7 @@ import { useRealtime } from '@/app/providers';
 import { useParams } from 'next/navigation';
 import { TaskAttachments } from './task-attachments';
 import { TaskComments } from './task-comments';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const TaskSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
@@ -262,37 +263,45 @@ export function TaskModal({
             />
           </div>
 
-          {/* Due Date and Daily Toggle */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="dueDate"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Due Date
-              </label>
-              <Input
-                type="date"
-                {...register('dueDate')}
-                disabled={addToDaily}
-                className={addToDaily ? 'bg-gray-100' : ''}
-              />
-            </div>
-            <div className="flex items-center space-x-2 mt-6">
-              <input
-                type="checkbox"
-                id="isDaily"
-                checked={addToDaily}
-                onChange={(e) => setAddToDaily(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="isDaily"
-                className="text-sm font-medium text-gray-700"
-              >
-                Add to Daily (no due date)
-              </label>
-            </div>
+          {/* REBUILT - Phase 4: New DatePicker Component */}
+          <div>
+            <label
+              htmlFor="dueDate"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Due Date
+            </label>
+            <DatePicker
+              value={watch('dueDate') as string | null}
+              onChange={(date) => {
+                console.log('📅 TaskModal - Date changed:', date);
+                setValue('dueDate', date);
+              }}
+              placeholder="Select due date (optional)"
+              disabled={addToDaily}
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isDaily"
+              checked={addToDaily}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setAddToDaily(checked);
+                if (checked) {
+                  setValue('dueDate', null);
+                }
+              }}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor="isDaily"
+              className="text-sm font-medium text-gray-700"
+            >
+              Add to Daily (no due date)
+            </label>
           </div>
 
           {/* Status and Priority */}

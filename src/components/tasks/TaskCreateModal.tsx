@@ -24,6 +24,7 @@ import { RecurringTaskModal } from '@/components/tasks/recurring-task-modal';
 import { TaskTemplateModal } from '@/components/tasks/task-template-modal';
 import { type RecurrenceConfig } from '@/lib/recurrence-parser';
 import { Repeat, FileText } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface TaskCreateModalProps {
   open: boolean;
@@ -220,15 +221,18 @@ export function TaskCreateModal({
             </Select>
           </div>
 
-          {/* Due Date */}
+          {/* REBUILT - Phase 4: New DatePicker Component */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Due Date
             </label>
-            <Input
-              type="date"
-              value={form.dueDate || ''}
-              onChange={(e) => updateForm({ dueDate: e.target.value })}
+            <DatePicker
+              value={form.dueDate || null}
+              onChange={(date) => {
+                console.log('📅 TaskCreateModal - Date changed:', date);
+                updateForm({ dueDate: date || '' });
+              }}
+              placeholder="Select due date (optional)"
             />
           </div>
 

@@ -10,20 +10,31 @@
  */
 
 /**
- * Parse a date string (YYYY-MM-DD) as a local date, avoiding timezone issues.
+ * Parse a date string (YYYY-MM-DD) or Date object as a local date, avoiding timezone issues.
  *
- * @param dateStr - Date string in YYYY-MM-DD format
+ * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @returns Date object in local timezone, or null if invalid
  *
  * @example
  * parseDateAsLocal("2025-10-31") // Returns Oct 31, 2025 in local timezone
+ * parseDateAsLocal(new Date("2025-10-31")) // Returns Oct 31, 2025 in local timezone
  * parseDateAsLocal(null) // Returns null
  */
 export function parseDateAsLocal(
-  dateStr: string | null | undefined
+  dateStr: string | Date | null | undefined
 ): Date | null {
-  // Handle null, undefined, or empty string
-  if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') {
+  // Handle null or undefined
+  if (!dateStr) {
+    return null;
+  }
+
+  // If it's already a Date object, return it
+  if (dateStr instanceof Date) {
+    return dateStr;
+  }
+
+  // Handle empty string
+  if (typeof dateStr !== 'string' || dateStr.trim() === '') {
     return null;
   }
 
@@ -38,18 +49,19 @@ export function parseDateAsLocal(
 }
 
 /**
- * Format a date string as a localized date string.
+ * Format a date string or Date object as a localized date string.
  *
- * @param dateStr - Date string in YYYY-MM-DD format
+ * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @param options - Intl.DateTimeFormat options
  * @returns Formatted date string, or empty string if invalid
  *
  * @example
  * formatDate("2025-10-31") // "10/31/2025"
+ * formatDate(new Date("2025-10-31")) // "10/31/2025"
  * formatDate("2025-10-31", { month: 'short', day: 'numeric' }) // "Oct 31"
  */
 export function formatDate(
-  dateStr: string | null | undefined,
+  dateStr: string | Date | null | undefined,
   options?: Intl.DateTimeFormatOptions
 ): string {
   const date = parseDateAsLocal(dateStr);
@@ -60,13 +72,14 @@ export function formatDate(
 /**
  * Get relative date text (Today, Tomorrow, In 3d, 2d late, etc.)
  *
- * @param dateStr - Date string in YYYY-MM-DD format
+ * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @returns Object with relative text and overdue flag, or null if invalid
  *
  * @example
  * getRelativeDateText("2025-10-31") // { text: "In 2d", overdue: false }
+ * getRelativeDateText(new Date("2025-10-31")) // { text: "In 2d", overdue: false }
  */
-export function getRelativeDateText(dateStr: string | null | undefined): {
+export function getRelativeDateText(dateStr: string | Date | null | undefined): {
   text: string;
   overdue: boolean;
 } | null {
@@ -100,10 +113,10 @@ export function getRelativeDateText(dateStr: string | null | undefined): {
 /**
  * Check if a date is today.
  *
- * @param dateStr - Date string in YYYY-MM-DD format
+ * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @returns True if the date is today
  */
-export function isToday(dateStr: string | null | undefined): boolean {
+export function isToday(dateStr: string | Date | null | undefined): boolean {
   if (!dateStr) return false;
   const date = parseDateAsLocal(dateStr);
   if (!date) return false;
@@ -114,10 +127,10 @@ export function isToday(dateStr: string | null | undefined): boolean {
 /**
  * Check if a date is overdue (before today).
  *
- * @param dateStr - Date string in YYYY-MM-DD format
+ * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @returns True if the date is before today
  */
-export function isOverdue(dateStr: string | null | undefined): boolean {
+export function isOverdue(dateStr: string | Date | null | undefined): boolean {
   if (!dateStr) return false;
   const date = parseDateAsLocal(dateStr);
   if (!date) return false;
@@ -133,20 +146,20 @@ export function isOverdue(dateStr: string | null | undefined): boolean {
 /**
  * Format a date for display in short format (e.g., "Oct 31").
  *
- * @param dateStr - Date string in YYYY-MM-DD format
+ * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @returns Formatted date string
  */
-export function formatDateShort(dateStr: string | null | undefined): string {
+export function formatDateShort(dateStr: string | Date | null | undefined): string {
   return formatDate(dateStr, { month: 'short', day: 'numeric' });
 }
 
 /**
  * Format a date for display in long format (e.g., "October 31, 2025").
  *
- * @param dateStr - Date string in YYYY-MM-DD format
+ * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @returns Formatted date string
  */
-export function formatDateLong(dateStr: string | null | undefined): string {
+export function formatDateLong(dateStr: string | Date | null | undefined): string {
   return formatDate(dateStr, {
     month: 'long',
     day: 'numeric',

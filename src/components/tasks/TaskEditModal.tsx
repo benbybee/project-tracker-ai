@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface TaskEditModalProps {
   task: Task;
@@ -27,10 +28,12 @@ interface TaskEditModalProps {
 }
 
 export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
-  const [form, setForm] = useState<Task>(task);
+  const [form, setForm] = useState<Task>({
+    ...task,
+    dueDate: task.dueDate ?? null,
+  });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: projects } = trpc.projects.list.useQuery({});
@@ -47,30 +50,22 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     },
   });
 
-  // Initialize form ONLY when modal opens, not on every task prop change
+  // Initialize form ONLY when task.id changes (new task opened)
   useEffect(() => {
-    if (open && !isInitialized) {
-      console.log('🔍 TaskEditModal opened with task:', {
-        id: task.id,
-        title: task.title,
-        dueDate: task.dueDate,
-        dueDateType: typeof task.dueDate,
-      });
+    console.log('🔍 TaskEditModal - Task changed:', {
+      id: task.id,
+      title: task.title,
+      dueDate: task.dueDate,
+      dueDateType: typeof task.dueDate,
+    });
 
-      // Format date to YYYY-MM-DD for HTML5 date input
-      const formattedTask = {
-        ...task,
-        dueDate: task.dueDate || null,
-      };
-      setForm(formattedTask);
-      setIsInitialized(true);
+    setForm({
+      ...task,
+      dueDate: task.dueDate ?? null,
+    });
 
-      console.log('📝 Form initialized with dueDate:', formattedTask.dueDate);
-    } else if (!open && isInitialized) {
-      // Reset initialization flag when modal closes
-      setIsInitialized(false);
-    }
-  }, [open, task, isInitialized]);
+    console.log('📝 Form initialized with dueDate:', task.dueDate);
+  }, [task.id]); // ONLY re-initialize when task.id changes
 
   const updateForm = (updates: Partial<Task>) => {
     console.log('📝 Form updating with:', updates);
@@ -232,19 +227,18 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
             </Select>
           </div>
 
-          {/* Due Date */}
+          {/* REBUILT - Phase 4: New DatePicker Component */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Due Date
             </label>
-            <Input
-              type="date"
-              value={
-                form.dueDate && typeof form.dueDate === 'string'
-                  ? form.dueDate
-                  : ''
-              }
-              onChange={(e) => updateForm({ dueDate: e.target.value || null })}
+            <DatePicker
+              value={form.dueDate}
+              onChange={(date) => {
+                console.log('📅 TaskEditModal - Date changed:', date);
+                updateForm({ dueDate: date });
+              }}
+              placeholder="Select due date (optional)"
             />
           </div>
 

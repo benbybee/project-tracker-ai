@@ -317,6 +317,13 @@ export const tasksRouter = createTRPCRouter({
   create: protectedProcedure
     .input(TaskCreateSchema)
     .mutation(async ({ input, ctx }) => {
+      // 🔵 DUE DATE REBUILD - Enhanced logging
+      console.log('🔵 CREATE - Received input:', {
+        dueDate: input.dueDate,
+        dueDateType: typeof input.dueDate,
+        isDaily: input.isDaily,
+      });
+
       // Inherit role from project if none provided
       let roleId = input.roleId ?? null;
       if (!roleId) {
@@ -328,6 +335,12 @@ export const tasksRouter = createTRPCRouter({
         roleId = proj?.roleId ?? null;
       }
 
+      const dueDateValue = input.dueDate ? input.dueDate : null;
+      console.log('🔵 CREATE - Inserting with dueDate:', {
+        value: dueDateValue,
+        type: typeof dueDateValue,
+      });
+
       const [inserted] = await ctx.db
         .insert(tasks)
         .values({
@@ -338,11 +351,17 @@ export const tasksRouter = createTRPCRouter({
           description: input.description ?? '',
           status: input.status,
           // dueDate: allow null for "Add to Daily"
-          dueDate: input.dueDate ? input.dueDate : null,
+          dueDate: dueDateValue,
           isDaily: input.isDaily ?? false,
           priorityScore: input.priorityScore,
         })
         .returning();
+
+      console.log('🔵 CREATE - DB returned:', {
+        id: inserted.id,
+        dueDate: inserted.dueDate,
+        dueDateType: typeof inserted.dueDate,
+      });
 
       if (input.subtasks?.length) {
         await ctx.db.insert(subtasks).values(
@@ -375,7 +394,7 @@ export const tasksRouter = createTRPCRouter({
         },
       });
 
-      return {
+      const result = {
         ...inserted,
         createdAt: inserted.createdAt?.toISOString() ?? null,
         updatedAt: inserted.updatedAt?.toISOString() ?? null,
@@ -388,12 +407,27 @@ export const tasksRouter = createTRPCRouter({
           | '4'
           | undefined,
       };
+
+      console.log('🔵 CREATE - Returning to client:', {
+        dueDate: result.dueDate,
+        dueDateType: typeof result.dueDate,
+      });
+
+      return result;
     }),
 
   update: protectedProcedure
     .input(TaskUpdateSchema)
     .mutation(async ({ input, ctx }) => {
       const { id, ...patch } = input;
+
+      // 🟡 DUE DATE REBUILD - Enhanced logging
+      console.log('🟡 UPDATE - Received input:', {
+        id,
+        dueDate: patch.dueDate,
+        dueDateType: typeof patch.dueDate,
+        hasDueDateKey: 'dueDate' in patch,
+      });
 
       // Get current task state before updating
       const [currentTask] = await ctx.db
@@ -409,6 +443,11 @@ export const tasksRouter = createTRPCRouter({
         });
       }
 
+      console.log('🟡 UPDATE - Current task dueDate:', {
+        currentDueDate: currentTask.dueDate,
+        currentType: typeof currentTask.dueDate,
+      });
+
       const updateData: any = {};
       if (patch.title !== undefined) updateData.title = patch.title;
       if (patch.description !== undefined)
@@ -417,7 +456,13 @@ export const tasksRouter = createTRPCRouter({
       if (patch.priorityScore !== undefined)
         updateData.priorityScore = patch.priorityScore;
       if (patch.isDaily !== undefined) updateData.isDaily = patch.isDaily;
-      if ('dueDate' in patch) updateData.dueDate = patch.dueDate || null;
+      if ('dueDate' in patch) {
+        updateData.dueDate = patch.dueDate || null;
+        console.log('🟡 UPDATE - Setting dueDate to:', {
+          value: updateData.dueDate,
+          type: typeof updateData.dueDate,
+        });
+      }
       if (patch.roleId !== undefined) updateData.roleId = patch.roleId;
       if (patch.projectId !== undefined) updateData.projectId = patch.projectId;
 
@@ -426,6 +471,12 @@ export const tasksRouter = createTRPCRouter({
         .set(updateData)
         .where(and(eq(tasks.id, id), eq(tasks.userId, ctx.session.user.id)))
         .returning();
+
+      console.log('🟡 UPDATE - DB returned:', {
+        id: updated.id,
+        dueDate: updated.dueDate,
+        dueDateType: typeof updated.dueDate,
+      });
 
       // Track time if status changed
       if (patch.status !== undefined && patch.status !== currentTask.status) {
@@ -465,7 +516,7 @@ export const tasksRouter = createTRPCRouter({
         },
       });
 
-      return {
+      const result = {
         ...updated,
         createdAt: updated.createdAt?.toISOString() ?? null,
         updatedAt: updated.updatedAt?.toISOString() ?? null,
@@ -479,6 +530,13 @@ export const tasksRouter = createTRPCRouter({
           | '4'
           | undefined,
       };
+
+      console.log('🟡 UPDATE - Returning to client:', {
+        dueDate: result.dueDate,
+        dueDateType: typeof result.dueDate,
+      });
+
+      return result;
     }),
 
   reorder: protectedProcedure

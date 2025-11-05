@@ -26,6 +26,7 @@ import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
+    // ✅ RE-ENABLED - Phase 6: Due date functionality rebuilt
     // Verify cron secret to prevent unauthorized access
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;

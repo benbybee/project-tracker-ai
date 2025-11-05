@@ -161,6 +161,7 @@ export function TaskCard({
                 {task.description}
               </p>
             )}
+            {/* RE-ENABLED - Phase 5 */}
             {task.dueDate && (
               <div className="text-xs text-gray-500 mt-1">
                 Due {formatDate(task.dueDate)}

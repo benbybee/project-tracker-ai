@@ -7,7 +7,7 @@ import { Task, TaskStatus } from '@/types/task';
 import { TaskEditModal } from '@/components/tasks/TaskEditModal';
 import { CalendarDays, ChevronDown, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseDateAsLocal } from '@/lib/date-utils';
+import { parseDateAsLocal, formatDateShort } from '@/lib/date-utils';
 import { TaskStatusPicker } from '@/components/mobile/task-status-picker';
 import { trpc } from '@/lib/trpc';
 import { useRealtime } from '@/app/providers';
@@ -200,11 +200,20 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
               {typeof task.role === 'string' ? task.role : task.role.name}
             </span>
           )}
-          {task.dueDate && due && (
+          {/* RE-ENABLED - Phase 5 */}
+          {task.dueDate && (
             <span className="flex items-center gap-1 flex-shrink-0">
               <CalendarDays className="h-3 w-3" />
               <span className="whitespace-nowrap">
-                {due.toLocaleDateString()}
+                {(() => {
+                  // Handle Date objects returned by Drizzle ORM (runtime check)
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  if ((task.dueDate as any) instanceof Date) {
+                    return (task.dueDate as any as Date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                  }
+                  // Handle string dates
+                  return formatDateShort(task.dueDate);
+                })()}
               </span>
             </span>
           )}
