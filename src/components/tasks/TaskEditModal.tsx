@@ -49,7 +49,12 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
   // Update form when task prop changes
   useEffect(() => {
     if (open) {
-      setForm(task);
+      // Format date to YYYY-MM-DD for HTML5 date input
+      const formattedTask = {
+        ...task,
+        dueDate: task.dueDate || null,
+      };
+      setForm(formattedTask);
     }
   }, [task, open]);
 
@@ -206,7 +211,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
             </label>
             <Input
               type="date"
-              value={form.dueDate || ''}
+              value={form.dueDate && typeof form.dueDate === 'string' ? form.dueDate : ''}
               onChange={(e) => updateForm({ dueDate: e.target.value || null })}
             />
           </div>
