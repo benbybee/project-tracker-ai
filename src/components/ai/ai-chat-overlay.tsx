@@ -7,14 +7,12 @@ import { cn } from '@/lib/utils';
 interface AiChatOverlayProps {
   isOpen: boolean;
   onClose: () => void;
-  onMinimize?: () => void;
   className?: string;
 }
 
 export function AiChatOverlay({
   isOpen,
   onClose,
-  onMinimize,
   className = '',
 }: AiChatOverlayProps) {
   return (
@@ -33,12 +31,7 @@ export function AiChatOverlay({
             }}
             className={cn('fixed bottom-6 right-6 z-50', className)}
           >
-            <AiChatWidget
-              isOpen={isOpen}
-              onClose={onClose}
-              onMinimize={onMinimize}
-              isMobile={false}
-            />
+            <AiChatWidget isOpen={isOpen} onClose={onClose} isMobile={false} />
           </motion.div>
         </>
       )}

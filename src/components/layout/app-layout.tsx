@@ -97,11 +97,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Desktop Chat Overlay */}
       {!isMobile && (
-        <AiChatOverlay
-          isOpen={chatOpen}
-          onClose={handleCloseChat}
-          onMinimize={handleCloseChat}
-        />
+        <AiChatOverlay isOpen={chatOpen} onClose={handleCloseChat} />
       )}
 
       {/* Mobile Fullscreen Chat */}
