@@ -21,15 +21,6 @@ export function AiChatOverlay({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop (optional - click to close) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-          />
-
           {/* Chat Widget Container */}
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -41,8 +32,7 @@ export function AiChatOverlay({
               damping: 30,
             }}
             className={cn(
-              'fixed bottom-6 right-6 z-45',
-              'w-[400px] max-h-[600px]',
+              'fixed bottom-6 right-6 z-50',
               className
             )}
           >

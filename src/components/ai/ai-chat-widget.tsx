@@ -247,7 +247,7 @@ export function AiChatWidget({
       exit={{ opacity: 0, scale: 0.95 }}
       className={cn(
         'flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden',
-        isMobile ? 'h-full w-full' : 'h-[600px] w-[800px]',
+        isMobile ? 'h-full w-full' : 'h-[600px] w-[400px]',
         className
       )}
     >
@@ -305,8 +305,8 @@ export function AiChatWidget({
             animate={isMobile ? { x: 0 } : undefined}
             exit={isMobile ? { x: -300 } : undefined}
             className={cn(
-              'flex-shrink-0',
-              isMobile ? 'absolute inset-0 z-10 w-full' : 'w-64'
+              'flex-shrink-0 border-r border-slate-200 dark:border-slate-700',
+              isMobile ? 'absolute inset-0 z-10 w-full' : 'w-48'
             )}
           >
             <AiChatHistorySidebar
