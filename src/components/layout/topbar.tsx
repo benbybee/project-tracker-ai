@@ -1,6 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Keyboard, CheckSquare, FolderPlus, FileText, Menu } from 'lucide-react';
+import {
+  Keyboard,
+  CheckSquare,
+  FolderPlus,
+  FileText,
+  Menu,
+} from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TaskModal } from '@/components/tasks/TaskModal';
 import { NoteModal } from '@/components/notes/NoteModal';

@@ -28,7 +28,6 @@ interface ChatSession {
 interface AiChatWidgetProps {
   isOpen: boolean;
   onClose: () => void;
-  onMinimize?: () => void;
   isMobile?: boolean;
   className?: string;
 }
@@ -36,7 +35,6 @@ interface AiChatWidgetProps {
 export function AiChatWidget({
   isOpen,
   onClose,
-  onMinimize,
   isMobile = false,
   className = '',
 }: AiChatWidgetProps) {
@@ -61,6 +59,7 @@ export function AiChatWidget({
         setMessages([]);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Auto-scroll to bottom when messages change
@@ -261,7 +260,9 @@ export function AiChatWidget({
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setViewMode(viewMode === 'chat' ? 'history' : 'chat')}
+            onClick={() =>
+              setViewMode(viewMode === 'chat' ? 'history' : 'chat')
+            }
             className="p-2 rounded-lg hover:bg-white/20 transition-colors"
             aria-label={viewMode === 'chat' ? 'Chat History' : 'Back to Chat'}
           >
@@ -293,92 +294,94 @@ export function AiChatWidget({
         ) : (
           /* Chat View */
           <div className="flex flex-col h-full overflow-hidden">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-4">
-                  <Sparkles className="h-8 w-8 text-white" />
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-4">
+                    <Sparkles className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                    How can I help you today?
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
+                    I can help you manage tasks, create projects, analyze your
+                    productivity, and more.
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  How can I help you today?
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
-                  I can help you manage tasks, create projects, analyze your
-                  productivity, and more.
-                </p>
-              </div>
-            ) : (
-              <AnimatePresence>
-                {messages.map((message) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={cn(
-                      'flex gap-3',
-                      message.role === 'user' ? 'justify-end' : 'justify-start'
-                    )}
-                  >
-                    {message.role === 'assistant' && (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                    <div
+              ) : (
+                <AnimatePresence>
+                  {messages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
                       className={cn(
-                        'max-w-[80%] rounded-2xl px-4 py-3',
+                        'flex gap-3',
                         message.role === 'user'
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                          : 'bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100'
+                          ? 'justify-end'
+                          : 'justify-start'
                       )}
                     >
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                        {message.content}
-                      </p>
-                    </div>
-                    {message.role === 'user' && (
-                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      {message.role === 'assistant' && (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                      <div
+                        className={cn(
+                          'max-w-[80%] rounded-2xl px-4 py-3',
+                          message.role === 'user'
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                            : 'bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100'
+                        )}
+                      >
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                          {message.content}
+                        </p>
                       </div>
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            )}
+                      {message.role === 'user' && (
+                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
 
-            {isLoading && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex gap-3"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="h-4 w-4 text-white" />
-                </div>
-                <div className="bg-slate-100 dark:bg-slate-900 rounded-2xl px-4 py-3 flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-purple-500" />
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
-                    Thinking...
-                  </span>
-                </div>
-              </motion.div>
-            )}
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex gap-3"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="bg-slate-100 dark:bg-slate-900 rounded-2xl px-4 py-3 flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-purple-500" />
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      Thinking...
+                    </span>
+                  </div>
+                </motion.div>
+              )}
 
-            <div ref={messagesEndRef} />
-          </div>
+              <div ref={messagesEndRef} />
+            </div>
 
-          {/* Input Area */}
-          <div className="border-t border-slate-200 dark:border-slate-700 p-4">
-            <AiChatEnhancedInput
-              value={input}
-              onChange={setInput}
-              onSend={handleSend}
-              onParsedDataChange={setParsedData}
-              isLoading={isLoading}
-              placeholder="What can I help you with?"
-            />
-          </div>
+            {/* Input Area */}
+            <div className="border-t border-slate-200 dark:border-slate-700 p-4">
+              <AiChatEnhancedInput
+                value={input}
+                onChange={setInput}
+                onSend={handleSend}
+                onParsedDataChange={setParsedData}
+                isLoading={isLoading}
+                placeholder="What can I help you with?"
+              />
+            </div>
           </div>
         )}
       </div>
