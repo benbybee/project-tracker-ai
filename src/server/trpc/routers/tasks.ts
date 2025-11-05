@@ -239,6 +239,7 @@ export const tasksRouter = createTRPCRouter({
         createdAt: task.createdAt?.toISOString() ?? null,
         updatedAt: task.updatedAt?.toISOString() ?? null,
         blockedAt: task.blockedAt?.toISOString() ?? null,
+        dueDate: task.dueDate ?? null, // Explicitly return dueDate as string or null
         isDaily: task.isDaily ?? undefined,
         archived: task.archived ?? undefined,
         priorityScore: (task.priorityScore ?? undefined) as
@@ -302,6 +303,7 @@ export const tasksRouter = createTRPCRouter({
         createdAt: task.createdAt?.toISOString() ?? null,
         updatedAt: task.updatedAt?.toISOString() ?? null,
         blockedAt: task.blockedAt?.toISOString() ?? null,
+        dueDate: task.dueDate ?? null, // Explicitly return dueDate as string or null
         isDaily: task.isDaily ?? undefined,
         priorityScore: (task.priorityScore ?? undefined) as
           | '1'

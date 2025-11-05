@@ -135,7 +135,10 @@ export const dashboardRouter = createTRPCRouter({
         })),
         today: Number(todayTasks[0]?.count || 0),
         overdue: Number(overdueTasks[0]?.count || 0),
-        upcoming: upcomingTasks,
+        upcoming: upcomingTasks.map((task) => ({
+          ...task,
+          dueDate: task.dueDate ?? null, // Explicitly return dueDate as string or null
+        })),
       };
     }),
 });
