@@ -55,14 +55,14 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
         dueDate: task.dueDate,
         dueDateType: typeof task.dueDate,
       });
-      
+
       // Format date to YYYY-MM-DD for HTML5 date input
       const formattedTask = {
         ...task,
         dueDate: task.dueDate || null,
       };
       setForm(formattedTask);
-      
+
       console.log('📝 Form initialized with dueDate:', formattedTask.dueDate);
     }
   }, [task, open]);
@@ -97,7 +97,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
 
       console.log('✅ Task updated successfully:', {
         sent: { dueDate: form.dueDate },
-        received: { dueDate: updatedTask.dueDate }
+        received: { dueDate: updatedTask.dueDate },
       });
 
       // Wait for cache to invalidate and refetch
