@@ -30,6 +30,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
   const [form, setForm] = useState<Task>(task);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: projects } = trpc.projects.list.useQuery({});
@@ -46,9 +47,9 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     },
   });
 
-  // Update form when task prop changes
+  // Initialize form ONLY when modal opens, not on every task prop change
   useEffect(() => {
-    if (open) {
+    if (open && !isInitialized) {
       console.log('🔍 TaskEditModal opened with task:', {
         id: task.id,
         title: task.title,
@@ -62,13 +63,22 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
         dueDate: task.dueDate || null,
       };
       setForm(formattedTask);
+      setIsInitialized(true);
 
       console.log('📝 Form initialized with dueDate:', formattedTask.dueDate);
+    } else if (!open && isInitialized) {
+      // Reset initialization flag when modal closes
+      setIsInitialized(false);
     }
-  }, [task, open]);
+  }, [open, task, isInitialized]);
 
   const updateForm = (updates: Partial<Task>) => {
-    setForm((prev) => ({ ...prev, ...updates }));
+    console.log('📝 Form updating with:', updates);
+    setForm((prev) => {
+      const newForm = { ...prev, ...updates };
+      console.log('📝 New form state:', { dueDate: newForm.dueDate });
+      return newForm;
+    });
   };
 
   const handleSave = async () => {
