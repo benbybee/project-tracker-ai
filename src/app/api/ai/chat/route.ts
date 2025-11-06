@@ -1829,13 +1829,27 @@ export async function POST(req: Request) {
           ? `\n\nIMPORTANT: Include a markdown link in your response. Format: [View ${entityType}](${toolResult.data.url})`
           : '';
 
-        const followUpMessages = [
-          ...messages,
-          {
+        // Add system instruction to existing messages array
+        const systemInstruction = `When a tool result includes a URL, add a markdown link to your response. Format: [View {entity name}]({url}). Keep your response brief and action-focused.${linkInstruction}`;
+        
+        // Create properly typed system message
+        const systemMessage: OpenAI.Chat.Completions.ChatCompletionSystemMessageParam = {
+          role: 'system',
+          content: systemInstruction,
+        };
+
+        // Update the first message if it's a system message, otherwise prepend
+        const followUpMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+        if (messages[0]?.role === 'system') {
+          followUpMessages.push({
             role: 'system',
-            content: `When a tool result includes a URL, add a markdown link to your response. Format: [View {entity name}]({url}). Keep your response brief and action-focused.${linkInstruction}`,
-          },
-        ];
+            content: `${messages[0].content}\n\n${systemInstruction}`,
+          });
+          followUpMessages.push(...messages.slice(1));
+        } else {
+          followUpMessages.push(systemMessage);
+          followUpMessages.push(...messages);
+        }
 
         const followUpCompletion =
           await getOpenAIClient().chat.completions.create({
