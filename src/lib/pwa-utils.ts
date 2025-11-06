@@ -9,15 +9,20 @@
 export function isStandalone(): boolean {
   if (typeof window === 'undefined') return false;
 
-  // Chrome/Android
+  // Chrome/Android - uses display-mode media query
   const isDisplayStandalone = window.matchMedia(
     '(display-mode: standalone)'
   ).matches;
 
-  // iOS Safari
+  // iOS Safari - uses navigator.standalone (legacy but still needed)
   const isIOSStandalone = (window.navigator as any).standalone === true;
 
-  return isDisplayStandalone || isIOSStandalone;
+  // Additional check: window.matchMedia for iOS (newer iOS versions)
+  const isIOSDisplayMode = window.matchMedia(
+    '(display-mode: standalone)'
+  ).matches && isIOS();
+
+  return isDisplayStandalone || isIOSStandalone || isIOSDisplayMode;
 }
 
 /**
@@ -108,4 +113,56 @@ export function preventIOSBounce() {
     },
     { passive: false }
   );
+}
+
+/**
+ * Checks if redirects should be prevented (iOS standalone mode requirement)
+ * iOS Safari requires that the start_url doesn't redirect, or it will open in browser mode
+ */
+export function shouldPreventRedirects(): boolean {
+  return isIOSPWA();
+}
+
+/**
+ * Enhanced iOS detection that accounts for different iOS versions and devices
+ */
+export function isIOSDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const ua = navigator.userAgent.toLowerCase();
+  
+  // Check for iOS devices (iPhone, iPad, iPod)
+  const isIOSDevice = /iphone|ipad|ipod/.test(ua);
+  
+  // Exclude Windows Phone (which can have similar user agent strings)
+  const isNotWindowsPhone = !(window as any).MSStream;
+  
+  // Check for iOS Safari (not Chrome/Firefox on iOS)
+  const isIOSSafari = isIOSDevice && /safari/.test(ua) && !/crios|fxios/.test(ua);
+  
+  return (isIOSDevice || isIOSSafari) && isNotWindowsPhone;
+}
+
+/**
+ * Gets comprehensive PWA status information for debugging
+ */
+export function getPWAStatus() {
+  if (typeof window === 'undefined') {
+    return {
+      isStandalone: false,
+      isIOS: false,
+      isIOSPWA: false,
+      displayMode: 'browser' as const,
+      userAgent: 'server',
+    };
+  }
+
+  return {
+    isStandalone: isStandalone(),
+    isIOS: isIOS(),
+    isIOSPWA: isIOSPWA(),
+    displayMode: getDisplayMode(),
+    userAgent: navigator.userAgent,
+    shouldPreventRedirects: shouldPreventRedirects(),
+  };
 }

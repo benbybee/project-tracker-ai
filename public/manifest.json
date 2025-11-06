@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "/",
-  "start_url": "/?source=pwa",
+  "start_url": "/dashboard",
   "id": "/",
   "icons": [
     {

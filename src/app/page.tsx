@@ -1,29 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Home page - redirects to dashboard.
+ * Note: PWA launches go directly to /dashboard via manifest start_url,
+ * so this page is only hit for direct browser visits to the root URL.
+ */
 export default function Home() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Check if launched from PWA (standalone mode or from home screen)
-    const isPWA =
-      searchParams.get('source') === 'pwa' ||
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true; // iOS Safari
-
-    if (isPWA) {
-      // For PWA launches, use replace to avoid browser history issues
-      router.replace('/dashboard');
-    } else {
-      // For browser launches, redirect normally
-      router.replace('/dashboard');
-    }
-  }, [router, searchParams]);
+    // Redirect to dashboard for all browser visits to root
+    // PWA launches bypass this page entirely (start_url is /dashboard)
+    router.replace('/dashboard');
+  }, [router]);
 
   return (
     <main className="flex min-h-screen items-center justify-center">
