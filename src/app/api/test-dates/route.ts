@@ -79,17 +79,27 @@ export async function POST(req: Request) {
     });
 
     // Convert Date objects to YYYY-MM-DD strings if necessary
-    const insertedDateStr = inserted.dueDate
-      ? typeof inserted.dueDate === 'string'
-        ? inserted.dueDate
-        : inserted.dueDate.toISOString().split('T')[0]
-      : null;
+    const insertedDateStr = (() => {
+      if (!inserted.dueDate) return null;
+      if (typeof inserted.dueDate === 'string') {
+        return inserted.dueDate;
+      }
+      if (inserted.dueDate instanceof Date) {
+        return inserted.dueDate.toISOString().split('T')[0];
+      }
+      return null;
+    })();
 
-    const retrievedDateStr = retrieved.dueDate
-      ? typeof retrieved.dueDate === 'string'
-        ? retrieved.dueDate
-        : retrieved.dueDate.toISOString().split('T')[0]
-      : null;
+    const retrievedDateStr = (() => {
+      if (!retrieved.dueDate) return null;
+      if (typeof retrieved.dueDate === 'string') {
+        return retrieved.dueDate;
+      }
+      if (retrieved.dueDate instanceof Date) {
+        return retrieved.dueDate.toISOString().split('T')[0];
+      }
+      return null;
+    })();
 
     // Clean up - delete test task
     await db
