@@ -83,6 +83,12 @@ export default function RootLayout({
           content="black-translucent"
         />
         <meta name="apple-mobile-web-app-title" content="TaskTracker AI" />
+        {/* Apple Touch Icon - iOS requires this for home screen icon */}
+        <link
+          rel="apple-touch-icon"
+          href="/icons/apple-touch-icon.png"
+          sizes="180x180"
+        />
         <link
           rel="apple-touch-startup-image"
           href="/icons/apple-splash-2048-2732.png"

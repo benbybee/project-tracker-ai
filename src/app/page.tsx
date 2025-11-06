@@ -2,22 +2,31 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Home page - redirects to dashboard.
- * Note: PWA launches go directly to /dashboard via manifest start_url,
- * so this page is only hit for direct browser visits to the root URL.
+ * Home page - PWA entry point.
+ * This page must NOT redirect server-side for iOS PWA to work.
+ * It checks auth client-side and redirects accordingly.
  */
 export default function Home() {
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Redirect to dashboard for all browser visits to root
-    // PWA launches bypass this page entirely (start_url is /dashboard)
-    router.replace('/dashboard');
-  }, [router]);
+    // Wait for session to load, then redirect client-side
+    if (status === 'loading') return;
+
+    if (session?.user) {
+      // User is authenticated, go to dashboard
+      router.replace('/dashboard');
+    } else {
+      // User is not authenticated, go to sign-in
+      router.replace('/sign-in');
+    }
+  }, [router, session, status]);
 
   return (
     <main className="flex min-h-screen items-center justify-center">

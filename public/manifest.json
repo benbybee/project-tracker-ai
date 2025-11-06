@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "/",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "id": "/",
   "icons": [
     {
