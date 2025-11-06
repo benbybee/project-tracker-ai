@@ -85,7 +85,11 @@ export async function POST(req: Request) {
       if (typeof value === 'string') return value;
       // Handle Date objects (type assertion needed because TS doesn't know it could be Date)
       const dateValue = value as unknown;
-      if (dateValue && typeof dateValue === 'object' && 'toISOString' in dateValue) {
+      if (
+        dateValue &&
+        typeof dateValue === 'object' &&
+        'toISOString' in dateValue
+      ) {
         const date = dateValue as { toISOString: () => string };
         return date.toISOString().split('T')[0];
       }
