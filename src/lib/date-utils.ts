@@ -79,7 +79,9 @@ export function formatDate(
  * getRelativeDateText("2025-10-31") // { text: "In 2d", overdue: false }
  * getRelativeDateText(new Date("2025-10-31")) // { text: "In 2d", overdue: false }
  */
-export function getRelativeDateText(dateStr: string | Date | null | undefined): {
+export function getRelativeDateText(
+  dateStr: string | Date | null | undefined
+): {
   text: string;
   overdue: boolean;
 } | null {
@@ -149,7 +151,9 @@ export function isOverdue(dateStr: string | Date | null | undefined): boolean {
  * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @returns Formatted date string
  */
-export function formatDateShort(dateStr: string | Date | null | undefined): string {
+export function formatDateShort(
+  dateStr: string | Date | null | undefined
+): string {
   return formatDate(dateStr, { month: 'short', day: 'numeric' });
 }
 
@@ -159,7 +163,9 @@ export function formatDateShort(dateStr: string | Date | null | undefined): stri
  * @param dateStr - Date string in YYYY-MM-DD format or Date object
  * @returns Formatted date string
  */
-export function formatDateLong(dateStr: string | Date | null | undefined): string {
+export function formatDateLong(
+  dateStr: string | Date | null | undefined
+): string {
   return formatDate(dateStr, {
     month: 'long',
     day: 'numeric',

@@ -209,7 +209,10 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
                   // Handle Date objects returned by Drizzle ORM (runtime check)
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   if ((task.dueDate as any) instanceof Date) {
-                    return (task.dueDate as any as Date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                    return (task.dueDate as any as Date).toLocaleDateString(
+                      undefined,
+                      { month: 'short', day: 'numeric' }
+                    );
                   }
                   // Handle string dates
                   return formatDateShort(task.dueDate);

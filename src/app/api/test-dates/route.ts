@@ -72,50 +72,50 @@ export async function POST(req: Request) {
       .from(tasks)
       .where(and(eq(tasks.id, inserted.id), eq(tasks.userId, session.user.id)));
 
-  console.log('🧪 TEST: Retrieved task:', {
-    id: retrieved.id,
-    dueDate: retrieved.dueDate,
-    type: typeof retrieved.dueDate,
-  });
+    console.log('🧪 TEST: Retrieved task:', {
+      id: retrieved.id,
+      dueDate: retrieved.dueDate,
+      type: typeof retrieved.dueDate,
+    });
 
-  // Convert Date objects to YYYY-MM-DD strings if necessary
-  const insertedDateStr = inserted.dueDate
-    ? typeof inserted.dueDate === 'string'
-      ? inserted.dueDate
-      : inserted.dueDate.toISOString().split('T')[0]
-    : null;
+    // Convert Date objects to YYYY-MM-DD strings if necessary
+    const insertedDateStr = inserted.dueDate
+      ? typeof inserted.dueDate === 'string'
+        ? inserted.dueDate
+        : inserted.dueDate.toISOString().split('T')[0]
+      : null;
 
-  const retrievedDateStr = retrieved.dueDate
-    ? typeof retrieved.dueDate === 'string'
-      ? retrieved.dueDate
-      : retrieved.dueDate.toISOString().split('T')[0]
-    : null;
+    const retrievedDateStr = retrieved.dueDate
+      ? typeof retrieved.dueDate === 'string'
+        ? retrieved.dueDate
+        : retrieved.dueDate.toISOString().split('T')[0]
+      : null;
 
-  // Clean up - delete test task
-  await db
-    .delete(tasks)
-    .where(and(eq(tasks.id, inserted.id), eq(tasks.userId, session.user.id)));
+    // Clean up - delete test task
+    await db
+      .delete(tasks)
+      .where(and(eq(tasks.id, inserted.id), eq(tasks.userId, session.user.id)));
 
-  console.log('🧪 TEST: Test task deleted');
+    console.log('🧪 TEST: Test task deleted');
 
-  // Compare values
-  const match = dueDate === retrievedDateStr;
+    // Compare values
+    const match = dueDate === retrievedDateStr;
 
-  const result = {
-    success: true,
-    sent: dueDate,
-    sentType: typeof dueDate,
-    insertedValue: insertedDateStr,
-    insertedType: typeof insertedDateStr,
-    insertedRaw: inserted.dueDate,
-    retrievedValue: retrievedDateStr,
-    retrievedType: typeof retrievedDateStr,
-    retrievedRaw: retrieved.dueDate,
-    match: match,
-    message: match
-      ? '✅ Date round-trip successful!'
-      : '❌ Date mismatch detected!',
-  };
+    const result = {
+      success: true,
+      sent: dueDate,
+      sentType: typeof dueDate,
+      insertedValue: insertedDateStr,
+      insertedType: typeof insertedDateStr,
+      insertedRaw: inserted.dueDate,
+      retrievedValue: retrievedDateStr,
+      retrievedType: typeof retrievedDateStr,
+      retrievedRaw: retrieved.dueDate,
+      match: match,
+      message: match
+        ? '✅ Date round-trip successful!'
+        : '❌ Date mismatch detected!',
+    };
 
     console.log('🧪 TEST: Result:', result);
 

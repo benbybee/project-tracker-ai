@@ -31,13 +31,15 @@ export type CalendarProps = {
  * Supports single date selection with month navigation.
  */
 export function Calendar({
-  mode,
+  mode: _mode,
   selected,
   onSelect,
-  initialFocus,
+  initialFocus: _initialFocus,
   className,
 }: CalendarProps) {
-  const [currentMonth, setCurrentMonth] = React.useState(selected || new Date());
+  const [currentMonth, setCurrentMonth] = React.useState(
+    selected || new Date()
+  );
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -132,4 +134,3 @@ export function Calendar({
     </div>
   );
 }
-

@@ -36,8 +36,9 @@ export default function TestDatesPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <h2 className="font-semibold text-blue-900 mb-2">Test Purpose</h2>
         <p className="text-blue-800 text-sm">
-          This page tests the database round-trip for due dates. It creates a task with a
-          specific date, immediately reads it back, and verifies the date matches.
+          This page tests the database round-trip for due dates. It creates a
+          task with a specific date, immediately reads it back, and verifies the
+          date matches.
         </p>
       </div>
 
@@ -92,10 +93,12 @@ export default function TestDatesPage() {
           <li>API creates a temporary task with this date</li>
           <li>API immediately reads the task back from database</li>
           <li>API deletes the test task</li>
-          <li>Returns: sent value, inserted value, retrieved value, and match status</li>
+          <li>
+            Returns: sent value, inserted value, retrieved value, and match
+            status
+          </li>
         </ol>
       </div>
     </div>
   );
 }
-
