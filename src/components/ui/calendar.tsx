@@ -31,10 +31,10 @@ export type CalendarProps = {
  * Supports single date selection with month navigation.
  */
 export function Calendar({
-  mode: _mode,
+  mode: _mode, // eslint-disable-line @typescript-eslint/no-unused-vars
   selected,
   onSelect,
-  initialFocus: _initialFocus,
+  initialFocus: _initialFocus, // eslint-disable-line @typescript-eslint/no-unused-vars
   className,
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(
