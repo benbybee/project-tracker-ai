@@ -10,10 +10,13 @@ import {
   roles,
   aiChatSessions,
   aiChatMessages,
+  subtasks,
 } from '@/server/db/schema';
 import { eq, and, gte, sql, ilike, or, inArray } from 'drizzle-orm';
 import { patternAnalyzer } from '@/lib/ai/pattern-analyzer';
 import { predictiveEngine } from '@/lib/ai/predictive-engine';
+import { upsertEmbedding } from '@/server/search/upsertEmbedding';
+import { logProjectActivity, logTaskActivity } from '@/lib/activity-logger';
 
 const getOpenAIClient = () => {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -35,7 +38,7 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'create_project',
-      description: 'Create a new project in the system',
+      description: 'Create a new project in the system. EXECUTE IMMEDIATELY when /projectname is provided. Only ask for type if missing.',
       parameters: {
         type: 'object',
         properties: {
@@ -70,7 +73,7 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'update_project',
-      description: 'Update an existing project',
+      description: 'Update an existing project. EXECUTE IMMEDIATELY when @project tag is provided.',
       parameters: {
         type: 'object',
         properties: {
@@ -120,7 +123,7 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'create_task',
-      description: 'Create a new task in a project',
+      description: 'Create a new task in a project. EXECUTE IMMEDIATELY when @project and /task tags are provided.',
       parameters: {
         type: 'object',
         properties: {
@@ -161,7 +164,7 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'update_task',
-      description: 'Update an existing task',
+      description: 'Update an existing task. EXECUTE IMMEDIATELY when /task tag is provided.',
       parameters: {
         type: 'object',
         properties: {
@@ -531,20 +534,47 @@ async function executeTool(
           roleId = roleMatches[0].id;
         }
 
-        // Return data for confirmation
+        // Execute immediately - create project
+        const [project] = await db
+          .insert(projects)
+          .values({
+            userId,
+            name: args.name,
+            type: args.type,
+            description: args.description || '',
+            roleId: roleId || null,
+            domain: args.domain || null,
+          })
+          .returning();
+
+        // Create embedding
+        await upsertEmbedding({
+          entityType: 'project',
+          entityId: project.id,
+          text: [
+            project.name,
+            project.description || '',
+            project.domain || '',
+          ].join('\n'),
+        });
+
+        // Log activity
+        await logProjectActivity({
+          userId,
+          projectId: project.id,
+          projectName: project.name,
+          action: 'created',
+          payload: { type: project.type },
+        });
+
         return {
           success: true,
-          needsConfirmation: true,
-          confirmationData: {
-            action: 'create_project',
-            details: {
-              name: args.name,
-              type: args.type,
-              description: args.description || '',
-              roleId,
-              roleName: args.roleName || null,
-              domain: args.domain || null,
-            },
+          data: {
+            id: project.id,
+            name: project.name,
+            type: project.type,
+            description: project.description,
+            message: `Project "${project.name}" created successfully!`,
           },
         };
       }
@@ -578,14 +608,51 @@ async function executeTool(
         if (args.domain !== undefined) updates.domain = args.domain;
         if (args.pinned !== undefined) updates.pinned = args.pinned;
 
+        // Execute immediately - update project
+        const [updatedProject] = await db
+          .update(projects)
+          .set({
+            ...updates,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(projects.id, project.id), eq(projects.userId, userId))
+          )
+          .returning();
+
+        if (!updatedProject) {
+          return {
+            success: false,
+            error: 'Project not found',
+          };
+        }
+
+        // Update embedding
+        await upsertEmbedding({
+          entityType: 'project',
+          entityId: updatedProject.id,
+          text: [
+            updatedProject.name,
+            updatedProject.description || '',
+            updatedProject.domain || '',
+          ].join('\n'),
+        });
+
+        // Log activity
+        await logProjectActivity({
+          userId,
+          projectId: updatedProject.id,
+          projectName: updatedProject.name,
+          action: 'updated',
+          payload: updates,
+        });
+
         return {
           success: true,
-          needsConfirmation: true,
-          confirmationData: {
-            action: 'update_project',
-            projectId: project.id,
-            projectName: project.name,
-            details: updates,
+          data: {
+            id: updatedProject.id,
+            name: updatedProject.name,
+            message: `Project "${updatedProject.name}" updated successfully!`,
           },
         };
       }
@@ -644,20 +711,48 @@ async function executeTool(
           };
         }
 
+        // Execute immediately - create task
+        const [task] = await db
+          .insert(tasks)
+          .values({
+            userId,
+            projectId: projectMatches[0].id,
+            title: args.title,
+            description: args.description || '',
+            status: args.status || 'not_started',
+            dueDate: args.dueDate || null,
+            priorityScore: args.priorityScore || '2',
+            isDaily: false,
+          })
+          .returning();
+
+        // Create embedding
+        await upsertEmbedding({
+          entityType: 'task',
+          entityId: task.id,
+          text: [task.title, task.description || ''].join('\n'),
+        });
+
+        // Log activity
+        await logTaskActivity({
+          userId,
+          taskId: task.id,
+          taskTitle: task.title,
+          action: 'created',
+          projectId: task.projectId,
+          payload: {
+            status: task.status,
+            priorityScore: task.priorityScore,
+          },
+        });
+
         return {
           success: true,
-          needsConfirmation: true,
-          confirmationData: {
-            action: 'create_task',
-            projectId: projectMatches[0].id,
+          data: {
+            id: task.id,
+            title: task.title,
             projectName: projectMatches[0].name,
-            details: {
-              title: args.title,
-              description: args.description || '',
-              dueDate: args.dueDate || null,
-              priorityScore: args.priorityScore || '2',
-              status: args.status || 'not_started',
-            },
+            message: `Task "${task.title}" created successfully in project "${projectMatches[0].name}"!`,
           },
         };
       }
@@ -693,14 +788,46 @@ async function executeTool(
         if (args.priorityScore) updates.priorityScore = args.priorityScore;
         if (args.status) updates.status = args.status;
 
+        // Execute immediately - update task
+        const [updatedTask] = await db
+          .update(tasks)
+          .set({
+            ...updates,
+            updatedAt: new Date(),
+          })
+          .where(and(eq(tasks.id, task.id), eq(tasks.userId, userId)))
+          .returning();
+
+        if (!updatedTask) {
+          return {
+            success: false,
+            error: 'Task not found',
+          };
+        }
+
+        // Update embedding
+        await upsertEmbedding({
+          entityType: 'task',
+          entityId: updatedTask.id,
+          text: [updatedTask.title, updatedTask.description || ''].join('\n'),
+        });
+
+        // Log activity
+        await logTaskActivity({
+          userId,
+          taskId: updatedTask.id,
+          taskTitle: updatedTask.title,
+          action: 'updated',
+          projectId: updatedTask.projectId,
+          payload: updates,
+        });
+
         return {
           success: true,
-          needsConfirmation: true,
-          confirmationData: {
-            action: 'update_task',
-            taskId: task.id,
-            taskTitle: task.title,
-            details: updates,
+          data: {
+            id: updatedTask.id,
+            title: updatedTask.title,
+            message: `Task "${updatedTask.title}" updated successfully!`,
           },
         };
       }
@@ -740,15 +867,23 @@ async function executeTool(
       }
 
       case 'create_role': {
+        // Execute immediately - create role
+        const [role] = await db
+          .insert(roles)
+          .values({
+            userId,
+            name: args.name,
+            color: args.color,
+          })
+          .returning();
+
         return {
           success: true,
-          needsConfirmation: true,
-          confirmationData: {
-            action: 'create_role',
-            details: {
-              name: args.name,
-              color: args.color,
-            },
+          data: {
+            id: role.id,
+            name: role.name,
+            color: role.color,
+            message: `Role "${role.name}" created successfully!`,
           },
         };
       }
@@ -776,14 +911,30 @@ async function executeTool(
         if (args.name) updates.name = args.name;
         if (args.color) updates.color = args.color;
 
+        // Execute immediately - update role
+        const [updatedRole] = await db
+          .update(roles)
+          .set({
+            ...updates,
+            updatedAt: new Date(),
+          })
+          .where(and(eq(roles.id, role.id), eq(roles.userId, userId)))
+          .returning();
+
+        if (!updatedRole) {
+          return {
+            success: false,
+            error: 'Role not found',
+          };
+        }
+
         return {
           success: true,
-          needsConfirmation: true,
-          confirmationData: {
-            action: 'update_role',
-            roleId: role.id,
-            roleName: role.name,
-            details: updates,
+          data: {
+            id: updatedRole.id,
+            name: updatedRole.name,
+            color: updatedRole.color,
+            message: `Role "${updatedRole.name}" updated successfully!`,
           },
         };
       }
@@ -956,13 +1107,19 @@ export async function POST(req: Request) {
       }
 
       tagContext +=
-        '\nIMPORTANT: The user has provided structured context above. Use this information when calling tools to avoid asking unnecessary follow-up questions. For example:\n';
+        '\nCRITICAL EXECUTION RULES:\n';
       tagContext +=
-        '- If @project is tagged, use that project ID/name directly\n';
-      tagContext += '- If /task is provided, use that as the task title\n';
+        '1. The user has provided structured commands using @ and / syntax. This is a DIRECT COMMAND, not a request for information.\n';
       tagContext +=
-        '- If /priority is provided, use the corresponding priorityScore\n';
-      tagContext += '- Pre-populate tool parameters with this data\n';
+        '2. Extract the values from tags above and call the appropriate tool IMMEDIATELY.\n';
+      tagContext +=
+        '3. Do NOT ask for confirmation. Do NOT ask for additional information. Do NOT provide opinions.\n';
+      tagContext +=
+        '4. If a required field is missing (e.g., project type for create_project), ONLY THEN ask for that specific field.\n';
+      tagContext +=
+        '5. Example: If you see "Task Title: /task \\"testing\\"" and "Projects: @Summit", call create_task(title="testing", projectName="Summit") NOW.\n';
+      tagContext +=
+        '\nEXECUTE IMMEDIATELY. NO CONFIRMATION. NO OPINIONS. JUST EXECUTE.\n';
       tagContext += '--- END TAGGED CONTEXT ---\n';
 
       systemPrompt += tagContext;
@@ -1058,12 +1215,12 @@ export async function POST(req: Request) {
         });
       }
 
-      // If tool succeeded without confirmation (list operations), include result
-      if (toolResult.success) {
+      // If tool succeeded without confirmation (immediate execution), include result
+      if (toolResult.success && !toolResult.needsConfirmation) {
         // Add tool response to conversation and get AI's interpretation
         messages.push({
           role: 'assistant',
-          content: responseMessage.content,
+          content: responseMessage.content || '',
           tool_calls: [toolCall],
         });
 
@@ -1073,18 +1230,18 @@ export async function POST(req: Request) {
           tool_call_id: toolCall.id,
         });
 
-        // Get AI's interpretation of the tool result
+        // Get AI's interpretation of the tool result - keep it brief
         const followUpCompletion =
           await getOpenAIClient().chat.completions.create({
             model: 'gpt-4o-mini',
             messages,
-            temperature: 0.7,
-            max_tokens: 1000,
+            temperature: 0.3,
+            max_tokens: 200,
           });
 
         const finalResponse =
           followUpCompletion.choices[0]?.message?.content ||
-          JSON.stringify(toolResult.data) ||
+          toolResult.data?.message ||
           'Operation completed successfully.';
 
         // Save assistant response to database
@@ -1105,6 +1262,7 @@ export async function POST(req: Request) {
           message: finalResponse,
           context: contextData,
           toolExecuted: toolName,
+          toolResult: toolResult.data,
           sessionId: chatSessionId,
         });
       }
@@ -1446,19 +1604,20 @@ WEEKLY FORECAST:
 
 PROJECTS: ${data.projectCount} total
 
-AVAILABLE ACTIONS:
-You can perform actions on behalf of the user using the available tools. When the user requests an action:
-1. Gather any missing required information by asking follow-up questions
-2. Use natural language references (project names, task titles, etc.) - you don't need IDs
-3. Be conversational when gathering data ("What type of project?" instead of "type parameter required")
-4. Once you have all required info, call the appropriate tool
+EXECUTION RULES:
+1. If user provides @project or /task or /command tags → EXECUTE IMMEDIATELY. No confirmation, no opinions, just execute.
+2. Only ask for clarification when genuinely missing REQUIRED information (e.g., project type when creating a project).
+3. Creates and updates execute immediately. Only deletes require confirmation.
+4. Do NOT provide opinions, suggestions, or feedback unless explicitly asked. Just execute the command.
+5. When tagged context is provided below, extract values and call the tool directly. No questions.
 
 Examples:
-- "Create a project called Website Redesign" → Ask for type (general/website), then create
-- "Update the Marketing project to add domain example.com" → Find project by name, then update
-- "Delete the old task about documentation" → Find task by fuzzy title match, confirm, then delete
+- "create a /task testing for @summit" → Call create_task(title="testing", projectName="summit") IMMEDIATELY
+- "create @MyProject" → Ask: "What type of project? (general or website)" - this is missing required info
+- "update /task fix bug status to completed" → Call update_task IMMEDIATELY
+- "delete /task old task" → Request confirmation (deletes always need confirmation)
 
-Provide helpful, actionable insights based on this data. Be conversational but precise. Use specific numbers from the data.`;
+Provide helpful, actionable insights based on this data when asked. Use specific numbers from the data.`;
 }
 
 function buildProjectSystemPrompt(data: any): string {
@@ -1491,18 +1650,19 @@ Your role is to:
 5. Answer questions about the project
 6. Create, update, or manage tasks and projects when requested
 
-AVAILABLE ACTIONS:
-You can create, update, and delete tasks and projects. When the user requests an action:
-- Gather missing information conversationally
-- Use natural names (no IDs needed)
-- Be helpful and proactive
+EXECUTION RULES:
+1. If user provides @project or /task or /command tags → EXECUTE IMMEDIATELY. No confirmation, no opinions, just execute.
+2. Only ask for clarification when genuinely missing REQUIRED information.
+3. Creates and updates execute immediately. Only deletes require confirmation.
+4. Do NOT provide opinions, suggestions, or feedback unless explicitly asked. Just execute the command.
+5. When tagged context is provided below, extract values and call the tool directly. No questions.
 
 Examples:
-- "Add a task for updating the homepage" → Create task in this project
-- "Mark the design task as completed" → Update task status
-- "Delete the old meeting notes task" → Find and delete the task
+- "create a /task testing for @summit" → Call create_task(title="testing", projectName="summit") IMMEDIATELY
+- "update /task fix bug status to completed" → Call update_task IMMEDIATELY
+- "delete /task old task" → Request confirmation (deletes always need confirmation)
 
-Be concise, actionable, and helpful. Use data from the project context above.`;
+Be concise and execute commands directly. Use data from the project context above.`;
 }
 
 function buildGeneralSystemPrompt(data: any): string {
@@ -1526,19 +1686,18 @@ CAPABILITIES:
 - Offer strategic advice on time management
 - Create, update, and delete projects, tasks, and roles
 
-TAKING ACTIONS:
-When the user asks you to do something (create, update, delete):
-1. Ask follow-up questions to gather any missing required information
-2. Be conversational and helpful ("What type of project is this?" not "Missing type parameter")
-3. Use the project/task/role names provided - you don't need IDs
-4. Once you have all info, use the appropriate tool
-5. The system will ask the user to confirm before executing
+EXECUTION RULES:
+1. If user provides @project or /task or /command tags → EXECUTE IMMEDIATELY. No confirmation, no opinions, just execute.
+2. Only ask for clarification when genuinely missing REQUIRED information (e.g., project type when creating a project).
+3. Creates and updates execute immediately. Only deletes require confirmation.
+4. Do NOT provide opinions, suggestions, or feedback unless explicitly asked. Just execute the command.
+5. When tagged context is provided below, extract values and call the tool directly. No questions.
 
 Examples:
-- User: "Create a project for me" → You: "I'd be happy to create a project! What would you like to call it, and should it be a general project or a website project?"
-- User: "Add a task to the Marketing project" → You: "What should the task be called?"
-- User: "Update the homepage task to high priority" → Use update_task with taskTitle="homepage", priorityScore="3"
-- User: "Delete the old project" → You: "Which project would you like to delete?" or use fuzzy match if clear from context
+- "create a /task testing for @summit" → Call create_task(title="testing", projectName="summit") IMMEDIATELY
+- "create @MyProject" → Ask: "What type of project? (general or website)" - this is missing required info
+- "update /task fix bug status to completed" → Call update_task IMMEDIATELY
+- "delete /task old task" → Request confirmation (deletes always need confirmation)
 
-Be conversational, actionable, and data-driven. Help the user stay productive and organized.`;
+Execute commands directly. Use the project/task/role names provided - you don't need IDs.`;
 }
