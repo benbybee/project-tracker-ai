@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import {
   Send,
   Sparkles,
@@ -140,6 +141,7 @@ export function UnifiedAiChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const quickPrompts = getQuickPromptsForContext(context);
 
@@ -190,6 +192,22 @@ export function UnifiedAiChat({
         responseText = data.message || data.response;
         needsConfirmation = data.needsConfirmation || false;
         confirmData = data.confirmationData || null;
+
+        // Handle navigation if present
+        if (data.navigation && data.navigation.url) {
+          // Show brief toast
+          toast({
+            title: 'Navigating...',
+            description:
+              data.navigation.message ||
+              `Opening ${data.navigation.type || 'page'}...`,
+          });
+
+          // Navigate after a brief delay to allow message to be displayed
+          setTimeout(() => {
+            router.push(data.navigation.url);
+          }, 500);
+        }
       }
 
       const assistantMessage: Message = {

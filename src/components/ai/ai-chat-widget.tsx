@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, X, Sparkles, User, Menu } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { AiChatHistorySidebar } from './ai-chat-history-sidebar';
 import { AiChatEnhancedInput } from './ai-chat-enhanced-input';
@@ -49,6 +50,7 @@ export function AiChatWidget({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   // Load sessions on mount and ensure we start in chat mode
   useEffect(() => {
@@ -210,6 +212,22 @@ export function AiChatWidget({
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Handle navigation if present
+      if (data.navigation && data.navigation.url) {
+        // Show brief toast
+        toast({
+          title: 'Navigating...',
+          description:
+            data.navigation.message ||
+            `Opening ${data.navigation.type || 'page'}...`,
+        });
+
+        // Navigate after a brief delay to allow message to be displayed
+        setTimeout(() => {
+          router.push(data.navigation.url);
+        }, 500);
+      }
 
       // Update session ID if this was a new chat
       if (!currentSessionId && data.sessionId) {

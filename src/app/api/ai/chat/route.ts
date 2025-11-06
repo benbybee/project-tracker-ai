@@ -457,6 +457,47 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'navigate_to',
+      description:
+        'Navigate to a page or entity in the application. Use this when user asks to "open", "show", "go to", or "view" something.',
+      parameters: {
+        type: 'object',
+        properties: {
+          target: {
+            type: 'string',
+            enum: [
+              'project',
+              'task',
+              'note',
+              'notes',
+              'projects',
+              'dashboard',
+              'board',
+              'analytics',
+            ],
+            description: 'Type of target to navigate to',
+          },
+          projectName: {
+            type: 'string',
+            description:
+              'Project name if navigating to a project (will be matched)',
+          },
+          taskTitle: {
+            type: 'string',
+            description: 'Task title if navigating to a task (will be matched)',
+          },
+          noteTitle: {
+            type: 'string',
+            description: 'Note title if navigating to a note (will be matched)',
+          },
+        },
+        required: ['target'],
+      },
+    },
+  },
 ];
 
 // Entity resolution functions for fuzzy matching by name
@@ -717,6 +758,7 @@ async function executeTool(
             name: project.name,
             type: project.type,
             description: project.description,
+            url: `/projects/${project.id}`,
             message: `Project "${project.name}" created successfully!`,
           },
         };
@@ -893,6 +935,7 @@ async function executeTool(
             id: task.id,
             title: task.title,
             projectName: projectMatches[0].name,
+            url: `/projects/${task.projectId}`,
             message: `Task "${task.title}" created successfully in project "${projectMatches[0].name}"!`,
           },
         };
@@ -1199,6 +1242,7 @@ async function executeTool(
             id: newNote.id,
             title: newNote.title,
             projectName: projectMatches[0].name,
+            url: `/projects/${newNote.projectId}`,
             message: `Note "${newNote.title}" created successfully in project "${projectMatches[0].name}"!`,
           },
         };
@@ -1320,6 +1364,183 @@ async function executeTool(
             noteId: note.id,
             noteTitle: note.title,
           },
+        };
+      }
+
+      case 'navigate_to': {
+        // Handle page-level navigation
+        if (args.target === 'notes') {
+          return {
+            success: true,
+            data: {
+              message: 'Navigating to notes page...',
+            },
+            navigation: {
+              type: 'page',
+              url: '/notes',
+            },
+          };
+        }
+
+        if (args.target === 'projects') {
+          return {
+            success: true,
+            data: {
+              message: 'Navigating to projects page...',
+            },
+            navigation: {
+              type: 'page',
+              url: '/projects',
+            },
+          };
+        }
+
+        if (args.target === 'dashboard') {
+          return {
+            success: true,
+            data: {
+              message: 'Navigating to dashboard...',
+            },
+            navigation: {
+              type: 'page',
+              url: '/',
+            },
+          };
+        }
+
+        if (args.target === 'board') {
+          return {
+            success: true,
+            data: {
+              message: 'Navigating to board...',
+            },
+            navigation: {
+              type: 'page',
+              url: '/board',
+            },
+          };
+        }
+
+        if (args.target === 'analytics') {
+          return {
+            success: true,
+            data: {
+              message: 'Navigating to analytics...',
+            },
+            navigation: {
+              type: 'page',
+              url: '/analytics',
+            },
+          };
+        }
+
+        // Handle project navigation
+        if (args.target === 'project' && args.projectName) {
+          const projectMatches = await findProjectByName(
+            userId,
+            args.projectName
+          );
+
+          if (projectMatches.length === 0) {
+            return {
+              success: false,
+              error: `No project found matching "${args.projectName}"`,
+            };
+          }
+
+          if (projectMatches.length > 1) {
+            return {
+              success: false,
+              error: `Multiple projects match "${args.projectName}": ${projectMatches.map((p) => p.name).join(', ')}. Please be more specific.`,
+            };
+          }
+
+          return {
+            success: true,
+            data: {
+              message: `Opening project "${projectMatches[0].name}"...`,
+            },
+            navigation: {
+              type: 'project',
+              url: `/projects/${projectMatches[0].id}`,
+              projectName: projectMatches[0].name,
+            },
+          };
+        }
+
+        // Handle task navigation (tasks are shown on project pages)
+        if (args.target === 'task' && args.taskTitle) {
+          const taskMatches = await findTaskByTitle(
+            userId,
+            args.taskTitle,
+            args.projectName
+          );
+
+          if (taskMatches.length === 0) {
+            return {
+              success: false,
+              error: `No task found matching "${args.taskTitle}"`,
+            };
+          }
+
+          if (taskMatches.length > 1) {
+            return {
+              success: false,
+              error: `Multiple tasks match "${args.taskTitle}": ${taskMatches.map((t) => t.title).join(', ')}. Please be more specific or provide the project name.`,
+            };
+          }
+
+          return {
+            success: true,
+            data: {
+              message: `Opening task "${taskMatches[0].title}"...`,
+            },
+            navigation: {
+              type: 'task',
+              url: `/projects/${taskMatches[0].projectId}`,
+              taskTitle: taskMatches[0].title,
+            },
+          };
+        }
+
+        // Handle note navigation (notes are shown on project pages)
+        if (args.target === 'note' && args.noteTitle) {
+          const noteMatches = await findNoteByTitle(
+            userId,
+            args.noteTitle,
+            args.projectName
+          );
+
+          if (noteMatches.length === 0) {
+            return {
+              success: false,
+              error: `No note found matching "${args.noteTitle}"`,
+            };
+          }
+
+          if (noteMatches.length > 1) {
+            return {
+              success: false,
+              error: `Multiple notes match "${args.noteTitle}": ${noteMatches.map((n) => n.title).join(', ')}. Please be more specific or provide the project name.`,
+            };
+          }
+
+          return {
+            success: true,
+            data: {
+              message: `Opening note "${noteMatches[0].title}"...`,
+            },
+            navigation: {
+              type: 'note',
+              url: `/projects/${noteMatches[0].projectId}`,
+              noteTitle: noteMatches[0].title,
+            },
+          };
+        }
+
+        return {
+          success: false,
+          error: 'Invalid navigation target or missing required parameters',
         };
       }
 
@@ -1586,10 +1807,32 @@ export async function POST(req: Request) {
         });
 
         // Get AI's interpretation of the tool result - keep it brief
+        // Include instruction to add markdown links if URL is provided
+        const hasUrl = toolResult.data?.url;
+        const entityType = toolName.includes('project')
+          ? 'project'
+          : toolName.includes('task')
+            ? 'task'
+            : toolName.includes('note')
+              ? 'note'
+              : 'item';
+
+        const linkInstruction = hasUrl
+          ? `\n\nIMPORTANT: Include a markdown link in your response. Format: [View ${entityType}](${toolResult.data.url})`
+          : '';
+
+        const followUpMessages = [
+          ...messages,
+          {
+            role: 'system',
+            content: `When a tool result includes a URL, add a markdown link to your response. Format: [View {entity name}]({url}). Keep your response brief and action-focused.${linkInstruction}`,
+          },
+        ];
+
         const followUpCompletion =
           await getOpenAIClient().chat.completions.create({
             model: 'gpt-4o-mini',
-            messages,
+            messages: followUpMessages,
             temperature: 0.3,
             max_tokens: 200,
           });
@@ -1618,6 +1861,7 @@ export async function POST(req: Request) {
           context: contextData,
           toolExecuted: toolName,
           toolResult: toolResult.data,
+          navigation: toolResult.navigation,
           sessionId: chatSessionId,
         });
       }
@@ -1971,6 +2215,11 @@ Examples:
 - "create @MyProject" → Ask: "What type of project? (general or website)" - this is missing required info
 - "update /task fix bug status to completed" → Call update_task IMMEDIATELY
 - "delete /task old task" → Request confirmation (deletes always need confirmation)
+- "open @BFCM" → Call navigate_to(target="project", projectName="BFCM")
+- "show me the notes page" → Call navigate_to(target="notes")
+
+NAVIGATION:
+You can navigate the application when users ask to "open", "show", "go to", or "view" something. Use the navigate_to tool.
 
 Provide helpful, actionable insights based on this data when asked. Use specific numbers from the data.`;
 }
@@ -2016,6 +2265,10 @@ Examples:
 - "create a /task testing for @summit" → Call create_task(title="testing", projectName="summit") IMMEDIATELY
 - "update /task fix bug status to completed" → Call update_task IMMEDIATELY
 - "delete /task old task" → Request confirmation (deletes always need confirmation)
+- "open @BFCM" → Call navigate_to(target="project", projectName="BFCM")
+
+NAVIGATION:
+You can navigate the application when users ask to "open", "show", "go to", or "view" something. Use the navigate_to tool.
 
 Be concise and execute commands directly. Use data from the project context above.`;
 }
@@ -2053,6 +2306,12 @@ Examples:
 - "create @MyProject" → Ask: "What type of project? (general or website)" - this is missing required info
 - "update /task fix bug status to completed" → Call update_task IMMEDIATELY
 - "delete /task old task" → Request confirmation (deletes always need confirmation)
+- "open @BFCM" → Call navigate_to(target="project", projectName="BFCM")
+- "show me the notes page" → Call navigate_to(target="notes")
+- "go to dashboard" → Call navigate_to(target="dashboard")
+
+NAVIGATION:
+You can navigate the application when users ask to "open", "show", "go to", or "view" something. Use the navigate_to tool.
 
 Execute commands directly. Use the project/task/role names provided - you don't need IDs.`;
 }
