@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth';
 import { db } from '@/server/db';
-import { projects, tasks, roles, subtasks } from '@/server/db/schema';
+import { projects, tasks, roles, subtasks, notes } from '@/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logProjectActivity, logTaskActivity } from '@/lib/activity-logger';
 
@@ -117,6 +117,27 @@ export async function POST(req: Request) {
         return NextResponse.json({
           success: true,
           message: `Role "${confirmationData.roleName}" deleted successfully!`,
+        });
+      }
+
+      case 'delete_note': {
+        const [note] = await db
+          .delete(notes)
+          .where(
+            and(eq(notes.id, confirmationData.noteId), eq(notes.userId, userId))
+          )
+          .returning();
+
+        if (!note) {
+          return NextResponse.json(
+            { error: 'Note not found' },
+            { status: 404 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: `Note "${confirmationData.noteTitle}" deleted successfully!`,
         });
       }
 

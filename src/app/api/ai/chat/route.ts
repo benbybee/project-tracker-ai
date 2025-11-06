@@ -10,6 +10,7 @@ import {
   roles,
   aiChatSessions,
   aiChatMessages,
+  notes,
 } from '@/server/db/schema';
 import { eq, and, gte, sql, ilike, or, inArray } from 'drizzle-orm';
 import { patternAnalyzer } from '@/lib/ai/pattern-analyzer';
@@ -344,6 +345,118 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'create_note',
+      description:
+        'Create a new note in a project. EXECUTE IMMEDIATELY when @project and /notes tags are provided.',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectName: {
+            type: 'string',
+            description:
+              'Name of the project to create note in (will be matched)',
+          },
+          title: {
+            type: 'string',
+            description: 'Note title (minimum 2 characters)',
+          },
+          content: {
+            type: 'string',
+            description: 'Note content (required)',
+          },
+          noteType: {
+            type: 'string',
+            enum: ['text', 'audio'],
+            description: 'Note type (default: text)',
+          },
+        },
+        required: ['projectName', 'content'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_note',
+      description:
+        'Update an existing note. EXECUTE IMMEDIATELY when note ID or title is provided.',
+      parameters: {
+        type: 'object',
+        properties: {
+          noteId: {
+            type: 'string',
+            description: 'ID of the note to update (preferred)',
+          },
+          noteTitle: {
+            type: 'string',
+            description:
+              'Title of the note to update (will be matched if noteId not provided)',
+          },
+          projectName: {
+            type: 'string',
+            description:
+              'Project name for context (optional, helps with disambiguation)',
+          },
+          title: {
+            type: 'string',
+            description: 'New title (optional)',
+          },
+          content: {
+            type: 'string',
+            description: 'New content (optional)',
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_note',
+      description: 'Delete a note',
+      parameters: {
+        type: 'object',
+        properties: {
+          noteId: {
+            type: 'string',
+            description: 'ID of the note to delete (preferred)',
+          },
+          noteTitle: {
+            type: 'string',
+            description:
+              'Title of the note to delete (will be matched if noteId not provided)',
+          },
+          projectName: {
+            type: 'string',
+            description:
+              'Project name for context (optional, helps with disambiguation)',
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_notes',
+      description: 'List notes, optionally filtered by project',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectName: {
+            type: 'string',
+            description: 'Filter by project name (optional)',
+          },
+        },
+        required: [],
+      },
+    },
+  },
 ];
 
 // Entity resolution functions for fuzzy matching by name
@@ -403,6 +516,33 @@ async function findRoleByName(userId: string, roleName: string) {
         or(ilike(roles.name, `%${roleName}%`), ilike(roles.name, roleName))
       )
     )
+    .limit(5);
+
+  return matches;
+}
+
+async function findNoteByTitle(
+  userId: string,
+  noteTitle: string,
+  projectName?: string
+) {
+  let conditions = [
+    eq(notes.userId, userId),
+    or(ilike(notes.title, `%${noteTitle}%`), ilike(notes.title, noteTitle)),
+  ];
+
+  // If projectName provided, filter by it
+  if (projectName) {
+    const projectMatches = await findProjectByName(userId, projectName);
+    if (projectMatches.length > 0) {
+      conditions.push(eq(notes.projectId, projectMatches[0].id));
+    }
+  }
+
+  const matches = await db
+    .select()
+    .from(notes)
+    .where(and(...conditions))
     .limit(5);
 
   return matches;
@@ -970,6 +1110,219 @@ async function executeTool(
         };
       }
 
+      case 'list_notes': {
+        let conditions = [eq(notes.userId, userId)];
+
+        if (args.projectName) {
+          const projectMatches = await findProjectByName(
+            userId,
+            args.projectName
+          );
+          if (projectMatches.length === 0) {
+            return {
+              success: false,
+              error: `No project found matching "${args.projectName}"`,
+            };
+          }
+          if (projectMatches.length > 1) {
+            return {
+              success: false,
+              error: `Multiple projects match "${args.projectName}": ${projectMatches.map((p) => p.name).join(', ')}. Please be more specific.`,
+            };
+          }
+          conditions.push(eq(notes.projectId, projectMatches[0].id));
+        }
+
+        const noteList = await db
+          .select()
+          .from(notes)
+          .where(and(...conditions))
+          .limit(50);
+
+        return {
+          success: true,
+          data: {
+            notes: noteList.map((n) => ({
+              id: n.id,
+              title: n.title,
+              content: n.content,
+              noteType: n.noteType,
+              projectId: n.projectId,
+            })),
+            count: noteList.length,
+          },
+        };
+      }
+
+      case 'create_note': {
+        const projectMatches = await findProjectByName(
+          userId,
+          args.projectName
+        );
+
+        if (projectMatches.length === 0) {
+          return {
+            success: false,
+            error: `No project found matching "${args.projectName}"`,
+          };
+        }
+
+        if (projectMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple projects match "${args.projectName}": ${projectMatches.map((p) => p.name).join(', ')}. Please specify which one.`,
+          };
+        }
+
+        // Generate title from content if not provided
+        const noteTitle =
+          args.title ||
+          args.content.substring(0, 50) +
+            (args.content.length > 50 ? '...' : '');
+
+        // Execute immediately - create note
+        const [newNote] = await db
+          .insert(notes)
+          .values({
+            userId,
+            projectId: projectMatches[0].id,
+            title: noteTitle,
+            content: args.content,
+            noteType: args.noteType || 'text',
+            tasksGenerated: false,
+          })
+          .returning();
+
+        return {
+          success: true,
+          data: {
+            id: newNote.id,
+            title: newNote.title,
+            projectName: projectMatches[0].name,
+            message: `Note "${newNote.title}" created successfully in project "${projectMatches[0].name}"!`,
+          },
+        };
+      }
+
+      case 'update_note': {
+        let noteMatches: any[] = [];
+
+        if (args.noteId) {
+          const [note] = await db
+            .select()
+            .from(notes)
+            .where(and(eq(notes.id, args.noteId), eq(notes.userId, userId)))
+            .limit(1);
+          if (note) noteMatches = [note];
+        } else if (args.noteTitle) {
+          noteMatches = await findNoteByTitle(
+            userId,
+            args.noteTitle,
+            args.projectName
+          );
+        } else {
+          return {
+            success: false,
+            error: 'Either noteId or noteTitle must be provided',
+          };
+        }
+
+        if (noteMatches.length === 0) {
+          return {
+            success: false,
+            error: `No note found matching the provided criteria`,
+          };
+        }
+
+        if (noteMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple notes match: ${noteMatches.map((n) => n.title).join(', ')}. Please be more specific or provide the note ID.`,
+          };
+        }
+
+        const note = noteMatches[0];
+        const updates: any = {
+          updatedAt: new Date(),
+        };
+
+        if (args.title) updates.title = args.title;
+        if (args.content !== undefined) updates.content = args.content;
+
+        // Execute immediately - update note
+        const [updatedNote] = await db
+          .update(notes)
+          .set(updates)
+          .where(and(eq(notes.id, note.id), eq(notes.userId, userId)))
+          .returning();
+
+        if (!updatedNote) {
+          return {
+            success: false,
+            error: 'Note not found',
+          };
+        }
+
+        return {
+          success: true,
+          data: {
+            id: updatedNote.id,
+            title: updatedNote.title,
+            message: `Note "${updatedNote.title}" updated successfully!`,
+          },
+        };
+      }
+
+      case 'delete_note': {
+        let noteMatches: any[] = [];
+
+        if (args.noteId) {
+          const [note] = await db
+            .select()
+            .from(notes)
+            .where(and(eq(notes.id, args.noteId), eq(notes.userId, userId)))
+            .limit(1);
+          if (note) noteMatches = [note];
+        } else if (args.noteTitle) {
+          noteMatches = await findNoteByTitle(
+            userId,
+            args.noteTitle,
+            args.projectName
+          );
+        } else {
+          return {
+            success: false,
+            error: 'Either noteId or noteTitle must be provided',
+          };
+        }
+
+        if (noteMatches.length === 0) {
+          return {
+            success: false,
+            error: `No note found matching the provided criteria`,
+          };
+        }
+
+        if (noteMatches.length > 1) {
+          return {
+            success: false,
+            error: `Multiple notes match: ${noteMatches.map((n) => n.title).join(', ')}. Please be more specific or provide the note ID.`,
+          };
+        }
+
+        const note = noteMatches[0];
+
+        return {
+          success: true,
+          needsConfirmation: true,
+          confirmationData: {
+            action: 'delete_note',
+            noteId: note.id,
+            noteTitle: note.title,
+          },
+        };
+      }
+
       default:
         return { success: false, error: `Unknown tool: ${toolName}` };
     }
@@ -1104,7 +1457,7 @@ export async function POST(req: Request) {
       }
 
       if (tags.notes) {
-        tagContext += `Notes/Description: /notes "${tags.notes}"\n`;
+        tagContext += `Note Content: /notes "${tags.notes}"\n`;
       }
 
       tagContext += '\nCRITICAL EXECUTION RULES:\n';
@@ -1118,6 +1471,8 @@ export async function POST(req: Request) {
         '4. If a required field is missing (e.g., project type for create_project), ONLY THEN ask for that specific field.\n';
       tagContext +=
         '5. Example: If you see "Task Title: /task \\"testing\\"" and "Projects: @Summit", call create_task(title="testing", projectName="Summit") NOW.\n';
+      tagContext +=
+        '6. Example: If you see "Note Content: /notes \\"test note\\"" and "Projects: @Summit", call create_note(content="test note", projectName="Summit") NOW.\n';
       tagContext +=
         '\nEXECUTE IMMEDIATELY. NO CONFIRMATION. NO OPINIONS. JUST EXECUTE.\n';
       tagContext += '--- END TAGGED CONTEXT ---\n';
