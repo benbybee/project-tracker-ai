@@ -600,6 +600,14 @@ async function executeTool(
   error?: string;
   needsConfirmation?: boolean;
   confirmationData?: any;
+  navigation?: {
+    type: string;
+    url: string;
+    message?: string;
+    projectName?: string;
+    taskTitle?: string;
+    noteTitle?: string;
+  };
 }> {
   try {
     switch (toolName) {
