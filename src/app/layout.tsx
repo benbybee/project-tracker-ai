@@ -78,7 +78,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#6D4AFF" />
         {/* iOS PWA Meta Tags - Required for standalone mode */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <meta name="apple-mobile-web-app-title" content="TaskTracker AI" />
         <link
           rel="apple-touch-startup-image"

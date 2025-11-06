@@ -18,9 +18,8 @@ export function isStandalone(): boolean {
   const isIOSStandalone = (window.navigator as any).standalone === true;
 
   // Additional check: window.matchMedia for iOS (newer iOS versions)
-  const isIOSDisplayMode = window.matchMedia(
-    '(display-mode: standalone)'
-  ).matches && isIOS();
+  const isIOSDisplayMode =
+    window.matchMedia('(display-mode: standalone)').matches && isIOS();
 
   return isDisplayStandalone || isIOSStandalone || isIOSDisplayMode;
 }
@@ -130,16 +129,17 @@ export function isIOSDevice(): boolean {
   if (typeof window === 'undefined') return false;
 
   const ua = navigator.userAgent.toLowerCase();
-  
+
   // Check for iOS devices (iPhone, iPad, iPod)
   const isIOSDevice = /iphone|ipad|ipod/.test(ua);
-  
+
   // Exclude Windows Phone (which can have similar user agent strings)
   const isNotWindowsPhone = !(window as any).MSStream;
-  
+
   // Check for iOS Safari (not Chrome/Firefox on iOS)
-  const isIOSSafari = isIOSDevice && /safari/.test(ua) && !/crios|fxios/.test(ua);
-  
+  const isIOSSafari =
+    isIOSDevice && /safari/.test(ua) && !/crios|fxios/.test(ua);
+
   return (isIOSDevice || isIOSSafari) && isNotWindowsPhone;
 }
 
