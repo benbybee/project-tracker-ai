@@ -84,10 +84,27 @@ export default function RootLayout({
         />
         <meta name="apple-mobile-web-app-title" content="TaskTracker AI" />
         {/* Apple Touch Icon - iOS requires this for home screen icon */}
+        {/* iOS automatically looks for /apple-touch-icon.png in root, but we also specify it explicitly */}
+        <link
+          rel="apple-touch-icon"
+          href="/apple-touch-icon.png"
+          sizes="180x180"
+        />
         <link
           rel="apple-touch-icon"
           href="/icons/apple-touch-icon.png"
           sizes="180x180"
+        />
+        {/* Additional sizes for better compatibility */}
+        <link
+          rel="apple-touch-icon"
+          href="/icons/icon-152x152.png"
+          sizes="152x152"
+        />
+        <link
+          rel="apple-touch-icon"
+          href="/icons/icon-120x120.png"
+          sizes="120x120"
         />
         <link
           rel="apple-touch-startup-image"
