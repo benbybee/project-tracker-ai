@@ -10,7 +10,6 @@ import {
   roles,
   aiChatSessions,
   aiChatMessages,
-  subtasks,
 } from '@/server/db/schema';
 import { eq, and, gte, sql, ilike, or, inArray } from 'drizzle-orm';
 import { patternAnalyzer } from '@/lib/ai/pattern-analyzer';
@@ -38,7 +37,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'create_project',
-      description: 'Create a new project in the system. EXECUTE IMMEDIATELY when /projectname is provided. Only ask for type if missing.',
+      description:
+        'Create a new project in the system. EXECUTE IMMEDIATELY when /projectname is provided. Only ask for type if missing.',
       parameters: {
         type: 'object',
         properties: {
@@ -73,7 +73,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'update_project',
-      description: 'Update an existing project. EXECUTE IMMEDIATELY when @project tag is provided.',
+      description:
+        'Update an existing project. EXECUTE IMMEDIATELY when @project tag is provided.',
       parameters: {
         type: 'object',
         properties: {
@@ -123,7 +124,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'create_task',
-      description: 'Create a new task in a project. EXECUTE IMMEDIATELY when @project and /task tags are provided.',
+      description:
+        'Create a new task in a project. EXECUTE IMMEDIATELY when @project and /task tags are provided.',
       parameters: {
         type: 'object',
         properties: {
@@ -164,7 +166,8 @@ const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'update_task',
-      description: 'Update an existing task. EXECUTE IMMEDIATELY when /task tag is provided.',
+      description:
+        'Update an existing task. EXECUTE IMMEDIATELY when /task tag is provided.',
       parameters: {
         type: 'object',
         properties: {
@@ -615,9 +618,7 @@ async function executeTool(
             ...updates,
             updatedAt: new Date(),
           })
-          .where(
-            and(eq(projects.id, project.id), eq(projects.userId, userId))
-          )
+          .where(and(eq(projects.id, project.id), eq(projects.userId, userId)))
           .returning();
 
         if (!updatedProject) {
@@ -1106,8 +1107,7 @@ export async function POST(req: Request) {
         tagContext += `Notes/Description: /notes "${tags.notes}"\n`;
       }
 
-      tagContext +=
-        '\nCRITICAL EXECUTION RULES:\n';
+      tagContext += '\nCRITICAL EXECUTION RULES:\n';
       tagContext +=
         '1. The user has provided structured commands using @ and / syntax. This is a DIRECT COMMAND, not a request for information.\n';
       tagContext +=

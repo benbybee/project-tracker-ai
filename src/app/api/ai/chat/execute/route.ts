@@ -4,7 +4,6 @@ import { authOptions } from '@/server/auth';
 import { db } from '@/server/db';
 import { projects, tasks, roles, subtasks } from '@/server/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { upsertEmbedding } from '@/server/search/upsertEmbedding';
 import { logProjectActivity, logTaskActivity } from '@/lib/activity-logger';
 
 export async function POST(req: Request) {
@@ -32,7 +31,7 @@ export async function POST(req: Request) {
     switch (action) {
       // Note: create and update operations now execute immediately in executeTool()
       // This endpoint only handles delete operations which require confirmation
-      
+
       case 'delete_project': {
         const [project] = await db
           .delete(projects)
