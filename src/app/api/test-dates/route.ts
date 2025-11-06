@@ -78,28 +78,22 @@ export async function POST(req: Request) {
       type: typeof retrieved.dueDate,
     });
 
-    // Convert Date objects to YYYY-MM-DD strings if necessary
-    const insertedDateStr = (() => {
-      if (!inserted.dueDate) return null;
-      if (typeof inserted.dueDate === 'string') {
-        return inserted.dueDate;
-      }
-      if (inserted.dueDate instanceof Date) {
-        return inserted.dueDate.toISOString().split('T')[0];
+    // Drizzle's date() column returns string | null (YYYY-MM-DD format)
+    // Handle both string and Date object cases (Date shouldn't happen but handle it)
+    const normalizeDate = (value: unknown): string | null => {
+      if (value === null || value === undefined) return null;
+      if (typeof value === 'string') return value;
+      // Handle Date objects (type assertion needed because TS doesn't know it could be Date)
+      const dateValue = value as unknown;
+      if (dateValue && typeof dateValue === 'object' && 'toISOString' in dateValue) {
+        const date = dateValue as { toISOString: () => string };
+        return date.toISOString().split('T')[0];
       }
       return null;
-    })();
+    };
 
-    const retrievedDateStr = (() => {
-      if (!retrieved.dueDate) return null;
-      if (typeof retrieved.dueDate === 'string') {
-        return retrieved.dueDate;
-      }
-      if (retrieved.dueDate instanceof Date) {
-        return retrieved.dueDate.toISOString().split('T')[0];
-      }
-      return null;
-    })();
+    const insertedDateStr = normalizeDate(inserted.dueDate);
+    const retrievedDateStr = normalizeDate(retrieved.dueDate);
 
     // Clean up - delete test task
     await db
