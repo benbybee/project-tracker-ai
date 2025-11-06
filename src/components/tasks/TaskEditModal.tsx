@@ -233,7 +233,7 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
               Due Date
             </label>
             <DatePicker
-              value={form.dueDate}
+              value={form.dueDate ?? null}
               onChange={(date) => {
                 console.log('📅 TaskEditModal - Date changed:', date);
                 updateForm({ dueDate: date });
