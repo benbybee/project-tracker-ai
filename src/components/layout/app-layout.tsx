@@ -12,7 +12,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarWidth, setSidebarWidth] = useState('256px'); // Default expanded width
   const [isMobile, setIsMobile] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
+  
+  // Restore chat state from sessionStorage on mount
+  const [chatOpen, setChatOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('ai-chat-open');
+      return saved === 'true';
+    }
+    return false;
+  });
+  
   const isMobileViewport = useMobileViewport();
 
   // Stable callback to prevent unnecessary re-renders
@@ -30,7 +39,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const handleCloseChat = useCallback(() => {
     setChatOpen(false);
+    // Clear sessionStorage when explicitly closed
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('ai-chat-open');
+    }
   }, []);
+
+  // Persist chat state to sessionStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (chatOpen) {
+        sessionStorage.setItem('ai-chat-open', 'true');
+      } else {
+        sessionStorage.removeItem('ai-chat-open');
+      }
+    }
+  }, [chatOpen]);
 
   // Check for mobile/tablet screens and update sidebar width
   useEffect(() => {

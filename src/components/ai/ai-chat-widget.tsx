@@ -224,6 +224,7 @@ export function AiChatWidget({
         });
 
         // Navigate after a brief delay to allow message to be displayed
+        // Chat state is persisted in sessionStorage, so it will remain open
         setTimeout(() => {
           router.push(data.navigation.url);
         }, 500);
