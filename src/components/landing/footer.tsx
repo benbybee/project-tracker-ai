@@ -17,9 +17,11 @@ export function Footer() {
               AI-powered task and project management application
             </p>
           </div>
-          
+
           <div>
-            <h4 className="text-sm font-semibold text-slate-900 mb-4">Product</h4>
+            <h4 className="text-sm font-semibold text-slate-900 mb-4">
+              Product
+            </h4>
             <ul className="space-y-2">
               <li>
                 <Link
@@ -31,9 +33,11 @@ export function Footer() {
               </li>
             </ul>
           </div>
-          
+
           <div>
-            <h4 className="text-sm font-semibold text-slate-900 mb-4">Company</h4>
+            <h4 className="text-sm font-semibold text-slate-900 mb-4">
+              Company
+            </h4>
             <ul className="space-y-2">
               <li>
                 <Link
@@ -54,14 +58,13 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        
+
         <div className="mt-8 border-t border-slate-200 pt-8">
           <p className="text-sm text-slate-600 text-center">
-          © {currentYear} TaskTracker AI. All rights reserved.
-        </p>
+            © {currentYear} TaskTracker AI. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
   );
 }
-

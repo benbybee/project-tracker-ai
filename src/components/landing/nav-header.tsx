@@ -25,7 +25,7 @@ export function NavHeader() {
               TaskTracker<span className="text-brand-600">AI</span>
             </span>
           </Link>
-          
+
           <div className="flex items-center gap-4">
             <Link
               href="#features"
@@ -33,7 +33,7 @@ export function NavHeader() {
             >
               Features
             </Link>
-            
+
             {session?.user ? (
               <Button asChild variant="outline" size="sm">
                 <Link href="/dashboard">Dashboard</Link>
@@ -43,7 +43,11 @@ export function NavHeader() {
                 <Button asChild variant="ghost" size="sm">
                   <Link href="/sign-in">Login</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-brand-500 hover:bg-brand-600 text-white">
+                <Button
+                  asChild
+                  size="sm"
+                  className="bg-brand-500 hover:bg-brand-600 text-white"
+                >
                   <Link href="/sign-up">Sign Up</Link>
                 </Button>
               </>
@@ -54,4 +58,3 @@ export function NavHeader() {
     </nav>
   );
 }
-

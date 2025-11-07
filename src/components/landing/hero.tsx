@@ -17,18 +17,20 @@ export function Hero({ isAuthenticated }: HeroProps) {
             <Sparkles className="h-4 w-4" />
             AI-Powered Task Management
           </div>
-          
+
           <h1 className="mb-6 text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl md:text-7xl">
             Maximize your
             <span className="bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent">
-              {' '}productivity
+              {' '}
+              productivity
             </span>
           </h1>
-          
+
           <p className="mb-10 text-xl text-slate-600 sm:text-2xl">
-            Organize tasks, collaborate on projects, and streamline your workflow—all in one place, enhanced by AI.
+            Organize tasks, collaborate on projects, and streamline your
+            workflow—all in one place, enhanced by AI.
           </p>
-          
+
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             {isAuthenticated ? (
               <Button
@@ -69,4 +71,3 @@ export function Hero({ isAuthenticated }: HeroProps) {
     </section>
   );
 }
-
