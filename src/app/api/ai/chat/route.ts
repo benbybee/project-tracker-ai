@@ -1831,15 +1831,17 @@ export async function POST(req: Request) {
 
         // Add system instruction to existing messages array
         const systemInstruction = `When a tool result includes a URL, add a markdown link to your response. Format: [View {entity name}]({url}). Keep your response brief and action-focused.${linkInstruction}`;
-        
+
         // Create properly typed system message
-        const systemMessage: OpenAI.Chat.Completions.ChatCompletionSystemMessageParam = {
-          role: 'system',
-          content: systemInstruction,
-        };
+        const systemMessage: OpenAI.Chat.Completions.ChatCompletionSystemMessageParam =
+          {
+            role: 'system',
+            content: systemInstruction,
+          };
 
         // Update the first message if it's a system message, otherwise prepend
-        const followUpMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+        const followUpMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
+          [];
         if (messages[0]?.role === 'system') {
           followUpMessages.push({
             role: 'system',
