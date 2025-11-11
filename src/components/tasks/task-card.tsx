@@ -198,7 +198,7 @@ export function TaskCard({
               <CalendarDays className="h-3 w-3" /> {dueText}
             </span>
           )}
-          {task.role && (
+          {task.role && typeof task.role === 'object' && (
             <span
               className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full"
               style={{
