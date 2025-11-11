@@ -11,34 +11,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseDateAsLocal, formatDate } from '@/lib/date-utils';
+import type { Task } from '@/types/task';
 
 export type Role = { id: string; name: string; color: string };
 export type Subtask = { id: number; title: string; completed: boolean };
-export type Task = {
-  id: string;
-  title: string;
-  description?: string | null;
-  dueDate?: string | null;
-  status:
-    | 'not_started'
-    | 'in_progress'
-    | 'blocked'
-    | 'completed'
-    | 'content'
-    | 'design'
-    | 'dev'
-    | 'qa'
-    | 'launch';
-  priorityScore: 1 | 2 | 3 | 4 | '1' | '2' | '3' | '4' | null;
-  role?: Role | null;
-  subtasks?: Subtask[];
-  isDaily?: boolean;
-  updatedAt?: string;
-  projectName?: string;
-  ticketId?: string;
-  ticketStatus?: string;
-  ticketTaskCount?: number;
-};
 
 export function TaskCard({
   task,
