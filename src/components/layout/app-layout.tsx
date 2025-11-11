@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarWidth, setSidebarWidth] = useState('256px'); // Default expanded width
   const [isMobile, setIsMobile] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  
+
   // Restore chat state from sessionStorage on mount
   const [chatOpen, setChatOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -21,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
     return false;
   });
-  
+
   const isMobileViewport = useMobileViewport();
 
   // Stable callback to prevent unnecessary re-renders
