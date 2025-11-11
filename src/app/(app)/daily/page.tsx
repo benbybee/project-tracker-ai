@@ -3,8 +3,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import DailyTaskRow from '@/components/daily/DailyTaskRow';
 import { TaskEditModal } from '@/components/tasks/TaskEditModal';
+import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
 import type { Task } from '@/types/task';
-import { Calendar } from 'lucide-react';
+import { Calendar, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { DailyPlanSuggestions } from '@/components/ai/DailyPlanSuggestions';
 import { SuggestionCard } from '@/components/ai/SuggestionCard';
@@ -12,6 +13,7 @@ import { PlanActionBar } from '@/components/ai/PlanActionBar';
 import { useAiSuggestions } from '@/hooks/useAiSuggestions';
 import { trpc } from '@/lib/trpc';
 import { parseDateAsLocal } from '@/lib/date-utils';
+import { Button } from '@/components/ui/button';
 
 // Use auto dynamic rendering to avoid chunk loading issues
 export const dynamic = 'force-dynamic';
@@ -38,6 +40,7 @@ export default function DailyPlannerPage() {
   const [editing, setEditing] = useState<Task | null>(null);
   const [showAiSuggestions] = useState(true);
   const [triggerGenerate, setTriggerGenerate] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // Fetch all tasks from tRPC (React Query handles caching)
   const { data: tasks = [] } = trpc.tasks.list.useQuery({});
@@ -53,7 +56,7 @@ export default function DailyPlannerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAiSuggestions]);
 
-  const { start, end } = useMemo(() => {
+  const { start, end, todayDateString } = useMemo(() => {
     const today = new Date();
     const start = new Date(
       today.getFullYear(),
@@ -61,7 +64,8 @@ export default function DailyPlannerPage() {
       today.getDate()
     );
     const end = new Date(start.getTime() + 86400000);
-    return { start, end };
+    const todayDateString = start.toISOString().split('T')[0];
+    return { start, end, todayDateString };
   }, []);
 
   // Urgent: Tasks blocked or in QA/Launch for 2+ days
@@ -164,13 +168,22 @@ export default function DailyPlannerPage() {
           title="Daily Planner"
           subtitle="Track overdue, blocked, and upcoming tasks with priority-based planning"
           actions={
-            <button
-              disabled={!selectedIds.length}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors whitespace-nowrap"
-              title="Select tasks below to enable bulk actions"
-            >
-              Bulk actions ({selectedIds.length})
-            </button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setCreateModalOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Task
+              </Button>
+              <button
+                disabled={!selectedIds.length}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                title="Select tasks below to enable bulk actions"
+              >
+                Bulk actions ({selectedIds.length})
+              </button>
+            </div>
           }
         />
 
@@ -321,6 +334,13 @@ export default function DailyPlannerPage() {
             onClose={() => setEditing(null)}
           />
         )}
+
+        {/* Task Create Modal */}
+        <TaskCreateModal
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          defaultDueDate={todayDateString}
+        />
       </div>
     </div>
   );
