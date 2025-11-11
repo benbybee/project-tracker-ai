@@ -31,6 +31,8 @@ export type Task = {
   roleId?: string | null;
   role?: Role | string | null;
   ticketId?: string | null; // Associated support ticket
+  ticketStatus?: string; // Status of associated ticket
+  ticketTaskCount?: number; // Number of tasks in ticket
   dueDate?: string | null; // ISO
   updatedAt?: string | null; // ISO
   createdAt?: string | null; // ISO
