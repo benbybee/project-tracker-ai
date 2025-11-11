@@ -19,7 +19,6 @@ import { SkeletonGlass } from '@/components/ui/skeleton-glass';
 import { ProjectTile } from '@/components/dashboard/ProjectTile';
 import { RoleFilter } from '@/components/dashboard/RoleFilter';
 import { EmptyProjects } from '@/components/dashboard/EmptyProjects';
-import { TaskCard } from '@/components/tasks/task-card';
 import { useRouter } from 'next/navigation';
 import { togglePin } from '@/lib/projects-client';
 import { PageHeader } from '@/components/layout/page-header';
@@ -125,7 +124,7 @@ export default function DashboardPage() {
     setProjectModalOpen(true);
   };
 
-  const handleTaskOpen = (task: any) => {
+  const handleTaskOpen = () => {
     router.push(`/board`); // Or open a task modal
   };
 
