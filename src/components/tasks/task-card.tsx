@@ -46,6 +46,7 @@ export function TaskCard({
   onComplete,
   onSnooze,
   onDelete,
+  onStatusChange,
   className,
 }: {
   task: Task;
@@ -53,6 +54,7 @@ export function TaskCard({
   onComplete?: (taskId: string) => void;
   onSnooze?: (taskId: string, days: 1 | 2 | 3) => void;
   onDelete?: (taskId: string) => void;
+  onStatusChange?: (taskId: string, status: Task['status']) => void;
   className?: string;
   draggable?: boolean;
 }) {
@@ -75,6 +77,22 @@ export function TaskCard({
   today.setHours(0, 0, 0, 0);
   const dueToday = due && due.toDateString() === today.toDateString();
   const stale = daysStale > 7;
+
+  const isCompleted = task.status === 'completed';
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (e.target.checked) {
+      onComplete?.(task.id);
+    } else if (onStatusChange) {
+      onStatusChange(task.id, 'not_started');
+    }
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.stopPropagation();
+    onStatusChange?.(task.id, e.target.value as Task['status']);
+  };
 
   return (
     <motion.div
@@ -103,9 +121,23 @@ export function TaskCard({
       {/* content */}
       <div className="px-4 py-3">
         <div className="flex items-start gap-3">
+          {/* Checkbox for completion */}
+          <input
+            type="checkbox"
+            checked={isCompleted}
+            onChange={handleCheckboxChange}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer flex-shrink-0"
+            aria-label="Mark as complete"
+          />
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 className="font-semibold text-gray-900 leading-snug">
+              <h4
+                className={cn(
+                  'font-semibold text-gray-900 leading-snug',
+                  isCompleted && 'line-through text-gray-500'
+                )}
+              >
                 {task.title}
               </h4>
               <div className="flex gap-1 flex-shrink-0">
@@ -177,7 +209,7 @@ export function TaskCard({
           </button>
         </div>
 
-        <div className="mt-2 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+        <div className="mt-2 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 flex-wrap">
           {due && (
             <span
               className={cn(
@@ -206,6 +238,30 @@ export function TaskCard({
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10">
               <Clock className="h-3 w-3" /> {subDone}/{subTotal}
             </span>
+          )}
+          {/* Status dropdown - visible on hover or always on mobile */}
+          {onStatusChange && (
+            <select
+              value={task.status}
+              onChange={handleStatusChange}
+              onClick={(e) => e.stopPropagation()}
+              className={cn(
+                'text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1',
+                'bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'cursor-pointer opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity'
+              )}
+              aria-label="Change status"
+            >
+              <option value="not_started">Not Started</option>
+              <option value="in_progress">In Progress</option>
+              <option value="blocked">Blocked</option>
+              <option value="completed">Completed</option>
+              <option value="content">Content</option>
+              <option value="design">Design</option>
+              <option value="dev">Dev</option>
+              <option value="qa">QA</option>
+              <option value="launch">Launch</option>
+            </select>
           )}
         </div>
       </div>

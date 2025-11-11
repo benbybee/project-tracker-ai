@@ -402,6 +402,12 @@ function BulkBar({ ids, clear }: { ids: string[]; clear: () => void }) {
       </div>
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <button
+          onClick={() => post('/api/tasks/bulk/set-daily-plan', { ids })}
+          className="rounded bg-blue-600 text-white px-3 py-1 text-xs hover:bg-blue-700 transition-colors whitespace-nowrap flex-shrink-0 font-medium"
+        >
+          Set as Daily Plan
+        </button>
+        <button
           onClick={() => post('/api/tasks/bulk/defer', { ids, days: 1 })}
           className="rounded border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50 transition-colors whitespace-nowrap flex-shrink-0"
         >

@@ -170,6 +170,24 @@ export default function DailyTaskRow({
             Create Follow-up
           </button>
         )}
+        {!task.isDaily && (
+          <button
+            onClick={() => update({ isDaily: true })}
+            className="rounded bg-indigo-600 text-white px-3 py-1 text-xs hover:bg-indigo-700 transition-colors font-medium whitespace-nowrap"
+            title="Add to daily plan"
+          >
+            📋 Daily Plan
+          </button>
+        )}
+        {task.isDaily && (
+          <button
+            onClick={() => update({ isDaily: false })}
+            className="rounded bg-gray-600 text-white px-3 py-1 text-xs hover:bg-gray-700 transition-colors font-medium whitespace-nowrap"
+            title="Remove from daily plan"
+          >
+            ✓ On Plan
+          </button>
+        )}
         <select
           aria-label="Status"
           className="border border-gray-300 rounded px-2 py-1 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -24,6 +24,10 @@ import { useRouter } from 'next/navigation';
 import { togglePin } from '@/lib/projects-client';
 import { PageHeader } from '@/components/layout/page-header';
 import { ProjectDetailsModal } from '@/components/projects/project-details-modal';
+import { ProjectQuickSelector } from '@/components/dashboard/ProjectQuickSelector';
+import { DailyPlanSummary } from '@/components/dashboard/DailyPlanSummary';
+import { TaskSection } from '@/components/dashboard/TaskSection';
+import { Calendar, AlertCircle, Clock3 } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -121,6 +125,31 @@ export default function DashboardPage() {
     setProjectModalOpen(true);
   };
 
+  const handleTaskOpen = (task: any) => {
+    router.push(`/board`); // Or open a task modal
+  };
+
+  const updateTaskMutation = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.dashboard.get.invalidate();
+      utils.tasks.list.invalidate();
+    },
+  });
+
+  const handleTaskComplete = async (taskId: string) => {
+    await updateTaskMutation.mutateAsync({
+      id: taskId,
+      status: 'completed',
+    });
+  };
+
+  const handleTaskStatusChange = async (taskId: string, status: any) => {
+    await updateTaskMutation.mutateAsync({
+      id: taskId,
+      status,
+    });
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -151,16 +180,19 @@ export default function DashboardPage() {
             title="Dashboard"
             subtitle="At-a-glance control center for your projects and tasks"
             actions={
-              <button
-                onClick={() =>
-                  document.dispatchEvent(
-                    new KeyboardEvent('keydown', { ctrlKey: true, key: 'k' })
-                  )
-                }
-                className="text-xs rounded-full px-3 py-1.5 border border-gray-300 bg-white hover:bg-gray-50 transition-colors whitespace-nowrap"
-              >
-                Search (⌘K)
-              </button>
+              <div className="flex items-center gap-2">
+                <ProjectQuickSelector />
+                <button
+                  onClick={() =>
+                    document.dispatchEvent(
+                      new KeyboardEvent('keydown', { ctrlKey: true, key: 'k' })
+                    )
+                  }
+                  className="text-xs rounded-full px-3 py-1.5 border border-gray-300 bg-white hover:bg-gray-50 transition-colors whitespace-nowrap"
+                >
+                  Search (⌘K)
+                </button>
+              </div>
             }
           />
         </motion.div>
@@ -173,6 +205,11 @@ export default function DashboardPage() {
             onRoleChange={handleRoleChange}
             isLoading={isLoadingState}
           />
+        </motion.div>
+
+        {/* Daily Plan Summary */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <DailyPlanSummary roleId={selectedRoleId} />
         </motion.div>
 
         {/* Stats Cards Row */}
@@ -301,72 +338,67 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Upcoming Tasks Section */}
-        <motion.div variants={itemVariants}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-              Upcoming Tasks
-            </h2>
-            <Link
-              href="/board"
-              prefetch
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
-            >
-              View All Tasks →
-            </Link>
-          </div>
+        {/* Next 3 Days Tasks Section */}
+        <motion.div variants={itemVariants} className="mb-8">
+          {isLoadingState ? (
+            <SkeletonGlass className="p-4">
+              <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded" />
+            </SkeletonGlass>
+          ) : (
+            <TaskSection
+              title="Next 3 Days"
+              tasks={dashboardData?.next3Days || []}
+              icon={<Calendar className="h-5 w-5 text-blue-500" />}
+              variant="info"
+              defaultExpanded={true}
+              onTaskClick={handleTaskOpen}
+              onTaskComplete={handleTaskComplete}
+              onTaskStatusChange={handleTaskStatusChange}
+              emptyMessage="No tasks due in the next 3 days"
+            />
+          )}
+        </motion.div>
 
-          <div className="min-h-[160px]" aria-busy={isLoading}>
-            {isLoadingState ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <SkeletonGlass key={i} className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded" />
-                      <div className="flex-1">
-                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded mb-2" />
-                        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-                      </div>
-                    </div>
-                  </SkeletonGlass>
-                ))}
-              </div>
-            ) : dashboardData?.upcoming && dashboardData.upcoming.length > 0 ? (
-              <div className="space-y-4">
-                {dashboardData.upcoming.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onOpen={(task) => router.push(`/tasks/${task.id}`)}
-                    className="hover:shadow-softer transition-shadow"
-                  />
-                ))}
-                <div className="mt-4 text-right">
-                  <Link
-                    href="/board"
-                    prefetch
-                    className="text-xs underline underline-offset-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                  >
-                    View all
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <GlassCard className="text-center py-12">
-                <div className="text-slate-400 dark:text-slate-500 mb-2">
-                  <Clock className="h-12 w-12 mx-auto" />
-                </div>
-                <h3 className="font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  No upcoming tasks
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-500">
-                  {selectedRoleId
-                    ? 'No tasks for this role in the next 7 days'
-                    : 'All caught up! 🎉'}
-                </p>
-              </GlassCard>
-            )}
-          </div>
+        {/* Next 7 Days Tasks Section */}
+        <motion.div variants={itemVariants} className="mb-8">
+          {isLoadingState ? (
+            <SkeletonGlass className="p-4">
+              <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded" />
+            </SkeletonGlass>
+          ) : (
+            <TaskSection
+              title="Days 4-7"
+              tasks={dashboardData?.next7Days || []}
+              icon={<Clock3 className="h-5 w-5 text-slate-500" />}
+              variant="default"
+              defaultExpanded={false}
+              onTaskClick={handleTaskOpen}
+              onTaskComplete={handleTaskComplete}
+              onTaskStatusChange={handleTaskStatusChange}
+              emptyMessage="No tasks due in days 4-7"
+            />
+          )}
+        </motion.div>
+
+        {/* Blocked/Stagnant Tasks Section */}
+        <motion.div variants={itemVariants} className="mb-8">
+          {isLoadingState ? (
+            <SkeletonGlass className="p-4">
+              <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded" />
+            </SkeletonGlass>
+          ) : (
+            <TaskSection
+              title="Blocked or Stagnant Tasks"
+              tasks={dashboardData?.blockedStagnant || []}
+              icon={<AlertCircle className="h-5 w-5 text-amber-500" />}
+              variant="warning"
+              defaultExpanded={false}
+              onTaskClick={handleTaskOpen}
+              onTaskComplete={handleTaskComplete}
+              onTaskStatusChange={handleTaskStatusChange}
+              emptyMessage="No blocked or stagnant tasks"
+            />
+          )}
         </motion.div>
 
         {/* Search Affordance - Hidden on mobile */}
