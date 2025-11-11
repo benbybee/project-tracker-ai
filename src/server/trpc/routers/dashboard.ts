@@ -95,6 +95,7 @@ export const dashboardRouter = createTRPCRouter({
           priorityScore: tasks.priorityScore,
           projectId: tasks.projectId,
           roleId: tasks.roleId,
+          updatedAt: tasks.updatedAt,
           project: {
             id: projects.id,
             name: projects.name,
