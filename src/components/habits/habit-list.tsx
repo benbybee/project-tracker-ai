@@ -1,13 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { GlassCard } from '@/components/ui/glass-card';
 import {
   CheckCircle,
   Circle,
   MoreVertical,
-  Trash2,
   Edit2,
   Archive,
 } from 'lucide-react';

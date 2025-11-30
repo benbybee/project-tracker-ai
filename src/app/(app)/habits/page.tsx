@@ -18,7 +18,7 @@ import type { Habit } from '@/server/db/schema/habits';
 export default function HabitsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [habitToEdit, setHabitToEdit] = useState<Habit | undefined>(undefined);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate] = useState(new Date());
 
   const { data: habits, isLoading: isLoadingHabits } =
     trpc.habits.list.useQuery();
