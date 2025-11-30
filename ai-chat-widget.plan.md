@@ -1,4 +1,5 @@
 <!-- ecb9d6bc-5ba6-42b4-9e98-91452047a920 78452740-7e9b-4cf1-91d5-6bf161a2698c -->
+
 # Chat Tags & Commands System Implementation
 
 ## Overview
@@ -32,6 +33,7 @@ Create a robust parser that:
 2. Detects all `/command value` parameters
 3. Validates entity references against database
 4. Returns structured data:
+
 ```typescript
 {
   originalMessage: string;
@@ -49,7 +51,6 @@ Create a robust parser that:
   unmatchedTags: string[]; // For error feedback
 }
 ```
-
 
 ### Parsing Rules
 
@@ -122,10 +123,10 @@ Custom hook to fetch and cache:
 - All user's roles (for /userole)
 - Command list with descriptions
 - Debounced search for large lists
+
 ```typescript
 const { projects, roles, commands } = useChatAutocompleteData();
 ```
-
 
 ## Phase 4: Integration with Chat Widget
 
@@ -144,12 +145,12 @@ Changes to `handleSend`:
 ```typescript
 const handleSend = async () => {
   const parsed = parseChatTags(input, { projects, roles });
-  
+
   if (parsed.unmatchedTags.length > 0) {
     // Show error for unmatched tags
     return;
   }
-  
+
   // Send to API with structured data
   await fetch('/api/ai/chat', {
     body: JSON.stringify({
@@ -157,7 +158,7 @@ const handleSend = async () => {
       tags: parsed.tags,
       originalMessage: parsed.originalMessage,
       // ... other fields
-    })
+    }),
   });
 };
 ```
@@ -218,7 +219,7 @@ Use library like `date-fns` for robust parsing.
 ### Tag Styling
 
 ```css
-.tag-project { 
+.tag-project {
   color: #a855f7; /* purple-500 */
   font-weight: 600;
   background: #f3e8ff; /* purple-50 */
@@ -328,7 +329,7 @@ Parsed:
 }
 
 System Prompt:
-"User wants to create task 'setup hosting' for Summit project, 
+"User wants to create task 'setup hosting' for Summit project,
 high priority, due tomorrow (2024-11-05). Use create_task tool."
 ```
 
@@ -407,11 +408,13 @@ high priority, due tomorrow (2024-11-05). Use create_task tool."
 ### 🔧 Deployment Fixes Applied
 
 **Next.js 15 Compatibility:**
+
 - Route params are now Promises (must await)
   - Fixed: `src/app/api/ai/chat/sessions/[id]/route.ts`
   - Fixed: `src/app/api/ai/chat/sessions/[id]/messages/route.ts`
 
 **TypeScript Strict Types:**
+
 - Added explicit type annotation for `chatSessionId: string`
 - Added fallback strings for all message content (can't be undefined)
 - Changed framer-motion props from `false` to `undefined`
@@ -420,6 +423,7 @@ high priority, due tomorrow (2024-11-05). Use create_task tool."
 ### 📁 Files Created
 
 **Components:**
+
 - `src/components/ai/ai-chat-widget.tsx`
 - `src/components/ai/ai-chat-enhanced-input.tsx`
 - `src/components/ai/ai-chat-autocomplete-dropdown.tsx`
@@ -429,21 +433,25 @@ high priority, due tomorrow (2024-11-05). Use create_task tool."
 - `src/components/mobile/mobile-header.tsx`
 
 **Utilities & Hooks:**
+
 - `src/lib/chat-tags-parser.ts`
 - `src/hooks/use-chat-autocomplete-data.ts`
 
 **API Routes:**
+
 - `src/app/api/ai/chat/sessions/route.ts`
 - `src/app/api/ai/chat/sessions/[id]/route.ts`
 - `src/app/api/ai/chat/sessions/[id]/messages/route.ts`
 - `src/app/api/ai/chat/cleanup/route.ts`
 
 **Database:**
+
 - `src/server/db/migrations/0022_add_ai_chat_sessions.sql`
 
 ### 🚀 Deployment Notes
 
 **Key TypeScript Fixes Required:**
+
 1. Use `Promise<{ id: string }>` for Next.js 15 route params
 2. Initialize `chatSessionId` as `string` type (not `string | undefined`)
 3. Always provide fallback strings for optional message content
@@ -451,19 +459,27 @@ high priority, due tomorrow (2024-11-05). Use create_task tool."
 5. Use `as const` for literal type assertions in mapped objects
 
 **Example - Next.js 15 Route Params:**
+
 ```typescript
 // Old way (Next.js 14):
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   const { id } = params;
 }
 
 // New way (Next.js 15):
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params;
 }
 ```
 
 **Example - Literal Type Assertions:**
+
 ```typescript
 // Without as const, TypeScript infers type as string
 type: 'project', // Type: string
@@ -473,6 +489,7 @@ type: 'project' as const, // Type: 'project'
 ```
 
 **Dependencies Used:**
+
 - `date-fns` - Natural language date parsing
 - `framer-motion` - Smooth animations
 - `lucide-react` - Icons
@@ -494,4 +511,3 @@ type: 'project' as const, // Type: 'project'
 - [x] Deploy to production
 
 ## 🎉 Status: COMPLETED & DEPLOYED
-

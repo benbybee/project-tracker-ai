@@ -23,6 +23,8 @@ import {
   FileText,
   LogOut,
   X,
+  Target,
+  CheckCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -73,6 +75,15 @@ const navGroups: NavGroup[] = [
     items: [
       { href: '/notes', label: 'Notes', icon: FileText },
       { href: '/plaud', label: 'Plaud AI', icon: Bot },
+    ],
+  },
+  {
+    id: 'personal',
+    label: 'Personal',
+    collapsible: true,
+    items: [
+      { href: '/goals', label: 'Goals', icon: Target },
+      { href: '/habits', label: 'Habits', icon: CheckCircle },
     ],
   },
   {

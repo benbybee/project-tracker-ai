@@ -1,6 +1,7 @@
 # Notification System Testing Guide
 
 ## Overview
+
 The notification system now supports four types of personal productivity notifications:
 
 1. **task_reminder** - Tasks due today
@@ -11,13 +12,17 @@ The notification system now supports four types of personal productivity notific
 ## Setup
 
 ### Environment Variables
+
 Ensure you have `CRON_SECRET` set in your `.env` file:
+
 ```bash
 CRON_SECRET=your-secret-here
 ```
 
 ### Cron Schedule
+
 The notification check runs daily at 8:00 AM UTC via Vercel Cron:
+
 ```json
 {
   "path": "/api/notifications/check-due-dates",
@@ -53,6 +58,7 @@ curl -X POST http://localhost:3000/api/notifications/check-due-dates \
 ### 2. Create Test Data
 
 #### Tasks Due Today
+
 ```sql
 -- In your database, create a task with today's date
 INSERT INTO tasks (user_id, project_id, title, due_date, status, archived)
@@ -67,6 +73,7 @@ VALUES (
 ```
 
 #### Tasks Due Soon
+
 ```sql
 -- Create a task due tomorrow
 INSERT INTO tasks (user_id, project_id, title, due_date, status, archived)
@@ -81,6 +88,7 @@ VALUES (
 ```
 
 #### Blocked Tasks (>2 days)
+
 ```sql
 -- Create a blocked task from 3 days ago
 INSERT INTO tasks (user_id, project_id, title, status, blocked_at, blocked_reason, archived)
@@ -96,6 +104,7 @@ VALUES (
 ```
 
 #### Projects in Client Review (>2 days)
+
 ```sql
 -- Create a project in client review for 3+ days
 INSERT INTO projects (user_id, name, type, website_status, updated_at)
@@ -114,7 +123,7 @@ After running the cron endpoint, check the notifications:
 
 ```sql
 -- View recent notifications
-SELECT 
+SELECT
   type,
   title,
   message,
@@ -129,10 +138,12 @@ LIMIT 10;
 ### 4. Test AI Suggestions
 
 AI suggestions are created when:
+
 - Priority is 'high', OR
 - Confidence is > 0.7
 
 To test:
+
 ```bash
 # Trigger AI suggestions from the dashboard
 curl -X POST http://localhost:3000/api/ai/suggest \
@@ -177,6 +188,7 @@ curl -X POST https://your-domain.vercel.app/api/notifications/check-due-dates \
 ### Duplicate notifications?
 
 The system checks for existing notifications created today before sending new ones. If you're seeing duplicates:
+
 1. Check the `createdAt` timestamp logic in the cron job
 2. Ensure the queries are filtering correctly
 
@@ -188,18 +200,18 @@ The system checks for existing notifications created today before sending new on
 
 ## Notification Types Reference
 
-| Type | Icon | When Triggered | Link |
-|------|------|----------------|------|
-| task_reminder | 📋 | Task due date = today | `/projects/{projectId}` |
-| due_date_approaching | ⏰ | Task due in 1-2 days | `/projects/{projectId}` |
-| sync_conflict | ⚠️ | Task blocked >2 days OR project in client_review >2 days | `/projects/{id}` |
-| ai_suggestion | 🤖 | High-priority AI suggestion generated | `/dashboard` or custom |
+| Type                 | Icon | When Triggered                                           | Link                    |
+| -------------------- | ---- | -------------------------------------------------------- | ----------------------- |
+| task_reminder        | 📋   | Task due date = today                                    | `/projects/{projectId}` |
+| due_date_approaching | ⏰   | Task due in 1-2 days                                     | `/projects/{projectId}` |
+| sync_conflict        | ⚠️   | Task blocked >2 days OR project in client_review >2 days | `/projects/{id}`        |
+| ai_suggestion        | 🤖   | High-priority AI suggestion generated                    | `/dashboard` or custom  |
 
 ## Next Steps
 
 After verifying everything works:
+
 1. Monitor the notification bell for the first few days
 2. Adjust the cron schedule if needed (currently 8:00 AM UTC)
 3. Fine-tune notification thresholds (e.g., change from 2 days to 3 days)
 4. Consider adding notification preferences to the settings page
-

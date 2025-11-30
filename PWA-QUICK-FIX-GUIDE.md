@@ -53,12 +53,14 @@ vercel --prod  # or git push
 ## 📞 Quick Diagnostics
 
 **Check in Chrome DevTools (desktop):**
+
 ```
 Application → Manifest → start_url should be "/dashboard"
 Application → Service Workers → should show "activated"
 ```
 
 **Check on iPhone:**
+
 ```javascript
 // In Safari console (if remote debugging)
 console.log(window.matchMedia('(display-mode: standalone)').matches);
@@ -84,4 +86,3 @@ console.log(window.matchMedia('(display-mode: standalone)').matches);
 ---
 
 **Full details:** See `PWA-IOS-FIX.md`
-

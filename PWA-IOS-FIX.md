@@ -14,6 +14,7 @@ The PWA was opening in Safari instead of standalone mode on iOS due to several c
 ### 1. Fixed Manifest Configuration (`public/manifest.json`)
 
 **BEFORE:**
+
 ```json
 {
   "start_url": "/dashboard?source=pwa",
@@ -23,6 +24,7 @@ The PWA was opening in Safari instead of standalone mode on iOS due to several c
 ```
 
 **AFTER:**
+
 ```json
 {
   "start_url": "/dashboard",
@@ -32,6 +34,7 @@ The PWA was opening in Safari instead of standalone mode on iOS due to several c
 ```
 
 **Changes:**
+
 - ✅ Set `start_url` to `/dashboard` (direct, no redirect)
 - ✅ Removed query params from start URL
 - ✅ Simplified `id` to `/`
@@ -43,14 +46,16 @@ Enhanced to detect PWA launches and handle them properly:
 
 ```typescript
 // Now detects standalone mode and handles PWA vs browser launches
-const isPWA = searchParams.get('source') === 'pwa' || 
-              window.matchMedia('(display-mode: standalone)').matches ||
-              (window.navigator as any).standalone === true; // iOS Safari
+const isPWA =
+  searchParams.get('source') === 'pwa' ||
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (window.navigator as any).standalone === true; // iOS Safari
 ```
 
 ### 3. Fixed Manifest Caching (`next.config.js`)
 
 **BEFORE:**
+
 ```javascript
 {
   key: 'Cache-Control',
@@ -59,6 +64,7 @@ const isPWA = searchParams.get('source') === 'pwa' ||
 ```
 
 **AFTER:**
+
 ```javascript
 {
   key: 'Cache-Control',
@@ -73,11 +79,13 @@ const isPWA = searchParams.get('source') === 'pwa' ||
 ### 4. Removed Duplicate Service Workers
 
 **Deleted:**
+
 - `src/app/pwa-provider.tsx` (unused, conflicting)
 - `public/service-worker-simple.js` (not needed)
 - `src/lib/register-service-worker.ts` (commented-out code)
 
 **Kept:**
+
 - `@ducanh2912/next-pwa` auto-registration (in `next.config.js`)
 - `src/lib/pwa-register.ts` (handles updates only)
 - `src/components/system/PWAInit.tsx` (initialization)
@@ -87,6 +95,7 @@ const isPWA = searchParams.get('source') === 'pwa' ||
 **New file: `src/lib/pwa-utils.ts`**
 
 Features:
+
 - ✅ `isStandalone()` - Detects PWA mode (iOS + Android)
 - ✅ `isIOS()` - Detects iOS devices
 - ✅ `isIOSPWA()` - Detects iOS PWA specifically
@@ -96,6 +105,7 @@ Features:
 **Enhanced: `src/components/system/PWAInit.tsx`**
 
 Now includes:
+
 - iOS bounce prevention
 - PWA-specific body class (`pwa-standalone`)
 - Viewport height fix for iOS (`--vh` CSS variable)
@@ -136,19 +146,21 @@ git push origin main
 ### Step 3: Verify Deployment
 
 1. **Check manifest is updated:**
+
    ```
    https://your-domain.com/manifest.json
    ```
-   
+
    Verify:
    - `start_url` is `/dashboard` (not `/dashboard?source=pwa`)
    - `Cache-Control` header shows `max-age=0, must-revalidate`
 
 2. **Check service worker:**
+
    ```
    https://your-domain.com/service-worker.js
    ```
-   
+
    Should load without errors
 
 ### Step 4: Fresh Install on iOS
@@ -205,10 +217,10 @@ git push origin main
 
 ```javascript
 // Should see this in logs (if you have remote debugging set up)
-PWA Status { 
-  standalone: true, 
+PWA Status {
+  standalone: true,
   displayMode: 'standalone',
-  userAgent: '...iOS...' 
+  userAgent: '...iOS...'
 }
 ```
 
@@ -219,10 +231,12 @@ PWA Status {
 **Solutions:**
 
 1. **Cache problem:**
+
    ```bash
    # Bust the cache by adding version query
    # In vercel.json or deployment config
    ```
+
    - Delete app from Home Screen
    - Clear Safari cache again
    - Reinstall
@@ -255,7 +269,6 @@ PWA Status {
 
 1. **Deep linking to external URL**
    - Check if any links use full URLs with different domains
-   
 2. **Query parameter changes**
    - Middleware shouldn't add/remove query params on PWA routes
 
@@ -299,8 +312,10 @@ The app now adds `.pwa-standalone` class to `<body>` when in standalone mode:
 /* Add in your CSS to customize PWA experience */
 body.pwa-standalone {
   /* Hide "Add to Home Screen" banners */
-  .install-prompt { display: none; }
-  
+  .install-prompt {
+    display: none;
+  }
+
   /* Adjust spacing for notch */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -310,31 +325,37 @@ body.pwa-standalone {
 ## 📊 What Changed - File Diff
 
 ### Modified Files:
+
 - ✅ `public/manifest.json` - Fixed start_url and icon purposes
 - ✅ `src/app/page.tsx` - Added PWA detection
 - ✅ `next.config.js` - Fixed manifest caching
 - ✅ `src/components/system/PWAInit.tsx` - Added iOS handling
 
 ### New Files:
+
 - ✅ `src/lib/pwa-utils.ts` - PWA utility functions
 
 ### Deleted Files:
+
 - ✅ `src/app/pwa-provider.tsx` - Unused duplicate
-- ✅ `public/service-worker-simple.js` - Unused duplicate  
+- ✅ `public/service-worker-simple.js` - Unused duplicate
 - ✅ `src/lib/register-service-worker.ts` - Commented-out duplicate
 
 ### Unchanged:
+
 - ✅ `src/lib/pwa-register.ts` - Update handling (working correctly)
 - ✅ All icon files in `public/icons/` - All present and valid
 
 ## 🎯 Expected Behavior After Fix
 
 ### First Launch (from Safari):
+
 1. User visits site in Safari
 2. Uses "Add to Home Screen"
 3. Icon appears on Home Screen
 
 ### Subsequent Launches:
+
 1. User taps Home Screen icon
 2. App opens **immediately** to `/dashboard`
 3. No Safari UI visible
@@ -343,6 +364,7 @@ body.pwa-standalone {
 6. External links open in Safari (separate from app)
 
 ### Service Worker Behavior:
+
 - Auto-registers on first production visit
 - Caches static assets
 - Updates automatically on new deployments
@@ -367,6 +389,7 @@ All critical PWA issues have been fixed:
 5. ✅ **All icons verified** - All required files present
 
 **Next Steps:**
+
 1. Deploy these changes
 2. Delete old app from iPhone
 3. Clear Safari cache
@@ -374,4 +397,3 @@ All critical PWA issues have been fixed:
 5. Test standalone launch
 
 The app should now open reliably in standalone mode on iOS! 🎉
-

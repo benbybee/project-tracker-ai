@@ -1723,6 +1723,83 @@ CREATE INDEX idx_ai_chat_user_id ON ai_chat_history(user_id, created_at DESC);
 
 ## Implementation Priority Matrix
 
+### Phase 6: Personal Growth Features
+
+We will expand the application to support personal development through structured goal setting and habit tracking. These features will live under a new "Personal" sidebar category.
+
+### Sprint 6.1: Personal Goals Tracking
+
+**Objective:** Create a dedicated space for long-term aspirations linked to actionable projects.
+
+#### Features
+
+1.  **Goals Dashboard**
+    -   Card-based view of active goals
+    -   Progress bars and status indicators
+    -   Filter by category (Career, Health, Finance, Personal, etc.)
+
+2.  **Goal Management**
+    -   Create/Edit/Delete goals
+    -   Link goals to existing Projects (optional)
+    -   Set target dates and milestones
+
+3.  **Database Schema**
+    -   New `goals` table with fields for progress, status, and category
+
+#### Files to Create
+
+-   `src/app/(app)/goals/page.tsx` - Main goals dashboard
+-   `src/components/goals/goal-card.tsx` - Individual goal display
+-   `src/components/goals/goal-form-modal.tsx` - Create/Edit modal
+-   `src/server/trpc/routers/goals.ts` - tRPC router for goal operations
+-   `src/server/db/schema/goals.ts` - Drizzle schema definition
+
+#### Files to Update
+
+-   `src/components/layout/sidebar.tsx` - Add "Personal" group with "Goals" item
+-   `src/server/trpc/root.ts` - Register new router
+
+---
+
+### Sprint 6.2: Daily Success Habits
+
+**Objective:** Build consistency with a simple, effective daily habit tracker.
+
+#### Features
+
+1.  **Habit Tracker Interface**
+    -   Daily checklist view
+    -   Visual completion streaks (heatmap or fire icon)
+    -   Quick toggle for "Today's" completion
+
+2.  **Habit Management**
+    -   Define habits with frequency (Daily, Weekly)
+    -   Set preferred time of day (Morning, Evening)
+    -   Archive old habits
+
+3.  **Analytics (Basic)**
+    -   Current streak count
+    -   Weekly completion rate
+
+4.  **Database Schema**
+    -   New `habits` table for definitions
+    -   New `habit_logs` table for daily completion records
+
+#### Files to Create
+
+-   `src/app/(app)/habits/page.tsx` - Main habit tracker page
+-   `src/components/habits/habit-list.tsx` - Daily checklist component
+-   `src/components/habits/habit-stats.tsx` - Streak and progress visualization
+-   `src/server/trpc/routers/habits.ts` - tRPC router for habits
+-   `src/server/db/schema/habits.ts` - Drizzle schema definition
+
+#### Files to Update
+
+-   `src/components/layout/sidebar.tsx` - Add "Habits" item to "Personal" group
+-   `src/server/trpc/root.ts` - Register new router
+
+---
+
 ### 🔥 Immediate Priority (Weeks 1-2)
 
 **Start Here - Maximum Impact**
