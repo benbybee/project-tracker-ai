@@ -8,6 +8,7 @@ import {
   jsonb,
   uuid,
   bigint,
+  index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -87,7 +88,10 @@ export const projects = pgTable('projects', {
   wpApiKey: text('wp_api_key'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+}, (table) => ({
+  typeIdx: index('projects_type_idx').on(table.type),
+  userIdIdx: index('projects_user_id_idx').on(table.userId),
+}));
 
 // Tasks table
 export const tasks = pgTable('tasks', {
@@ -136,7 +140,13 @@ export const tasks = pgTable('tasks', {
   nextOccurrence: date('next_occurrence'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+}, (table) => ({
+  statusIdx: index('tasks_status_idx').on(table.status),
+  dueDateIdx: index('tasks_due_date_idx').on(table.dueDate),
+  priorityScoreIdx: index('tasks_priority_score_idx').on(table.priorityScore),
+  projectIdIdx: index('tasks_project_id_idx').on(table.projectId),
+  userIdIdx: index('tasks_user_id_idx').on(table.userId),
+}));
 
 // Subtasks table
 export const subtasks = pgTable('subtasks', {
@@ -266,7 +276,9 @@ export const tickets = pgTable('tickets', {
     () => projects.id
   ),
   completedAt: timestamp('completed_at'),
-});
+}, (table) => ({
+  statusIdx: index('tickets_status_idx').on(table.status),
+}));
 
 export const ticketReplies = pgTable('ticket_replies', {
   id: uuid('id').primaryKey().defaultRandom(),

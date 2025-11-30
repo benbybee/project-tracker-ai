@@ -35,6 +35,7 @@ export const goalsRouter = createTRPCRouter({
           projectName: projects.name,
           createdAt: goals.createdAt,
           updatedAt: goals.updatedAt,
+          userId: goals.userId,
         })
         .from(goals)
         .leftJoin(projects, eq(goals.projectId, projects.id))
