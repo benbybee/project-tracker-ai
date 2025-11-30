@@ -60,93 +60,107 @@ export const roles = pgTable('roles', {
 });
 
 // Projects table
-export const projects = pgTable('projects', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  type: text('type', { enum: ['general', 'website'] }).notNull(),
-  description: text('description'),
-  roleId: uuid('role_id').references(() => roles.id),
-  notes: text('notes'),
-  pinned: boolean('pinned').default(false),
-  // Website-specific fields
-  domain: text('domain'),
-  hostingProvider: text('hosting_provider'),
-  dnsStatus: text('dns_status'),
-  goLiveDate: date('go_live_date'),
-  repoUrl: text('repo_url'),
-  stagingUrl: text('staging_url'),
-  checklistJson: jsonb('checklist_json'),
-  websiteStatus: text('website_status', {
-    enum: ['discovery', 'development', 'client_review', 'completed', 'blocked'],
-  }),
-  // WordPress one-click login fields
-  wpOneClickEnabled: boolean('wp_one_click_enabled').default(false),
-  wpAdminEmail: text('wp_admin_email'),
-  wpApiKey: text('wp_api_key'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  typeIdx: index('projects_type_idx').on(table.type),
-  userIdIdx: index('projects_user_id_idx').on(table.userId),
-}));
+export const projects = pgTable(
+  'projects',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    type: text('type', { enum: ['general', 'website'] }).notNull(),
+    description: text('description'),
+    roleId: uuid('role_id').references(() => roles.id),
+    notes: text('notes'),
+    pinned: boolean('pinned').default(false),
+    // Website-specific fields
+    domain: text('domain'),
+    hostingProvider: text('hosting_provider'),
+    dnsStatus: text('dns_status'),
+    goLiveDate: date('go_live_date'),
+    repoUrl: text('repo_url'),
+    stagingUrl: text('staging_url'),
+    checklistJson: jsonb('checklist_json'),
+    websiteStatus: text('website_status', {
+      enum: [
+        'discovery',
+        'development',
+        'client_review',
+        'completed',
+        'blocked',
+      ],
+    }),
+    // WordPress one-click login fields
+    wpOneClickEnabled: boolean('wp_one_click_enabled').default(false),
+    wpAdminEmail: text('wp_admin_email'),
+    wpApiKey: text('wp_api_key'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    typeIdx: index('projects_type_idx').on(table.type),
+    userIdIdx: index('projects_user_id_idx').on(table.userId),
+  })
+);
 
 // Tasks table
-export const tasks = pgTable('tasks', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  projectId: uuid('project_id')
-    .notNull()
-    .references(() => projects.id),
-  roleId: uuid('role_id').references(() => roles.id),
-  ticketId: uuid('ticket_id').references(() => tickets.id),
-  title: text('title').notNull(),
-  description: text('description'),
-  status: text('status', {
-    enum: [
-      'not_started',
-      'in_progress',
-      'blocked',
-      'completed',
-      'content',
-      'design',
-      'dev',
-      'qa',
-      'launch',
-    ],
+export const tasks = pgTable(
+  'tasks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id),
+    roleId: uuid('role_id').references(() => roles.id),
+    ticketId: uuid('ticket_id').references(() => tickets.id),
+    title: text('title').notNull(),
+    description: text('description'),
+    status: text('status', {
+      enum: [
+        'not_started',
+        'in_progress',
+        'blocked',
+        'completed',
+        'content',
+        'design',
+        'dev',
+        'qa',
+        'launch',
+      ],
+    })
+      .notNull()
+      .default('not_started'),
+    weekOf: date('week_of'),
+    progress: integer('progress').default(0),
+    dueDate: date('due_date'),
+    isDaily: boolean('is_daily').default(false),
+    priorityScore: text('priority_score', {
+      enum: ['1', '2', '3', '4'],
+    }).default('2'),
+    blockedReason: text('blocked_reason'),
+    blockedDetails: text('blocked_details'),
+    blockedAt: timestamp('blocked_at'),
+    archived: boolean('archived').default(false),
+    archivedAt: timestamp('archived_at'),
+    // Recurring task fields
+    isRecurring: boolean('is_recurring').default(false),
+    recurrenceRule: jsonb('recurrence_rule'), // RRULE format (RFC 5545)
+    recurrenceParentId: uuid('recurrence_parent_id'),
+    nextOccurrence: date('next_occurrence'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    statusIdx: index('tasks_status_idx').on(table.status),
+    dueDateIdx: index('tasks_due_date_idx').on(table.dueDate),
+    priorityScoreIdx: index('tasks_priority_score_idx').on(table.priorityScore),
+    projectIdIdx: index('tasks_project_id_idx').on(table.projectId),
+    userIdIdx: index('tasks_user_id_idx').on(table.userId),
   })
-    .notNull()
-    .default('not_started'),
-  weekOf: date('week_of'),
-  progress: integer('progress').default(0),
-  dueDate: date('due_date'),
-  isDaily: boolean('is_daily').default(false),
-  priorityScore: text('priority_score', { enum: ['1', '2', '3', '4'] }).default(
-    '2'
-  ),
-  blockedReason: text('blocked_reason'),
-  blockedDetails: text('blocked_details'),
-  blockedAt: timestamp('blocked_at'),
-  archived: boolean('archived').default(false),
-  archivedAt: timestamp('archived_at'),
-  // Recurring task fields
-  isRecurring: boolean('is_recurring').default(false),
-  recurrenceRule: jsonb('recurrence_rule'), // RRULE format (RFC 5545)
-  recurrenceParentId: uuid('recurrence_parent_id'),
-  nextOccurrence: date('next_occurrence'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  statusIdx: index('tasks_status_idx').on(table.status),
-  dueDateIdx: index('tasks_due_date_idx').on(table.dueDate),
-  priorityScoreIdx: index('tasks_priority_score_idx').on(table.priorityScore),
-  projectIdIdx: index('tasks_project_id_idx').on(table.projectId),
-  userIdIdx: index('tasks_user_id_idx').on(table.userId),
-}));
+);
 
 // Subtasks table
 export const subtasks = pgTable('subtasks', {
@@ -243,42 +257,46 @@ export type PlaudPendingItem = typeof plaudPending.$inferSelect;
 export type NewPlaudPendingItem = typeof plaudPending.$inferInsert;
 
 // Support Tickets tables
-export const tickets = pgTable('tickets', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  customerName: text('customer_name').notNull(),
-  customerEmail: text('customer_email').notNull(),
-  projectName: text('project_name').notNull(),
-  domain: text('domain'),
-  details: text('details').notNull(),
-  dueDateSuggested: date('due_date_suggested'),
-  priority: text('priority', { enum: ['low', 'normal', 'high', 'urgent'] })
-    .notNull()
-    .default('normal'),
-  status: text('status', {
-    enum: [
-      'new',
-      'viewed',
-      'pending_tasks',
-      'complete',
-      'in_review',
-      'responded',
-      'converted',
-      'closed',
-    ],
+export const tickets = pgTable(
+  'tickets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    customerName: text('customer_name').notNull(),
+    customerEmail: text('customer_email').notNull(),
+    projectName: text('project_name').notNull(),
+    domain: text('domain'),
+    details: text('details').notNull(),
+    dueDateSuggested: date('due_date_suggested'),
+    priority: text('priority', { enum: ['low', 'normal', 'high', 'urgent'] })
+      .notNull()
+      .default('normal'),
+    status: text('status', {
+      enum: [
+        'new',
+        'viewed',
+        'pending_tasks',
+        'complete',
+        'in_review',
+        'responded',
+        'converted',
+        'closed',
+      ],
+    })
+      .notNull()
+      .default('new'),
+    aiEta: date('ai_eta'),
+    aiSummary: text('ai_summary'),
+    suggestedProjectId: uuid('suggested_project_id').references(
+      () => projects.id
+    ),
+    completedAt: timestamp('completed_at'),
+  },
+  (table) => ({
+    statusIdx: index('tickets_status_idx').on(table.status),
   })
-    .notNull()
-    .default('new'),
-  aiEta: date('ai_eta'),
-  aiSummary: text('ai_summary'),
-  suggestedProjectId: uuid('suggested_project_id').references(
-    () => projects.id
-  ),
-  completedAt: timestamp('completed_at'),
-}, (table) => ({
-  statusIdx: index('tickets_status_idx').on(table.status),
-}));
+);
 
 export const ticketReplies = pgTable('ticket_replies', {
   id: uuid('id').primaryKey().defaultRandom(),
