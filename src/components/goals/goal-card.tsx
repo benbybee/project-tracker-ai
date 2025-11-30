@@ -44,7 +44,8 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
           <span
             className={cn(
               'text-xs font-medium px-2.5 py-0.5 rounded-full uppercase tracking-wider',
-              categoryColors[goal.category as keyof typeof categoryColors] || categoryColors.other
+              categoryColors[goal.category as keyof typeof categoryColors] ||
+                categoryColors.other
             )}
           >
             {goal.category}
@@ -107,10 +108,12 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
           {goal.targetDate && (
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" />
-              <span>Target: {format(new Date(goal.targetDate), 'MMM d, yyyy')}</span>
+              <span>
+                Target: {format(new Date(goal.targetDate), 'MMM d, yyyy')}
+              </span>
             </div>
           )}
-          
+
           {goal.status === 'completed' && (
             <div className="flex items-center gap-1.5 text-green-500 ml-auto">
               <CheckCircle2 className="h-3.5 w-3.5" />
@@ -122,4 +125,3 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
     </GlassCard>
   );
 }
-

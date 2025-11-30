@@ -7,7 +7,14 @@ import { TRPCError } from '@trpc/server';
 const GoalCreate = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
-  category: z.enum(['career', 'health', 'finance', 'personal', 'learning', 'other']),
+  category: z.enum([
+    'career',
+    'health',
+    'finance',
+    'personal',
+    'learning',
+    'other',
+  ]),
   targetDate: z.string().optional(), // YYYY-MM-DD
   projectId: z.string().uuid().optional(),
 });
@@ -44,21 +51,23 @@ export const goalsRouter = createTRPCRouter({
     }
   }),
 
-  create: protectedProcedure.input(GoalCreate).mutation(async ({ input, ctx }) => {
-    const [newGoal] = await ctx.db
-      .insert(goals)
-      .values({
-        userId: ctx.session.user.id,
-        title: input.title,
-        description: input.description,
-        category: input.category,
-        targetDate: input.targetDate,
-        projectId: input.projectId,
-      })
-      .returning();
+  create: protectedProcedure
+    .input(GoalCreate)
+    .mutation(async ({ input, ctx }) => {
+      const [newGoal] = await ctx.db
+        .insert(goals)
+        .values({
+          userId: ctx.session.user.id,
+          title: input.title,
+          description: input.description,
+          category: input.category,
+          targetDate: input.targetDate,
+          projectId: input.projectId,
+        })
+        .returning();
 
-    return newGoal;
-  }),
+      return newGoal;
+    }),
 
   update: protectedProcedure
     .input(
@@ -66,9 +75,20 @@ export const goalsRouter = createTRPCRouter({
         id: z.string().uuid(),
         title: z.string().min(1).optional(),
         description: z.string().optional(),
-        category: z.enum(['career', 'health', 'finance', 'personal', 'learning', 'other']).optional(),
+        category: z
+          .enum([
+            'career',
+            'health',
+            'finance',
+            'personal',
+            'learning',
+            'other',
+          ])
+          .optional(),
         targetDate: z.string().optional(),
-        status: z.enum(['not_started', 'in_progress', 'completed', 'on_hold']).optional(),
+        status: z
+          .enum(['not_started', 'in_progress', 'completed', 'on_hold'])
+          .optional(),
         progress: z.number().min(0).max(100).optional(),
         projectId: z.string().uuid().optional().nullable(),
       })
@@ -100,7 +120,9 @@ export const goalsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const [deletedGoal] = await ctx.db
         .delete(goals)
-        .where(and(eq(goals.id, input.id), eq(goals.userId, ctx.session.user.id)))
+        .where(
+          and(eq(goals.id, input.id), eq(goals.userId, ctx.session.user.id))
+        )
         .returning();
 
       if (!deletedGoal) {
@@ -113,4 +135,3 @@ export const goalsRouter = createTRPCRouter({
       return deletedGoal;
     }),
 });
-

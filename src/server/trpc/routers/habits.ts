@@ -17,7 +17,12 @@ export const habitsRouter = createTRPCRouter({
       const userHabits = await ctx.db
         .select()
         .from(habits)
-        .where(and(eq(habits.userId, ctx.session.user.id), eq(habits.archived, false)))
+        .where(
+          and(
+            eq(habits.userId, ctx.session.user.id),
+            eq(habits.archived, false)
+          )
+        )
         .orderBy(desc(habits.createdAt));
 
       return userHabits;
@@ -30,20 +35,22 @@ export const habitsRouter = createTRPCRouter({
     }
   }),
 
-  create: protectedProcedure.input(HabitCreate).mutation(async ({ input, ctx }) => {
-    const [newHabit] = await ctx.db
-      .insert(habits)
-      .values({
-        userId: ctx.session.user.id,
-        title: input.title,
-        description: input.description,
-        frequency: input.frequency,
-        timeOfDay: input.timeOfDay,
-      })
-      .returning();
+  create: protectedProcedure
+    .input(HabitCreate)
+    .mutation(async ({ input, ctx }) => {
+      const [newHabit] = await ctx.db
+        .insert(habits)
+        .values({
+          userId: ctx.session.user.id,
+          title: input.title,
+          description: input.description,
+          frequency: input.frequency,
+          timeOfDay: input.timeOfDay,
+        })
+        .returning();
 
-    return newHabit;
-  }),
+      return newHabit;
+    }),
 
   update: protectedProcedure
     .input(
@@ -52,7 +59,9 @@ export const habitsRouter = createTRPCRouter({
         title: z.string().min(1).optional(),
         description: z.string().optional(),
         frequency: z.enum(['daily', 'weekly']).optional(),
-        timeOfDay: z.enum(['morning', 'afternoon', 'evening', 'anytime']).optional(),
+        timeOfDay: z
+          .enum(['morning', 'afternoon', 'evening', 'anytime'])
+          .optional(),
         archived: z.boolean().optional(),
       })
     )
@@ -83,7 +92,9 @@ export const habitsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const [deletedHabit] = await ctx.db
         .delete(habits)
-        .where(and(eq(habits.id, input.id), eq(habits.userId, ctx.session.user.id)))
+        .where(
+          and(eq(habits.id, input.id), eq(habits.userId, ctx.session.user.id))
+        )
         .returning();
 
       if (!deletedHabit) {
@@ -135,7 +146,10 @@ export const habitsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       // Verify habit belongs to user
       const habit = await ctx.db.query.habits.findFirst({
-        where: and(eq(habits.id, input.habitId), eq(habits.userId, ctx.session.user.id)),
+        where: and(
+          eq(habits.id, input.habitId),
+          eq(habits.userId, ctx.session.user.id)
+        ),
       });
 
       if (!habit) {
@@ -167,4 +181,3 @@ export const habitsRouter = createTRPCRouter({
       }
     }),
 });
-

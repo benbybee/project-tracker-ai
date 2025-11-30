@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, uuid, integer, date } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  integer,
+  date,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users, projects } from '../schema';
 
@@ -39,4 +46,3 @@ export const goalsRelations = relations(goals, ({ one }) => ({
 
 export type Goal = typeof goals.$inferSelect;
 export type NewGoal = typeof goals.$inferInsert;
-

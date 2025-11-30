@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, uuid, boolean, date } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  boolean,
+  date,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from '../schema';
 
@@ -12,7 +19,9 @@ export const habits = pgTable('habits', {
   frequency: text('frequency', { enum: ['daily', 'weekly'] })
     .notNull()
     .default('daily'),
-  timeOfDay: text('time_of_day', { enum: ['morning', 'afternoon', 'evening', 'anytime'] })
+  timeOfDay: text('time_of_day', {
+    enum: ['morning', 'afternoon', 'evening', 'anytime'],
+  })
     .notNull()
     .default('anytime'),
   archived: boolean('archived').default(false),
@@ -49,4 +58,3 @@ export type Habit = typeof habits.$inferSelect;
 export type NewHabit = typeof habits.$inferInsert;
 export type HabitLog = typeof habitLogs.$inferSelect;
 export type NewHabitLog = typeof habitLogs.$inferInsert;
-

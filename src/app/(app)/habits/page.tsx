@@ -6,7 +6,12 @@ import { HabitList } from '@/components/habits/habit-list';
 import { HabitStats } from '@/components/habits/habit-stats';
 import { HabitFormModal } from '@/components/habits/habit-form-modal';
 import { Button } from '@/components/ui/button';
-import { Plus, CheckCircle, Loader2, Calendar as CalendarIcon } from 'lucide-react';
+import {
+  Plus,
+  CheckCircle,
+  Loader2,
+  Calendar as CalendarIcon,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import type { Habit } from '@/server/db/schema/habits';
 
@@ -15,15 +20,18 @@ export default function HabitsPage() {
   const [habitToEdit, setHabitToEdit] = useState<Habit | undefined>(undefined);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const { data: habits, isLoading: isLoadingHabits } = trpc.habits.list.useQuery();
+  const { data: habits, isLoading: isLoadingHabits } =
+    trpc.habits.list.useQuery();
 
   // Fetch logs for the selected date (and maybe surrounding for stats)
   // For now, just fetching selected date's logs for the list check status
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
-  const { data: logs, isLoading: isLoadingLogs } = trpc.habits.getLogs.useQuery({
-    startDate: dateStr,
-    endDate: dateStr,
-  });
+  const { data: logs, isLoading: isLoadingLogs } = trpc.habits.getLogs.useQuery(
+    {
+      startDate: dateStr,
+      endDate: dateStr,
+    }
+  );
 
   const handleEdit = (habit: Habit) => {
     setHabitToEdit(habit);
@@ -107,4 +115,3 @@ export default function HabitsPage() {
     </div>
   );
 }
-

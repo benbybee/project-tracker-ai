@@ -3,7 +3,14 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { GlassCard } from '@/components/ui/glass-card';
-import { CheckCircle, Circle, MoreVertical, Trash2, Edit2, Archive } from 'lucide-react';
+import {
+  CheckCircle,
+  Circle,
+  MoreVertical,
+  Trash2,
+  Edit2,
+  Archive,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,7 +45,9 @@ export function HabitList({ habits, logs, date, onEdit }: HabitListProps) {
 
   const isCompleted = (habitId: string) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return logs.some((log) => log.habitId === habitId && log.completedDate === dateStr);
+    return logs.some(
+      (log) => log.habitId === habitId && log.completedDate === dateStr
+    );
   };
 
   const handleToggle = async (habitId: string) => {
@@ -86,7 +95,9 @@ export function HabitList({ habits, logs, date, onEdit }: HabitListProps) {
                     onClick={() => handleToggle(habit.id)}
                     className={cn(
                       'transition-all duration-200 transform active:scale-90 focus:outline-none',
-                      completed ? 'text-green-500' : 'text-slate-300 hover:text-indigo-400'
+                      completed
+                        ? 'text-green-500'
+                        : 'text-slate-300 hover:text-indigo-400'
                     )}
                   >
                     {completed ? (
@@ -99,20 +110,27 @@ export function HabitList({ habits, logs, date, onEdit }: HabitListProps) {
                     <h4
                       className={cn(
                         'font-medium text-slate-900 dark:text-white transition-all',
-                        completed && 'text-slate-500 line-through decoration-slate-500/50'
+                        completed &&
+                          'text-slate-500 line-through decoration-slate-500/50'
                       )}
                     >
                       {habit.title}
                     </h4>
                     {habit.description && (
-                      <p className="text-xs text-slate-500">{habit.description}</p>
+                      <p className="text-xs text-slate-500">
+                        {habit.description}
+                      </p>
                     )}
                   </div>
                 </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-50 hover:opacity-100">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-50 hover:opacity-100"
+                    >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -147,4 +165,3 @@ export function HabitList({ habits, logs, date, onEdit }: HabitListProps) {
     </div>
   );
 }
-

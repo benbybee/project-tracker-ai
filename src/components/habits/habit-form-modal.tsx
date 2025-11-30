@@ -27,7 +27,11 @@ interface HabitFormModalProps {
   habitToEdit?: Habit;
 }
 
-export function HabitFormModal({ open, onClose, habitToEdit }: HabitFormModalProps) {
+export function HabitFormModal({
+  open,
+  onClose,
+  habitToEdit,
+}: HabitFormModalProps) {
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -109,16 +113,22 @@ export function HabitFormModal({ open, onClose, habitToEdit }: HabitFormModalPro
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1 block">Description</label>
+            <label className="text-sm font-medium mb-1 block">
+              Description
+            </label>
             <Textarea
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
               placeholder="Details..."
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Frequency</label>
+              <label className="text-sm font-medium mb-1 block">
+                Frequency
+              </label>
               <Select
                 value={form.frequency}
                 onValueChange={(v) => setForm({ ...form, frequency: v })}
@@ -133,7 +143,9 @@ export function HabitFormModal({ open, onClose, habitToEdit }: HabitFormModalPro
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Time of Day</label>
+              <label className="text-sm font-medium mb-1 block">
+                Time of Day
+              </label>
               <Select
                 value={form.timeOfDay}
                 onValueChange={(v) => setForm({ ...form, timeOfDay: v })}
@@ -163,4 +175,3 @@ export function HabitFormModal({ open, onClose, habitToEdit }: HabitFormModalPro
     </Dialog>
   );
 }
-

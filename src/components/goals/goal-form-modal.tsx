@@ -28,7 +28,11 @@ interface GoalFormModalProps {
   goalToEdit?: Goal;
 }
 
-export function GoalFormModal({ open, onClose, goalToEdit }: GoalFormModalProps) {
+export function GoalFormModal({
+  open,
+  onClose,
+  goalToEdit,
+}: GoalFormModalProps) {
   const [form, setForm] = useState<Partial<NewGoal>>({
     title: '',
     description: '',
@@ -162,7 +166,9 @@ export function GoalFormModal({ open, onClose, goalToEdit }: GoalFormModalProps)
               </label>
               <Select
                 value={form.category}
-                onValueChange={(value) => updateField({ category: value as any })}
+                onValueChange={(value) =>
+                  updateField({ category: value as any })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Category" />
@@ -200,7 +206,9 @@ export function GoalFormModal({ open, onClose, goalToEdit }: GoalFormModalProps)
                 </label>
                 <Select
                   value={form.status}
-                  onValueChange={(value) => updateField({ status: value as any })}
+                  onValueChange={(value) =>
+                    updateField({ status: value as any })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Status" />
@@ -224,7 +232,9 @@ export function GoalFormModal({ open, onClose, goalToEdit }: GoalFormModalProps)
                   min={0}
                   max={100}
                   value={form.progress || 0}
-                  onChange={(e) => updateField({ progress: parseInt(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    updateField({ progress: parseInt(e.target.value) || 0 })
+                  }
                 />
               </div>
             </div>
@@ -243,4 +253,3 @@ export function GoalFormModal({ open, onClose, goalToEdit }: GoalFormModalProps)
     </Dialog>
   );
 }
-
