@@ -159,6 +159,9 @@ export const tasksRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const conditions = [];
 
+      // Filter by current user
+      conditions.push(eq(tasks.userId, ctx.session.user.id));
+
       // Always exclude archived tasks from list view
       conditions.push(eq(tasks.archived, false));
 
@@ -473,19 +476,31 @@ export const tasksRouter = createTRPCRouter({
         .returning();
 
       console.log('🟡 UPDATE - DB returned:', {
-        id: updated.id,
-        dueDate: updated.dueDate,
-        dueDateType: typeof updated.dueDate,
+        id: updated?.id,
+        dueDate: updated?.dueDate,
+        dueDateType: typeof updated?.dueDate,
       });
+
+      if (!updated) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update task',
+        });
+      }
 
       // Track time if status changed
       if (patch.status !== undefined && patch.status !== currentTask.status) {
-        await trackTaskTime(
-          id,
-          ctx.session.user.id,
-          currentTask.status,
-          patch.status
-        );
+        try {
+          await trackTaskTime(
+            id,
+            ctx.session.user.id,
+            currentTask.status,
+            patch.status
+          );
+        } catch (error) {
+          console.error('Failed to track task time:', error);
+          // Don't fail the update if tracking fails
+        }
       }
 
       // optional: upsert/replace subtasks if provided
