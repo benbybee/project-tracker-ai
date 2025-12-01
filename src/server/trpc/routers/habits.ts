@@ -122,6 +122,7 @@ export const habitsRouter = createTRPCRouter({
           habitId: habitLogs.habitId,
           completedDate: habitLogs.completedDate,
           notes: habitLogs.notes,
+          createdAt: habitLogs.createdAt,
         })
         .from(habitLogs)
         .innerJoin(habits, eq(habitLogs.habitId, habits.id))
