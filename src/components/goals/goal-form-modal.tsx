@@ -106,6 +106,8 @@ export function GoalFormModal({
           ...form,
           description: form.description || undefined,
           targetDate: form.targetDate || undefined,
+          progress: form.progress || 0,
+          projectId: form.projectId || undefined,
           // Ensure types match what mutation expects
           category: form.category as any,
           status: form.status as any,
