@@ -104,6 +104,8 @@ export function GoalFormModal({
         await updateGoal.mutateAsync({
           id: goalToEdit.id,
           ...form,
+          description: form.description || undefined,
+          targetDate: form.targetDate || undefined,
           // Ensure types match what mutation expects
           category: form.category as any,
           status: form.status as any,
