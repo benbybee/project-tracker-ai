@@ -159,7 +159,7 @@ export function HabitList({ habits, logs, date, onEdit }: HabitListProps) {
   };
 
   return (
-    <div className="">
+    <div className="max-w-3xl mx-auto">
       {renderHabitGroup('Morning', groupedHabits.morning)}
       {renderHabitGroup('Afternoon', groupedHabits.afternoon)}
       {renderHabitGroup('Evening', groupedHabits.evening)}

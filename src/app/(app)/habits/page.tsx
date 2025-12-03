@@ -95,7 +95,7 @@ export default function HabitsPage() {
             </Button>
           </div>
         ) : (
-          <div className="">
+          <div className="max-w-3xl mx-auto">
             <HabitStats habits={habits} logs={logs || []} />
             <HabitList
               habits={habits}
