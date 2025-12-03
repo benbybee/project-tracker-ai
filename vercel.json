@@ -1,0 +1,48 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "crons": [
+    { "path": "/api/maintenance/archive-completed", "schedule": "59 23 * * 0" },
+    { "path": "/api/ai/patterns/cron", "schedule": "0 0 * * 0" },
+    { "path": "/api/slack/daily-standup", "schedule": "0 9 * * 1-5" },
+    { "path": "/api/notifications/check-due-dates", "schedule": "0 8 * * *" },
+    { "path": "/api/ai/chat/cleanup", "schedule": "0 */6 * * *" }
+  ],
+  "regions": ["iad1"],
+  "headers": [
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
+      ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/icons/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}

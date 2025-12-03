@@ -1,0 +1,321 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import {
+  CalendarDays,
+  ChevronRight,
+  Clock,
+  Trash2,
+  CheckCircle2,
+  AlarmClock,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { parseDateAsLocal, formatDate } from '@/lib/date-utils';
+import type { Task } from '@/types/task';
+
+export type Role = { id: string; name: string; color: string };
+export type Subtask = { id: number; title: string; completed: boolean };
+
+export function TaskCard({
+  task,
+  onOpen,
+  onComplete,
+  onSnooze,
+  onDelete,
+  onStatusChange,
+  className,
+}: {
+  task: Task;
+  onOpen?: (task: Task) => void;
+  onComplete?: (taskId: string) => void;
+  onSnooze?: (taskId: string, days: 1 | 2 | 3) => void;
+  onDelete?: (taskId: string) => void;
+  onStatusChange?: (taskId: string, status: Task['status']) => void;
+  className?: string;
+  draggable?: boolean;
+}) {
+  const p = task.priorityScore
+    ? (Number(task.priorityScore) as 1 | 2 | 3 | 4)
+    : 2;
+  const subDone = task.subtasks?.filter((s) => s.completed).length ?? 0;
+  const subTotal = task.subtasks?.length ?? 0;
+  const hasSubs = subTotal > 0;
+
+  // Parse date as local date (not UTC) to avoid timezone issues
+  const due = task.dueDate ? parseDateAsLocal(task.dueDate) : null;
+  const { dueText, overdue } = dueBadge(due);
+
+  // Calculate status indicators
+  const daysStale = task.updatedAt
+    ? (Date.now() - new Date(task.updatedAt).getTime()) / 86400000
+    : 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueToday = due && due.toDateString() === today.toDateString();
+  const stale = daysStale > 7;
+
+  const isCompleted = task.status === 'completed';
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (e.target.checked) {
+      onComplete?.(task.id);
+    } else if (onStatusChange) {
+      onStatusChange(task.id, 'not_started');
+    }
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.stopPropagation();
+    onStatusChange?.(task.id, e.target.value as Task['status']);
+  };
+
+  return (
+    <motion.div
+      layout
+      whileHover={{ y: -2, scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+      onClick={() => onOpen?.(task)}
+      className={cn(
+        'group relative overflow-hidden rounded-xl border shadow-sm',
+        'bg-white/80 dark:bg-white/10 border-gray-200 backdrop-blur',
+        'hover:shadow-md cursor-pointer transition-all',
+        className
+      )}
+    >
+      {/* Priority corner ribbon */}
+      <div
+        className="absolute top-0 right-0 w-0 h-0 pointer-events-none"
+        style={{
+          borderStyle: 'solid',
+          borderWidth: '0 32px 32px 0',
+          borderColor: `transparent ${getPriorityColor(p)} transparent transparent`,
+        }}
+        aria-label={`Priority ${p}`}
+      />
+
+      {/* content */}
+      <div className="px-4 py-3">
+        <div className="flex items-start gap-3">
+          {/* Checkbox for completion */}
+          <input
+            type="checkbox"
+            checked={isCompleted}
+            onChange={handleCheckboxChange}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer flex-shrink-0"
+            aria-label="Mark as complete"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h4
+                className={cn(
+                  'font-semibold text-gray-900 leading-snug',
+                  isCompleted && 'line-through text-gray-500'
+                )}
+              >
+                {task.title}
+              </h4>
+              <div className="flex gap-1 flex-shrink-0">
+                {overdue && (
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 font-medium">
+                    Overdue
+                  </span>
+                )}
+                {dueToday && (
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700 font-medium">
+                    Due Today
+                  </span>
+                )}
+                {stale && (
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+                    Stale
+                  </span>
+                )}
+              </div>
+            </div>
+            {task.projectName && (
+              <div className="text-xs text-gray-500">{task.projectName}</div>
+            )}
+            {task.ticketId && (
+              <div className="text-xs text-blue-600 mt-1">
+                🎫 Ticket #{task.ticketId.slice(-8)}
+                {task.ticketStatus && (
+                  <span
+                    className={`ml-2 px-1.5 py-0.5 rounded text-[10px] ${
+                      task.ticketStatus === 'new'
+                        ? 'bg-green-100 text-green-700'
+                        : task.ticketStatus === 'viewed'
+                          ? 'bg-blue-100 text-blue-700'
+                          : task.ticketStatus === 'pending_tasks'
+                            ? 'bg-orange-100 text-orange-700'
+                            : task.ticketStatus === 'complete'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {task.ticketStatus.replace('_', ' ')}
+                  </span>
+                )}
+                {task.ticketTaskCount && task.ticketTaskCount > 1 && (
+                  <span className="ml-1 text-gray-500">
+                    ({task.ticketTaskCount} tasks)
+                  </span>
+                )}
+              </div>
+            )}
+            {task.description && (
+              <p className="text-sm text-gray-700 line-clamp-2 mt-1">
+                {task.description}
+              </p>
+            )}
+            {/* RE-ENABLED - Phase 5 */}
+            {task.dueDate && (
+              <div className="text-xs text-gray-500 mt-1">
+                Due {formatDate(task.dueDate)}
+              </div>
+            )}
+          </div>
+          <button
+            className="ml-auto opacity-0 group-hover:opacity-100 transition"
+            onClick={() => onOpen?.(task)}
+            aria-label="Open"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-2 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 flex-wrap">
+          {due && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full',
+                overdue
+                  ? 'bg-red-500/10 text-red-600'
+                  : 'bg-black/5 dark:bg-white/10'
+              )}
+            >
+              <CalendarDays className="h-3 w-3" /> {dueText}
+            </span>
+          )}
+          {task.role && typeof task.role === 'object' && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+              style={{
+                backgroundColor: `${task.role.color}22`,
+                color: task.role.color,
+              }}
+              title="Role"
+            >
+              {task.role.name}
+            </span>
+          )}
+          {hasSubs && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10">
+              <Clock className="h-3 w-3" /> {subDone}/{subTotal}
+            </span>
+          )}
+          {/* Status dropdown - visible on hover or always on mobile */}
+          {onStatusChange && (
+            <select
+              value={task.status}
+              onChange={handleStatusChange}
+              onClick={(e) => e.stopPropagation()}
+              className={cn(
+                'text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1',
+                'bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'cursor-pointer opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity'
+              )}
+              aria-label="Change status"
+            >
+              <option value="not_started">Not Started</option>
+              <option value="in_progress">In Progress</option>
+              <option value="blocked">Blocked</option>
+              <option value="completed">Completed</option>
+              <option value="content">Content</option>
+              <option value="design">Design</option>
+              <option value="dev">Dev</option>
+              <option value="qa">QA</option>
+              <option value="launch">Launch</option>
+            </select>
+          )}
+        </div>
+      </div>
+
+      {/* quick actions */}
+      <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+        <IconBtn label="Complete" onClick={() => onComplete?.(task.id)}>
+          <CheckCircle2 className="h-4 w-4" />
+        </IconBtn>
+        <IconBtn label="Snooze +1d" onClick={() => onSnooze?.(task.id, 1)}>
+          <AlarmClock className="h-4 w-4" />
+        </IconBtn>
+        <IconBtn label="Delete" onClick={() => onDelete?.(task.id)}>
+          <Trash2 className="h-4 w-4" />
+        </IconBtn>
+      </div>
+    </motion.div>
+  );
+}
+
+function IconBtn({
+  children,
+  onClick,
+  label,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      aria-label={label}
+      onClick={onClick}
+      className="h-8 w-8 rounded-md border border-white/50 bg-white/60 hover:bg-white/80 backdrop-blur flex items-center justify-center"
+    >
+      {children}
+    </button>
+  );
+}
+
+function getPriorityColor(p: 1 | 2 | 3 | 4): string {
+  // Priority colors: Low → Urgent
+  const map: Record<1 | 2 | 3 | 4, string> = {
+    1: '#9CA3AF', // Gray
+    2: '#3B82F6', // Blue
+    3: '#F97316', // Orange
+    4: '#EF4444', // Red
+  };
+  return map[p];
+}
+
+function dueBadge(due: Date | null) {
+  if (!due) return { badge: null, dueText: '', overdue: false };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(due);
+  d.setHours(0, 0, 0, 0);
+  const diff = Math.round((+d - +today) / 86400000);
+  const overdue = diff < 0;
+
+  const dueText =
+    diff === 0
+      ? 'Today'
+      : diff === 1
+        ? 'Tomorrow'
+        : diff > 1
+          ? `In ${diff}d`
+          : `${Math.abs(diff)}d late`;
+  const chip = (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px]',
+        overdue ? 'bg-red-500/15 text-red-600' : 'bg-black/5 dark:bg-white/10'
+      )}
+    >
+      <CalendarDays className="h-3 w-3" />
+      {dueText}
+    </span>
+  );
+  return { badge: chip, dueText, overdue };
+}
