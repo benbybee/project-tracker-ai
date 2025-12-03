@@ -46,7 +46,7 @@ export function HabitList({ habits, logs, date, onEdit }: HabitListProps) {
     return logs.some((log) => {
       const logDate =
         (log.completedDate as unknown) instanceof Date
-          ? format(log.completedDate as unknown as Date, 'yyyy-MM-dd')
+          ? (log.completedDate as unknown as Date).toISOString().split('T')[0]
           : log.completedDate;
       return log.habitId === habitId && logDate === dateStr;
     });
@@ -159,7 +159,7 @@ export function HabitList({ habits, logs, date, onEdit }: HabitListProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="">
       {renderHabitGroup('Morning', groupedHabits.morning)}
       {renderHabitGroup('Afternoon', groupedHabits.afternoon)}
       {renderHabitGroup('Evening', groupedHabits.evening)}

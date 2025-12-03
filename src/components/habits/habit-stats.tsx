@@ -18,7 +18,7 @@ export function HabitStats({ habits, logs }: HabitStatsProps) {
   const completedToday = logs.filter((log) => {
     const logDate =
       (log.completedDate as unknown) instanceof Date
-        ? format(log.completedDate as unknown as Date, 'yyyy-MM-dd')
+        ? (log.completedDate as unknown as Date).toISOString().split('T')[0]
         : log.completedDate;
     return logDate === today;
   }).length;
