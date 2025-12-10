@@ -1,11 +1,11 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import { Calendar, ArrowLeft, Edit2 } from 'lucide-react';
-import { trpc } from '@/lib/trpc';
+import { trpc } from '@/lib/trpc/client';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
-import { useState } from 'react';
+import { TaskList } from '@/components/pattern4/task-list';
 
 export default function WeekDetailPage({
   params,
@@ -28,11 +28,44 @@ export default function WeekDetailPage({
     weekId: resolvedParams.id,
   });
 
+  // Fetch week tasks
+  const { data: tasks = [] } = trpc.pattern4.tasks.listByWeek.useQuery({
+    weekId: resolvedParams.id,
+  });
+
   // Update week mutation
   const updateWeek = trpc.pattern4.weeks.update.useMutation({
     onSuccess: () => {
       utils.pattern4.weeks.getById.invalidate({ id: resolvedParams.id });
       setIsEditingTheme(false);
+    },
+  });
+
+  // Task mutations
+  const createTask = trpc.pattern4.tasks.createForPattern4.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listByWeek.invalidate({ weekId: resolvedParams.id });
+      utils.pattern4.stats.weekProgress.invalidate({
+        weekId: resolvedParams.id,
+      });
+    },
+  });
+
+  const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listByWeek.invalidate({ weekId: resolvedParams.id });
+      utils.pattern4.stats.weekProgress.invalidate({
+        weekId: resolvedParams.id,
+      });
+    },
+  });
+
+  const deleteTask = trpc.tasks.delete.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listByWeek.invalidate({ weekId: resolvedParams.id });
+      utils.pattern4.stats.weekProgress.invalidate({
+        weekId: resolvedParams.id,
+      });
     },
   });
 
@@ -182,14 +215,34 @@ export default function WeekDetailPage({
       </div>
 
       {/* Tasks Section */}
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-4">Tasks</h2>
-        <div className="p-8 text-center rounded-xl bg-white/5 border border-white/10">
-          <p className="text-muted-foreground">
-            Task management integration coming soon. Use the existing task
-            system and link tasks to this week via sprint week assignment.
-          </p>
-        </div>
+      <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+        <TaskList
+          tasks={tasks.map((t) => ({
+            id: t.id,
+            title: t.title,
+            status: t.status,
+            priorityScore: t.priorityScore,
+            budgetPlanned: t.budgetPlanned,
+            budgetSpent: t.budgetSpent,
+            sprintWeekId: t.sprintWeekId,
+            opportunityId: t.opportunityId,
+          }))}
+          onTaskCreate={async (data) => {
+            await createTask.mutateAsync({
+              ...data,
+              sprintWeekId: resolvedParams.id,
+              sprintId: sprint.id,
+            });
+          }}
+          onTaskUpdate={async (id, data) => {
+            await updateTask.mutateAsync({ id, ...data });
+          }}
+          onTaskDelete={async (id) => {
+            await deleteTask.mutateAsync({ id });
+          }}
+          sprintWeekId={resolvedParams.id}
+          sprintId={sprint.id}
+        />
       </div>
     </div>
   );

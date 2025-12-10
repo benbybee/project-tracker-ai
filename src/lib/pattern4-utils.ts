@@ -152,7 +152,7 @@ export function validateSprintDates(
 export function sumDecimalValues(
   values: Array<string | number | null | undefined>
 ): number {
-  return values.reduce((sum, val) => {
+  return values.reduce((sum: number, val) => {
     if (!val) return sum;
     const num = typeof val === 'string' ? parseFloat(val) : val;
     return sum + (isNaN(num) ? 0 : num);

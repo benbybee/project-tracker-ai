@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
-import { sprints, sprintWeeks, opportunities, tasks } from '@/server/db';
-import { eq, and, desc } from 'drizzle-orm';
+import { sprints, sprintWeeks, opportunities, tasks, projects, roles } from '@/server/db';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
 // Input schemas
@@ -77,6 +77,22 @@ const OpportunityComplete = z.object({
   profit: z.string().optional(),
   decision: z.enum(['KEEP', 'ADJUST', 'CANCEL', 'UNDECIDED']),
   outcomeNotes: z.string().optional(),
+});
+
+const TaskCreate = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  priority: z.string().optional(), // 1-4
+  budgetPlanned: z.string().optional(),
+  sprintId: z.string().uuid().optional(),
+  sprintWeekId: z.string().uuid().optional(),
+  opportunityId: z.string().uuid().optional(),
+});
+
+const TaskBulkMove = z.object({
+  taskIds: z.array(z.string().uuid()),
+  targetSprintWeekId: z.string().uuid().optional(),
+  targetOpportunityId: z.string().uuid().optional(),
 });
 
 export const pattern4Router = createTRPCRouter({
@@ -687,6 +703,123 @@ export const pattern4Router = createTRPCRouter({
         }
 
         return deletedOpportunity;
+      }),
+  }),
+
+  // ===== TASK PROCEDURES =====
+  tasks: createTRPCRouter({
+    listByWeek: protectedProcedure
+      .input(z.object({ weekId: z.string().uuid() }))
+      .query(async ({ input, ctx }) => {
+        const weekTasks = await ctx.db
+          .select()
+          .from(tasks)
+          .where(
+            and(
+              eq(tasks.sprintWeekId, input.weekId),
+              eq(tasks.userId, ctx.session.user.id)
+            )
+          )
+          .orderBy(desc(tasks.priorityScore), desc(tasks.createdAt));
+
+        return weekTasks;
+      }),
+
+    listByOpportunity: protectedProcedure
+      .input(z.object({ opportunityId: z.string().uuid() }))
+      .query(async ({ input, ctx }) => {
+        const opportunityTasks = await ctx.db
+          .select()
+          .from(tasks)
+          .where(
+            and(
+              eq(tasks.opportunityId, input.opportunityId),
+              eq(tasks.userId, ctx.session.user.id)
+            )
+          )
+          .orderBy(desc(tasks.priorityScore), desc(tasks.createdAt));
+
+        return opportunityTasks;
+      }),
+
+    createForPattern4: protectedProcedure
+      .input(TaskCreate)
+      .mutation(async ({ input, ctx }) => {
+        // Need a default project for the task (required field)
+        // Find or create a "Pattern 4" project
+        let project = await ctx.db
+          .select()
+          .from(projects)
+          .where(
+            and(
+              eq(projects.userId, ctx.session.user.id),
+              eq(projects.name, 'Pattern 4')
+            )
+          )
+          .limit(1)
+          .then((res) => res[0]);
+
+        if (!project) {
+          // Create a default project if it doesn't exist
+          [project] = await ctx.db
+            .insert(projects)
+            .values({
+              userId: ctx.session.user.id,
+              name: 'Pattern 4',
+              type: 'general',
+              description: 'Tasks created from Pattern 4 Sprint System',
+            })
+            .returning();
+        }
+
+        const [newTask] = await ctx.db
+          .insert(tasks)
+          .values({
+            userId: ctx.session.user.id,
+            projectId: project.id,
+            title: input.title,
+            description: input.description,
+            priorityScore: input.priority || '2',
+            budgetPlanned: input.budgetPlanned,
+            sprintId: input.sprintId,
+            sprintWeekId: input.sprintWeekId,
+            opportunityId: input.opportunityId,
+            status: 'not_started',
+          })
+          .returning();
+
+        return newTask;
+      }),
+
+    bulkMove: protectedProcedure
+      .input(TaskBulkMove)
+      .mutation(async ({ input, ctx }) => {
+        if (input.taskIds.length === 0) return { count: 0 };
+
+        const updateData: any = {
+          updatedAt: new Date(),
+        };
+
+        if (input.targetSprintWeekId) {
+          updateData.sprintWeekId = input.targetSprintWeekId;
+        }
+
+        if (input.targetOpportunityId) {
+          updateData.opportunityId = input.targetOpportunityId;
+        }
+
+        const result = await ctx.db
+          .update(tasks)
+          .set(updateData)
+          .where(
+            and(
+              inArray(tasks.id, input.taskIds),
+              eq(tasks.userId, ctx.session.user.id)
+            )
+          )
+          .returning();
+
+        return { count: result.length };
       }),
   }),
 
