@@ -15,73 +15,67 @@ import { cn } from '@/lib/utils';
 interface BurndownChartProps {
   data: Array<{
     day: string;
-    remaining: number;
     ideal: number;
+    actual: number;
   }>;
   title?: string;
   className?: string;
 }
 
-export function BurndownChart({
-  data,
-  title,
-  className,
-}: BurndownChartProps) {
-  if (!data || data.length === 0) {
-    return (
-      <div className={cn('flex items-center justify-center h-64 bg-white/5 rounded-xl border border-white/10', className)}>
-        <p className="text-muted-foreground">No burndown data available</p>
-      </div>
-    );
-  }
-
+export function BurndownChart({ data, title, className }: BurndownChartProps) {
   return (
-    <div className={cn('p-4 bg-white/5 rounded-xl border border-white/10', className)}>
-      {title && <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>}
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorRemaining" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#818cf8" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#1e293b',
-                borderColor: '#334155',
-                borderRadius: '8px',
-                color: '#f8fafc',
-              }}
-              itemStyle={{ color: '#f8fafc' }}
-            />
-            <Legend />
-            <Area
-              type="monotone"
-              dataKey="ideal"
-              name="Ideal Burndown"
-              stroke="#94a3b8"
-              fill="transparent"
-              strokeDasharray="5 5"
-              strokeWidth={2}
-            />
-            <Area
-              type="monotone"
-              dataKey="remaining"
-              name="Remaining Tasks"
-              stroke="#818cf8"
-              fillOpacity={1}
-              fill="url(#colorRemaining)"
-              strokeWidth={2}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+    <div className={cn('w-full h-[300px]', className)}>
+      {title && (
+        <h3 className="text-sm font-medium text-foreground mb-4">{title}</h3>
+      )}
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={data}
+          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+          <XAxis
+            dataKey="day"
+            stroke="#94a3b8"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            stroke="#94a3b8"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#1e293b',
+              border: '1px solid #ffffff20',
+              borderRadius: '8px',
+            }}
+            itemStyle={{ color: '#fff' }}
+          />
+          <Legend />
+          <Area
+            type="monotone"
+            dataKey="ideal"
+            stroke="#64748b"
+            strokeDasharray="5 5"
+            fill="transparent"
+            strokeWidth={2}
+            name="Ideal Burndown"
+          />
+          <Area
+            type="monotone"
+            dataKey="actual"
+            stroke="#8b5cf6"
+            fill="#8b5cf6"
+            fillOpacity={0.1}
+            strokeWidth={2}
+            name="Actual Remaining"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }
-

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, Circle, MoreVertical, Calendar, Target, DollarSign } from 'lucide-react';
+import { CheckCircle, Circle, MoreHorizontal, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/pattern4-utils';
+import { format, parseISO } from 'date-fns';
 import { TaskCreateForm } from './task-create-form';
 import { TaskBulkActions } from './task-bulk-actions';
 
@@ -11,40 +12,41 @@ interface Task {
   id: string;
   title: string;
   status: string;
-  priorityScore?: string | null; // 1-4 as string from DB
+  priorityScore: string;
   budgetPlanned?: string | null;
   budgetSpent?: string | null;
+  dueDate?: string | null;
   sprintWeekId?: string | null;
   opportunityId?: string | null;
 }
 
 interface TaskListProps {
   tasks: Task[];
+  groupBy?: 'none' | 'week' | 'opportunity';
+  onTaskUpdate: (taskId: string, data: Partial<Task>) => Promise<void>;
   onTaskCreate: (data: any) => Promise<void>;
-  onTaskUpdate: (id: string, data: any) => Promise<void>;
-  onTaskDelete: (id: string) => Promise<void>;
-  onBulkMove?: (ids: string[], targetId: string) => Promise<void>;
-  sprintId?: string;
-  sprintWeekId?: string;
-  opportunityId?: string;
+  onTaskDelete: (taskIds: string[]) => Promise<void>;
+  context?: {
+    sprintId?: string;
+    sprintWeekId?: string;
+    opportunityId?: string;
+  };
   className?: string;
 }
 
 export function TaskList({
   tasks,
-  onTaskCreate,
+  groupBy = 'none',
   onTaskUpdate,
+  onTaskCreate,
   onTaskDelete,
-  onBulkMove,
-  sprintId,
-  sprintWeekId,
-  opportunityId,
+  context,
   className,
 }: TaskListProps) {
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [isCreating, setIsCreating] = useState(false);
 
-  const toggleTaskSelection = (taskId: string) => {
+  const toggleSelection = (taskId: string) => {
     const newSelection = new Set(selectedTasks);
     if (newSelection.has(taskId)) {
       newSelection.delete(taskId);
@@ -54,163 +56,151 @@ export function TaskList({
     setSelectedTasks(newSelection);
   };
 
-  const clearSelection = () => {
-    setSelectedTasks(new Set());
-  };
-
   const handleBulkComplete = async () => {
     await Promise.all(
-      Array.from(selectedTasks).map((id) =>
-        onTaskUpdate(id, { status: 'completed' })
+      Array.from(selectedTasks).map((taskId) =>
+        onTaskUpdate(taskId, { status: 'completed' })
       )
     );
-    clearSelection();
   };
 
   const handleBulkDelete = async () => {
-    if (confirm(`Delete ${selectedTasks.size} tasks?`)) {
-      await Promise.all(Array.from(selectedTasks).map((id) => onTaskDelete(id)));
-      clearSelection();
-    }
+    await onTaskDelete(Array.from(selectedTasks));
+    setSelectedTasks(new Set());
+  };
+
+  const TaskItem = ({ task }: { task: Task }) => {
+    const isCompleted = task.status === 'completed';
+    const isSelected = selectedTasks.has(task.id);
+
+    return (
+      <div
+        className={cn(
+          'group flex items-center gap-3 p-3 rounded-lg border border-transparent hover:bg-white/5 hover:border-white/10 transition-all',
+          isSelected && 'bg-white/5 border-indigo-500/30'
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleSelection(task.id)}
+            className="w-4 h-4 rounded border-white/20 bg-transparent text-indigo-500 focus:ring-indigo-500/50"
+          />
+          <button
+            onClick={() =>
+              onTaskUpdate(task.id, {
+                status: isCompleted ? 'not_started' : 'completed',
+              })
+            }
+            className={cn(
+              'transition-colors',
+              isCompleted ? 'text-green-400' : 'text-gray-400 hover:text-white'
+            )}
+          >
+            {isCompleted ? (
+              <CheckCircle className="h-5 w-5" />
+            ) : (
+              <Circle className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p
+            className={cn(
+              'font-medium truncate transition-colors',
+              isCompleted
+                ? 'text-muted-foreground line-through'
+                : 'text-foreground'
+            )}
+          >
+            {task.title}
+          </p>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            {task.budgetPlanned && (
+              <span className="flex items-center gap-1">
+                <DollarSign className="h-3 w-3" />
+                {formatCurrency(task.budgetPlanned)}
+              </span>
+            )}
+            {task.dueDate && (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {format(parseISO(task.dueDate), 'MMM d')}
+              </span>
+            )}
+            <span
+              className={cn(
+                'px-1.5 py-0.5 rounded text-[10px] font-medium',
+                task.priorityScore === '1' && 'bg-red-500/20 text-red-300',
+                task.priorityScore === '2' &&
+                  'bg-yellow-500/20 text-yellow-300',
+                task.priorityScore === '3' && 'bg-blue-500/20 text-blue-300',
+                task.priorityScore === '4' && 'bg-gray-500/20 text-gray-300'
+              )}
+            >
+              P{task.priorityScore}
+            </span>
+          </div>
+        </div>
+
+        <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-all">
+          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </div>
+    );
   };
 
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Header / Actions */}
+      {/* Header Actions */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Tasks</h3>
         <button
-          onClick={() => setIsCreating(true)}
+          onClick={() => setIsCreating(!isCreating)}
           className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
         >
-          + Add Task
+          {isCreating ? 'Cancel' : '+ Add Task'}
         </button>
       </div>
 
       {/* Create Form */}
       {isCreating && (
-        <div className="p-4 rounded-xl bg-white/5 border border-white/10 mb-4">
-          <TaskCreateForm
-            sprintId={sprintId}
-            sprintWeekId={sprintWeekId}
-            opportunityId={opportunityId}
-            onSubmit={async (data) => {
-              await onTaskCreate(data);
-              setIsCreating(false);
-            }}
-            onCancel={() => setIsCreating(false)}
-          />
-        </div>
+        <TaskCreateForm
+          onSubmit={async (data) => {
+            await onTaskCreate(data);
+            setIsCreating(false);
+          }}
+          onCancel={() => setIsCreating(false)}
+          defaultValues={context}
+        />
       )}
 
       {/* Task List */}
-      <div className="space-y-2">
-        {tasks.map((task) => {
-          const isSelected = selectedTasks.has(task.id);
-          const isCompleted = task.status === 'completed';
-
-          return (
-            <div
-              key={task.id}
-              className={cn(
-                'group flex items-center gap-3 p-3 rounded-lg border transition-all duration-200',
-                isSelected
-                  ? 'bg-indigo-500/10 border-indigo-500/30'
-                  : 'bg-white/5 border-white/10 hover:bg-white/10'
-              )}
-            >
-              {/* Checkbox */}
-              <button
-                onClick={() => toggleTaskSelection(task.id)}
-                className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-              >
-                <div
-                  className={cn(
-                    'w-4 h-4 rounded border',
-                    isSelected
-                      ? 'bg-indigo-500 border-indigo-500'
-                      : 'border-muted-foreground'
-                  )}
-                />
-              </button>
-
-              {/* Status Toggle */}
-              <button
-                onClick={() =>
-                  onTaskUpdate(task.id, {
-                    status: isCompleted ? 'not_started' : 'completed',
-                  })
-                }
-                className="text-muted-foreground hover:text-indigo-400 transition-colors"
-              >
-                {isCompleted ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                ) : (
-                  <Circle className="h-5 w-5" />
-                )}
-              </button>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p
-                  className={cn(
-                    'text-sm font-medium truncate',
-                    isCompleted
-                      ? 'text-muted-foreground line-through'
-                      : 'text-foreground'
-                  )}
+      <div className="space-y-1">
+        {tasks.length > 0
+          ? tasks.map((task) => <TaskItem key={task.id} task={task} />)
+          : !isCreating && (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No tasks yet.</p>
+                <button
+                  onClick={() => setIsCreating(true)}
+                  className="text-indigo-400 hover:text-indigo-300 text-sm mt-2"
                 >
-                  {task.title}
-                </p>
-                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                  {task.priorityScore && (
-                    <span
-                      className={cn(
-                        'px-1.5 py-0.5 rounded',
-                        task.priorityScore === '4'
-                          ? 'bg-red-500/20 text-red-300'
-                          : task.priorityScore === '3'
-                          ? 'bg-orange-500/20 text-orange-300'
-                          : 'bg-white/10'
-                      )}
-                    >
-                      P{task.priorityScore}
-                    </span>
-                  )}
-                  {task.budgetPlanned && (
-                    <span className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3" />
-                      {formatCurrency(task.budgetPlanned)}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                <button className="p-1 hover:bg-white/10 rounded">
-                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                  Create your first task
                 </button>
               </div>
-            </div>
-          );
-        })}
-
-        {tasks.length === 0 && !isCreating && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            No tasks found. Add one to get started.
-          </div>
-        )}
+            )}
       </div>
 
-      {/* Bulk Actions Toolbar */}
+      {/* Bulk Actions */}
       <TaskBulkActions
         selectedCount={selectedTasks.size}
-        onClearSelection={clearSelection}
+        onClearSelection={() => setSelectedTasks(new Set())}
         onComplete={handleBulkComplete}
         onDelete={handleBulkDelete}
       />
     </div>
   );
 }
-

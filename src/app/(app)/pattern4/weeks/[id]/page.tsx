@@ -1,10 +1,11 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use } from 'react';
 import { Calendar, ArrowLeft, Edit2 } from 'lucide-react';
-import { trpc } from '@/lib/trpc';
+import { trpc } from '@/lib/trpc/client';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
+import { useState } from 'react';
 import { TaskList } from '@/components/pattern4/task-list';
 
 export default function WeekDetailPage({
@@ -28,7 +29,7 @@ export default function WeekDetailPage({
     weekId: resolvedParams.id,
   });
 
-  // Fetch week tasks
+  // Fetch tasks
   const { data: tasks = [] } = trpc.pattern4.tasks.listByWeek.useQuery({
     weekId: resolvedParams.id,
   });
@@ -42,7 +43,7 @@ export default function WeekDetailPage({
   });
 
   // Task mutations
-  const createTask = trpc.pattern4.tasks.createForPattern4.useMutation({
+  const createTask = trpc.pattern4.tasks.create.useMutation({
     onSuccess: () => {
       utils.pattern4.tasks.listByWeek.invalidate({ weekId: resolvedParams.id });
       utils.pattern4.stats.weekProgress.invalidate({
@@ -51,7 +52,7 @@ export default function WeekDetailPage({
     },
   });
 
-  const updateTask = trpc.tasks.update.useMutation({
+  const updateTask = trpc.pattern4.tasks.update.useMutation({
     onSuccess: () => {
       utils.pattern4.tasks.listByWeek.invalidate({ weekId: resolvedParams.id });
       utils.pattern4.stats.weekProgress.invalidate({
@@ -60,7 +61,7 @@ export default function WeekDetailPage({
     },
   });
 
-  const deleteTask = trpc.tasks.delete.useMutation({
+  const deleteTask = trpc.pattern4.tasks.delete.useMutation({
     onSuccess: () => {
       utils.pattern4.tasks.listByWeek.invalidate({ weekId: resolvedParams.id });
       utils.pattern4.stats.weekProgress.invalidate({
@@ -215,33 +216,37 @@ export default function WeekDetailPage({
       </div>
 
       {/* Tasks Section */}
-      <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+      <div>
         <TaskList
           tasks={tasks.map((t) => ({
-            id: t.id,
-            title: t.title,
-            status: t.status,
-            priorityScore: t.priorityScore,
-            budgetPlanned: t.budgetPlanned,
-            budgetSpent: t.budgetSpent,
-            sprintWeekId: t.sprintWeekId,
-            opportunityId: t.opportunityId,
+            ...t,
+            priorityScore: t.priority?.toString() || '4',
+            budgetPlanned: t.budgetPlanned?.toString(),
+            budgetSpent: t.budgetSpent?.toString(),
           }))}
           onTaskCreate={async (data) => {
             await createTask.mutateAsync({
               ...data,
-              sprintWeekId: resolvedParams.id,
               sprintId: sprint.id,
+              sprintWeekId: week.id,
             });
           }}
-          onTaskUpdate={async (id, data) => {
-            await updateTask.mutateAsync({ id, ...data });
+          onTaskUpdate={async (taskId, data) => {
+            await updateTask.mutateAsync({
+              id: taskId,
+              ...data,
+              priority: data.priorityScore
+                ? parseInt(data.priorityScore)
+                : undefined,
+            });
           }}
-          onTaskDelete={async (id) => {
-            await deleteTask.mutateAsync({ id });
+          onTaskDelete={async (taskIds) => {
+            await deleteTask.mutateAsync(taskIds);
           }}
-          sprintWeekId={resolvedParams.id}
-          sprintId={sprint.id}
+          context={{
+            sprintId: sprint.id,
+            sprintWeekId: week.id,
+          }}
         />
       </div>
     </div>

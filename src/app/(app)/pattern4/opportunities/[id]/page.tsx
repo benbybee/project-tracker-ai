@@ -2,14 +2,14 @@
 
 import { use, useState } from 'react';
 import { ArrowLeft, Edit2, CheckCircle, XCircle } from 'lucide-react';
-import { trpc } from '@/lib/trpc';
+import { trpc } from '@/lib/trpc/client';
 import Link from 'next/link';
 import { FinancialSummary } from '@/components/pattern4/financial-summary';
 import { CompleteOpportunityDialog } from '@/components/pattern4/complete-opportunity-dialog';
 import { OpportunityForm } from '@/components/pattern4/opportunity-form';
+import { TaskList } from '@/components/pattern4/task-list';
 import { getOpportunityStatusColor } from '@/lib/pattern4-utils';
 import { cn } from '@/lib/utils';
-import { TaskList } from '@/components/pattern4/task-list';
 
 export default function OpportunityDetailPage({
   params,
@@ -68,7 +68,7 @@ export default function OpportunityDetailPage({
   });
 
   // Task mutations
-  const createTask = trpc.pattern4.tasks.createForPattern4.useMutation({
+  const createTask = trpc.pattern4.tasks.create.useMutation({
     onSuccess: () => {
       utils.pattern4.tasks.listByOpportunity.invalidate({
         opportunityId: resolvedParams.id,
@@ -79,7 +79,7 @@ export default function OpportunityDetailPage({
     },
   });
 
-  const updateTask = trpc.tasks.update.useMutation({
+  const updateTask = trpc.pattern4.tasks.update.useMutation({
     onSuccess: () => {
       utils.pattern4.tasks.listByOpportunity.invalidate({
         opportunityId: resolvedParams.id,
@@ -90,7 +90,7 @@ export default function OpportunityDetailPage({
     },
   });
 
-  const deleteTask = trpc.tasks.delete.useMutation({
+  const deleteTask = trpc.pattern4.tasks.delete.useMutation({
     onSuccess: () => {
       utils.pattern4.tasks.listByOpportunity.invalidate({
         opportunityId: resolvedParams.id,
@@ -209,18 +209,7 @@ export default function OpportunityDetailPage({
             Edit Opportunity
           </h2>
           <OpportunityForm
-            defaultValues={{
-              name: opportunity.name,
-              type: opportunity.type,
-              lane: opportunity.lane || undefined,
-              summary: opportunity.summary || undefined,
-              complexity: opportunity.complexity || undefined,
-              estimatedCost: opportunity.estimatedCost || undefined,
-              goToMarket: opportunity.goToMarket || undefined,
-              details: opportunity.details || undefined,
-              priority: opportunity.priority || undefined,
-              notes: opportunity.notes || undefined,
-            }}
+            defaultValues={opportunity}
             onSubmit={handleUpdate}
             onCancel={() => setIsEditing(false)}
             submitLabel="Update Opportunity"
@@ -297,13 +286,13 @@ export default function OpportunityDetailPage({
         </div>
       )}
 
-      {/* Progress */}
-      {progress && progress.totalTasks > 0 && (
-        <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            Task Progress
-          </h2>
-          <div className="space-y-4">
+      {/* Progress & Tasks */}
+      <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+        <h2 className="text-lg font-semibold text-foreground mb-4">
+          Task Progress
+        </h2>
+        {progress && progress.totalTasks > 0 && (
+          <div className="space-y-4 mb-6">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Tasks</span>
               <span className="font-semibold text-foreground">
@@ -332,37 +321,38 @@ export default function OpportunityDetailPage({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Tasks List */}
-      <div className="p-6 rounded-xl bg-white/5 border border-white/10">
         <TaskList
           tasks={tasks.map((t) => ({
-            id: t.id,
-            title: t.title,
-            status: t.status,
-            priorityScore: t.priorityScore,
-            budgetPlanned: t.budgetPlanned,
-            budgetSpent: t.budgetSpent,
-            sprintWeekId: t.sprintWeekId,
-            opportunityId: t.opportunityId,
+            ...t,
+            priorityScore: t.priority?.toString() || '4',
+            budgetPlanned: t.budgetPlanned?.toString(),
+            budgetSpent: t.budgetSpent?.toString(),
           }))}
           onTaskCreate={async (data) => {
             await createTask.mutateAsync({
               ...data,
-              opportunityId: resolvedParams.id,
-              sprintId: opportunity.sprintId,
+              sprintId: opportunity.sprintId!,
+              opportunityId: opportunity.id,
             });
           }}
-          onTaskUpdate={async (id, data) => {
-            await updateTask.mutateAsync({ id, ...data });
+          onTaskUpdate={async (taskId, data) => {
+            await updateTask.mutateAsync({
+              id: taskId,
+              ...data,
+              priority: data.priorityScore
+                ? parseInt(data.priorityScore)
+                : undefined,
+            });
           }}
-          onTaskDelete={async (id) => {
-            await deleteTask.mutateAsync({ id });
+          onTaskDelete={async (taskIds) => {
+            await deleteTask.mutateAsync(taskIds);
           }}
-          opportunityId={resolvedParams.id}
-          sprintId={opportunity.sprintId || undefined}
+          context={{
+            sprintId: opportunity.sprintId!,
+            opportunityId: opportunity.id,
+          }}
         />
       </div>
 
