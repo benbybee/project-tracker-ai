@@ -14,82 +14,74 @@ import { cn } from '@/lib/utils';
 
 interface ProgressLineChartProps {
   data: Array<{
-    date: string;
-    completed: number;
-    total: number;
-    planned?: number;
+    name: string;
+    actual: number;
+    planned: number;
   }>;
-  title?: string;
   className?: string;
+  title?: string;
 }
 
 export function ProgressLineChart({
   data,
-  title,
   className,
+  title,
 }: ProgressLineChartProps) {
   return (
-    <div className={cn('w-full h-[300px]', className)}>
+    <div className={cn('w-full h-64', className)}>
       {title && (
-        <h3 className="text-sm font-medium text-foreground mb-4">{title}</h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-4">
+          {title}
+        </h3>
       )}
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
-          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+          margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
           <XAxis
-            dataKey="date"
-            stroke="#94a3b8"
+            dataKey="name"
+            stroke="#ffffff50"
             fontSize={12}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
-            stroke="#94a3b8"
+            stroke="#ffffff50"
             fontSize={12}
             tickLine={false}
             axisLine={false}
+            tickFormatter={(value) => `${value}%`}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #ffffff20',
+              backgroundColor: '#1f2937',
+              border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '8px',
             }}
-            itemStyle={{ color: '#fff' }}
+            labelStyle={{ color: '#9ca3af' }}
           />
           <Legend />
           <Line
             type="monotone"
-            dataKey="total"
-            stroke="#64748b"
+            dataKey="planned"
+            stroke="#6366f1"
             strokeWidth={2}
             dot={false}
-            name="Total Tasks"
+            name="Planned"
           />
           <Line
             type="monotone"
-            dataKey="completed"
-            stroke="#8b5cf6"
+            dataKey="actual"
+            stroke="#10b981"
             strokeWidth={2}
-            activeDot={{ r: 6 }}
-            name="Completed"
+            activeDot={{ r: 4 }}
+            name="Actual"
           />
-          {data[0]?.planned !== undefined && (
-            <Line
-              type="monotone"
-              dataKey="planned"
-              stroke="#10b981"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={false}
-              name="Planned"
-            />
-          )}
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
 }
+

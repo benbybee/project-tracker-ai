@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
   ReferenceLine,
 } from 'recharts';
 import { cn } from '@/lib/utils';
@@ -19,36 +18,38 @@ interface VelocityChartProps {
     completed: number;
   }>;
   averageVelocity: number;
-  title?: string;
   className?: string;
+  title?: string;
 }
 
 export function VelocityChart({
   data,
   averageVelocity,
-  title,
   className,
+  title,
 }: VelocityChartProps) {
   return (
-    <div className={cn('w-full h-[300px]', className)}>
+    <div className={cn('w-full h-64', className)}>
       {title && (
-        <h3 className="text-sm font-medium text-foreground mb-4">{title}</h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-4">
+          {title}
+        </h3>
       )}
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
-          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+          margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
           <XAxis
             dataKey="week"
-            stroke="#94a3b8"
+            stroke="#ffffff50"
             fontSize={12}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
-            stroke="#94a3b8"
+            stroke="#ffffff50"
             fontSize={12}
             tickLine={false}
             axisLine={false}
@@ -56,18 +57,11 @@ export function VelocityChart({
           <Tooltip
             cursor={{ fill: '#ffffff05' }}
             contentStyle={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #ffffff20',
+              backgroundColor: '#1f2937',
+              border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '8px',
             }}
-            itemStyle={{ color: '#fff' }}
-          />
-          <Legend />
-          <Bar
-            dataKey="completed"
-            fill="#8b5cf6"
-            name="Tasks Completed"
-            radius={[4, 4, 0, 0]}
+            labelStyle={{ color: '#9ca3af' }}
           />
           <ReferenceLine
             y={averageVelocity}
@@ -79,6 +73,12 @@ export function VelocityChart({
               fontSize: 10,
               position: 'right',
             }}
+          />
+          <Bar
+            dataKey="completed"
+            fill="#6366f1"
+            name="Tasks Completed"
+            radius={[4, 4, 0, 0]}
           />
         </BarChart>
       </ResponsiveContainer>

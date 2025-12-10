@@ -36,14 +36,14 @@ const pattern4NavItems = [
     icon: Lightbulb,
   },
   {
-    href: '/pattern4/completed',
-    label: 'Completed Opportunities',
-    icon: Archive,
-  },
-  {
     href: '/pattern4/analytics',
     label: 'Analytics',
     icon: BarChart3,
+  },
+  {
+    href: '/pattern4/completed',
+    label: 'Completed Opportunities',
+    icon: Archive,
   },
 ];
 

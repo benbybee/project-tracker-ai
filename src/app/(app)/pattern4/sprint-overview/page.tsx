@@ -1,13 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Calendar, Target, TrendingUp } from 'lucide-react';
+import { Plus, Calendar, Target, TrendingUp, Activity } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { SprintProgressBar } from '@/components/pattern4/sprint-progress-bar';
 import { WeekProgressCard } from '@/components/pattern4/week-progress-card';
 import { OpportunityCard } from '@/components/pattern4/opportunity-card';
 import { SprintForm } from '@/components/pattern4/sprint-form';
 import { TaskList } from '@/components/pattern4/task-list';
+import { BurndownChart } from '@/components/pattern4/charts/burndown-chart';
+import { VelocityChart } from '@/components/pattern4/charts/velocity-chart';
+import { OpportunityPieChart } from '@/components/pattern4/charts/opportunity-pie-chart';
 import { format, parseISO } from 'date-fns';
 import { getCurrentSprintWeek } from '@/lib/pattern4-utils';
 
@@ -33,6 +36,22 @@ export default function SprintOverviewPage() {
 
   // Get sprint progress
   const { data: sprintProgress } = trpc.pattern4.stats.sprintProgress.useQuery(
+    { sprintId: activeSprint?.id! },
+    { enabled: !!activeSprint }
+  );
+
+  // Analytics data for mini-charts
+  const { data: burndownData } = trpc.analyticsPattern4.getBurndownData.useQuery(
+    { sprintId: activeSprint?.id! },
+    { enabled: !!activeSprint }
+  );
+
+  const { data: velocityData } = trpc.analyticsPattern4.getVelocityData.useQuery(
+    { sprintId: activeSprint?.id! },
+    { enabled: !!activeSprint }
+  );
+
+  const { data: distributionData } = trpc.analyticsPattern4.getOpportunityDistribution.useQuery(
     { sprintId: activeSprint?.id! },
     { enabled: !!activeSprint }
   );
@@ -66,6 +85,8 @@ export default function SprintOverviewPage() {
     onSuccess: () => {
       utils.pattern4.tasks.listBySprintCurrent.invalidate();
       utils.pattern4.stats.sprintProgress.invalidate();
+      utils.analyticsPattern4.getBurndownData.invalidate();
+      utils.analyticsPattern4.getVelocityData.invalidate();
     },
   });
 
@@ -73,6 +94,8 @@ export default function SprintOverviewPage() {
     onSuccess: () => {
       utils.pattern4.tasks.listBySprintCurrent.invalidate();
       utils.pattern4.stats.sprintProgress.invalidate();
+      utils.analyticsPattern4.getBurndownData.invalidate();
+      utils.analyticsPattern4.getVelocityData.invalidate();
     },
   });
 
@@ -80,6 +103,8 @@ export default function SprintOverviewPage() {
     onSuccess: () => {
       utils.pattern4.tasks.listBySprintCurrent.invalidate();
       utils.pattern4.stats.sprintProgress.invalidate();
+      utils.analyticsPattern4.getBurndownData.invalidate();
+      utils.analyticsPattern4.getVelocityData.invalidate();
     },
   });
 
@@ -140,22 +165,31 @@ export default function SprintOverviewPage() {
   return (
     <div className="p-8 space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          {activeSprint.name}
-        </h1>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span>
-              {format(parseISO(activeSprint.startDate), 'MMM d, yyyy')} -{' '}
-              {format(parseISO(activeSprint.endDate), 'MMM d, yyyy')}
-            </span>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {activeSprint.name}
+          </h1>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {format(parseISO(activeSprint.startDate), 'MMM d, yyyy')} -{' '}
+                {format(parseISO(activeSprint.endDate), 'MMM d, yyyy')}
+              </span>
+            </div>
           </div>
+          {activeSprint.goalSummary && (
+            <p className="mt-3 text-foreground/80">{activeSprint.goalSummary}</p>
+          )}
         </div>
-        {activeSprint.goalSummary && (
-          <p className="mt-3 text-foreground/80">{activeSprint.goalSummary}</p>
-        )}
+        <a
+          href="/pattern4/analytics"
+          className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium transition-colors"
+        >
+          <Activity className="h-4 w-4 text-indigo-400" />
+          View Full Analytics
+        </a>
       </div>
 
       {/* Sprint Progress */}
@@ -168,6 +202,26 @@ export default function SprintOverviewPage() {
           />
         </div>
       )}
+
+      {/* Analytics Mini-Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <BurndownChart data={burndownData || []} title="Burndown" />
+        </div>
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <VelocityChart
+            data={(velocityData?.data || []).slice(-5)}
+            averageVelocity={velocityData?.averageVelocity || 0}
+            title="Recent Velocity"
+          />
+        </div>
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <OpportunityPieChart
+            data={distributionData?.statusData || []}
+            title="Opportunity Status"
+          />
+        </div>
+      </div>
 
       {/* Current Week */}
       {currentWeek && (
@@ -263,26 +317,6 @@ export default function SprintOverviewPage() {
             </p>
           </div>
         )}
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-          <p className="text-sm text-muted-foreground mb-1">Total Weeks</p>
-          <p className="text-3xl font-bold text-foreground">{weeks.length}</p>
-        </div>
-        <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-          <p className="text-sm text-muted-foreground mb-1">Opportunities</p>
-          <p className="text-3xl font-bold text-foreground">
-            {opportunities.length}
-          </p>
-        </div>
-        <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-          <p className="text-sm text-muted-foreground mb-1">Tasks</p>
-          <p className="text-3xl font-bold text-foreground">
-            {sprintProgress?.totalTasks || 0}
-          </p>
-        </div>
       </div>
     </div>
   );

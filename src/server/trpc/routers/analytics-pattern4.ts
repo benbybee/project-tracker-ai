@@ -1,15 +1,19 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
-import { sprints, sprintWeeks, opportunities, tasks } from '@/server/db';
-import { eq, and, asc } from 'drizzle-orm';
+import {
+  sprints,
+  sprintWeeks,
+  opportunities,
+  tasks,
+} from '@/server/db';
+import { eq, and, desc, sql, gte, lte } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
-import { addDays, format, differenceInDays } from 'date-fns';
+import { differenceInDays, startOfDay, endOfDay, addDays, format } from 'date-fns';
 
 export const analyticsPattern4Router = createTRPCRouter({
   getSprintTrends: protectedProcedure
     .input(z.object({ sprintId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      // Get sprint details
       const [sprint] = await ctx.db
         .select()
         .from(sprints)
@@ -27,13 +31,12 @@ export const analyticsPattern4Router = createTRPCRouter({
         });
       }
 
-      // Get all tasks for sprint with creation and completion dates
+      // Get all tasks in sprint
       const sprintTasks = await ctx.db
         .select({
-          id: tasks.id,
           status: tasks.status,
-          createdAt: tasks.createdAt,
           updatedAt: tasks.updatedAt,
+          createdAt: tasks.createdAt,
         })
         .from(tasks)
         .where(
@@ -43,55 +46,59 @@ export const analyticsPattern4Router = createTRPCRouter({
           )
         );
 
-      // Generate trend data
-      // Group by day for the last 30 days or sprint duration
-      const startDate = new Date(sprint.startDate);
-      const endDate = new Date(); // Up to today
-      const days = differenceInDays(endDate, startDate) + 1;
+      // Generate trend data by week
+      const weeks = [];
+      let currentDate = new Date(sprint.startDate);
+      const endDate = new Date(sprint.endDate);
+      let weekCount = 1;
 
-      const trendData = [];
-      let cumulativeTotal = 0;
-      let cumulativeCompleted = 0;
+      while (currentDate <= endDate) {
+        const weekStart = startOfDay(currentDate);
+        const weekEnd = endOfDay(addDays(currentDate, 6));
 
-      // This is a simplified trend calculation
-      // In a real app, you'd want more precise historical tracking
-      // For now, we'll approximate based on created/updated timestamps
-      for (let i = 0; i < Math.min(days, 90); i++) {
-        const currentDate = addDays(startDate, i);
-        const dateStr = format(currentDate, 'MMM d');
+        // Tasks created before or during this week
+        const tasksInScope = sprintTasks.filter(
+          (t) => new Date(t.createdAt) <= weekEnd
+        );
 
-        // Count tasks created on or before this date
-        const totalOnDate = sprintTasks.filter(
-          (t) => new Date(t.createdAt) <= currentDate
-        ).length;
-
-        // Count tasks completed on or before this date
-        const completedOnDate = sprintTasks.filter(
+        // Tasks completed by end of this week
+        const completedCount = tasksInScope.filter(
           (t) =>
-            t.status === 'completed' && new Date(t.updatedAt) <= currentDate
+            t.status === 'completed' && new Date(t.updatedAt) <= weekEnd
         ).length;
 
-        trendData.push({
-          date: dateStr,
-          total: totalOnDate,
-          completed: completedOnDate,
-          planned: Math.round(totalOnDate * ((i + 1) / 90)), // Rough planned line
+        // Ideal progress (linear)
+        const totalDuration = differenceInDays(endDate, new Date(sprint.startDate));
+        const daysElapsed = differenceInDays(weekEnd, new Date(sprint.startDate));
+        const progressPercent = Math.min(100, Math.round((daysElapsed / totalDuration) * 100));
+
+        // Actual progress
+        const totalCount = Math.max(tasksInScope.length, 1);
+        const actualPercent = Math.round((completedCount / totalCount) * 100);
+
+        weeks.push({
+          name: `Week ${weekCount}`,
+          actual: actualPercent,
+          planned: progressPercent,
         });
+
+        currentDate = addDays(currentDate, 7);
+        weekCount++;
       }
 
-      return trendData;
+      return weeks;
     }),
 
   getFinancialSummary: protectedProcedure
     .input(z.object({ sprintId: z.string().uuid().optional() }))
     .query(async ({ input, ctx }) => {
-      let oppQuery = ctx.db
+      let query = ctx.db
         .select()
         .from(opportunities)
         .where(eq(opportunities.userId, ctx.session.user.id));
 
       if (input.sprintId) {
-        oppQuery = oppQuery.where(
+        query = query.where(
           and(
             eq(opportunities.userId, ctx.session.user.id),
             eq(opportunities.sprintId, input.sprintId)
@@ -99,47 +106,26 @@ export const analyticsPattern4Router = createTRPCRouter({
         );
       }
 
-      const opps = await oppQuery;
+      const opps = await query;
 
-      // Group by opportunity for chart data
-      const chartData = opps
-        .filter((o) => o.actualCost || o.estimatedCost || o.revenue)
-        .map((o) => ({
-          name: o.name,
-          cost: parseFloat(o.actualCost || o.estimatedCost || '0'),
-          revenue: parseFloat(o.revenue || '0'),
-          profit: parseFloat(o.profit || '0'),
-        }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 10); // Top 10 by revenue
-
-      // Calculate totals
-      const totals = opps.reduce(
-        (acc, o) => ({
-          totalCost:
-            acc.totalCost + parseFloat(o.actualCost || o.estimatedCost || '0'),
-          totalRevenue: acc.totalRevenue + parseFloat(o.revenue || '0'),
-          totalProfit: acc.totalProfit + parseFloat(o.profit || '0'),
-        }),
-        { totalCost: 0, totalRevenue: 0, totalProfit: 0 }
-      );
-
-      return {
-        chartData,
-        totals,
-      };
+      return opps.map((opp) => ({
+        name: opp.name,
+        cost: parseFloat(opp.actualCost || opp.estimatedCost || '0'),
+        revenue: parseFloat(opp.revenue || '0'),
+        profit: parseFloat(opp.profit || '0'),
+      })).filter(item => item.cost > 0 || item.revenue > 0);
     }),
 
   getOpportunityDistribution: protectedProcedure
     .input(z.object({ sprintId: z.string().uuid().optional() }))
     .query(async ({ input, ctx }) => {
-      let oppQuery = ctx.db
+      let query = ctx.db
         .select()
         .from(opportunities)
         .where(eq(opportunities.userId, ctx.session.user.id));
 
       if (input.sprintId) {
-        oppQuery = oppQuery.where(
+        query = query.where(
           and(
             eq(opportunities.userId, ctx.session.user.id),
             eq(opportunities.sprintId, input.sprintId)
@@ -147,37 +133,40 @@ export const analyticsPattern4Router = createTRPCRouter({
         );
       }
 
-      const opps = await oppQuery;
+      const opps = await query;
 
-      // Distribution by Status
-      const statusCounts: Record<string, number> = {};
+      // By Status
+      const statusData = [
+        'IDEA',
+        'PLANNING',
+        'ACTIVE',
+        'ON_HOLD',
+        'COMPLETED',
+        'KILLED',
+      ].map((status) => ({
+        name: status,
+        value: opps.filter((o) => o.status === status).length,
+      })).filter(d => d.value > 0);
+
+      // By Lane
+      const laneMap = new Map<string, number>();
       opps.forEach((o) => {
-        statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
+        if (o.lane) {
+          laneMap.set(o.lane, (laneMap.get(o.lane) || 0) + 1);
+        }
       });
-
-      const statusData = Object.entries(statusCounts).map(([name, value]) => ({
+      const laneData = Array.from(laneMap.entries()).map(([name, value]) => ({
         name,
         value,
-        color: getStatusColor(name),
       }));
 
-      // Distribution by Lane
-      const laneCounts: Record<string, number> = {};
-      opps.forEach((o) => {
-        const lane = o.lane || 'Uncategorized';
-        laneCounts[lane] = (laneCounts[lane] || 0) + 1;
-      });
+      // By Type
+      const typeData = [
+        { name: 'MAJOR', value: opps.filter((o) => o.type === 'MAJOR').length },
+        { name: 'MICRO', value: opps.filter((o) => o.type === 'MICRO').length },
+      ].filter(d => d.value > 0);
 
-      const laneData = Object.entries(laneCounts).map(([name, value]) => ({
-        name,
-        value,
-        color: getRandomColor(name),
-      }));
-
-      return {
-        statusData,
-        laneData,
-      };
+      return { statusData, laneData, typeData };
     }),
 
   getBurndownData: protectedProcedure
@@ -193,12 +182,18 @@ export const analyticsPattern4Router = createTRPCRouter({
           )
         );
 
-      if (!sprint) throw new TRPCError({ code: 'NOT_FOUND' });
+      if (!sprint) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Sprint not found',
+        });
+      }
 
       const sprintTasks = await ctx.db
         .select({
           status: tasks.status,
           updatedAt: tasks.updatedAt,
+          createdAt: tasks.createdAt,
         })
         .from(tasks)
         .where(
@@ -209,119 +204,128 @@ export const analyticsPattern4Router = createTRPCRouter({
         );
 
       const totalTasks = sprintTasks.length;
-      const startDate = new Date(sprint.startDate);
+      const data = [];
+      let currentDate = new Date(sprint.startDate);
       const endDate = new Date(sprint.endDate);
-      const totalDays = 90;
+      const today = new Date();
 
-      const burndownData = [];
-      const now = new Date();
+      // Calculate daily burn
+      while (currentDate <= endDate) {
+        // Stop calculating future actuals
+        if (currentDate > today) break;
 
-      for (let i = 0; i <= totalDays; i++) {
-        const currentDate = addDays(startDate, i);
-        const dayStr = format(currentDate, 'MMM d');
+        const dayEnd = endOfDay(currentDate);
+        
+        // Tasks completed by this day
+        const completedCount = sprintTasks.filter(
+          (t) => t.status === 'completed' && new Date(t.updatedAt) <= dayEnd
+        ).length;
+
+        // Remaining
+        const remaining = Math.max(0, totalTasks - completedCount);
 
         // Ideal line
-        const ideal = Math.max(0, totalTasks - totalTasks * (i / totalDays));
+        const totalDuration = differenceInDays(endDate, new Date(sprint.startDate));
+        const daysElapsed = differenceInDays(currentDate, new Date(sprint.startDate));
+        const ideal = Math.max(0, totalTasks - (totalTasks * (daysElapsed / totalDuration)));
 
-        // Actual remaining
-        // Only calculate for past/present days
-        let actual = 0;
-        if (currentDate <= now) {
-          const completedByDate = sprintTasks.filter(
-            (t) =>
-              t.status === 'completed' && new Date(t.updatedAt) <= currentDate
-          ).length;
-          actual = Math.max(0, totalTasks - completedByDate);
-        }
-
-        burndownData.push({
-          day: dayStr,
+        data.push({
+          day: format(currentDate, 'MMM d'),
+          actual: remaining,
           ideal: Math.round(ideal),
-          actual: currentDate <= now ? actual : 0, // 0 prevents chart line from extending
         });
+
+        currentDate = addDays(currentDate, 1);
       }
 
-      // Filter out future dates for 'actual' line in chart display logic usually
-      // For Recharts Area, we might return null or handle in component
+      // Fill future ideal line
+      while (currentDate <= endDate) {
+        const totalDuration = differenceInDays(endDate, new Date(sprint.startDate));
+        const daysElapsed = differenceInDays(currentDate, new Date(sprint.startDate));
+        const ideal = Math.max(0, totalTasks - (totalTasks * (daysElapsed / totalDuration)));
 
-      return burndownData;
+        data.push({
+          day: format(currentDate, 'MMM d'),
+          actual: null as any, // Null for future actuals
+          ideal: Math.round(ideal),
+        });
+        currentDate = addDays(currentDate, 1);
+      }
+
+      return data;
     }),
 
   getVelocityData: protectedProcedure
     .input(z.object({ sprintId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      // Get weeks for sprint
-      const weeks = await ctx.db
+      const [sprint] = await ctx.db
         .select()
-        .from(sprintWeeks)
-        .where(eq(sprintWeeks.sprintId, input.sprintId))
-        .orderBy(sprintWeeks.weekIndex);
+        .from(sprints)
+        .where(
+          and(
+            eq(sprints.id, input.sprintId),
+            eq(sprints.userId, ctx.session.user.id)
+          )
+        );
 
-      const velocityData = [];
-      let totalCompleted = 0;
-
-      for (const week of weeks) {
-        // Count completed tasks for this week's assignment
-        // Note: Ideally we check completion date falling within week range
-        // For simplicity using sprintWeekId assignment + status='completed'
-
-        const completedTasks = await ctx.db
-          .select({ count: sql<number>`count(*)` })
-          .from(tasks)
-          .where(
-            and(
-              eq(tasks.sprintWeekId, week.id),
-              eq(tasks.userId, ctx.session.user.id),
-              eq(tasks.status, 'completed')
-            )
-          );
-
-        const count = Number(completedTasks[0]?.count || 0);
-        totalCompleted += count;
-
-        velocityData.push({
-          week: `W${week.weekIndex}`,
-          completed: count,
+      if (!sprint) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Sprint not found',
         });
       }
 
-      const averageVelocity =
-        weeks.length > 0
-          ? Math.round((totalCompleted / weeks.length) * 10) / 10
-          : 0;
+      const sprintTasks = await ctx.db
+        .select({
+          status: tasks.status,
+          updatedAt: tasks.updatedAt,
+        })
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.sprintId, input.sprintId),
+            eq(tasks.userId, ctx.session.user.id),
+            eq(tasks.status, 'completed')
+          )
+        );
+
+      const weeks = [];
+      let currentDate = new Date(sprint.startDate);
+      const endDate = new Date(sprint.endDate);
+      let weekCount = 1;
+      let totalCompleted = 0;
+
+      while (currentDate <= endDate) {
+        const weekStart = startOfDay(currentDate);
+        const weekEnd = endOfDay(addDays(currentDate, 6));
+
+        // Tasks completed this week
+        const weeklyCompleted = sprintTasks.filter(
+          (t) => {
+            const completedAt = new Date(t.updatedAt);
+            return completedAt >= weekStart && completedAt <= weekEnd;
+          }
+        ).length;
+
+        weeks.push({
+          week: `Week ${weekCount}`,
+          completed: weeklyCompleted,
+        });
+
+        totalCompleted += weeklyCompleted;
+        currentDate = addDays(currentDate, 7);
+        weekCount++;
+      }
+
+      // Calculate average velocity (excluding future weeks if 0)
+      const activeWeeks = weeks.filter(w => w.completed > 0).length;
+      const averageVelocity = activeWeeks > 0 
+        ? Math.round((totalCompleted / activeWeeks) * 10) / 10 
+        : 0;
 
       return {
-        velocityData,
+        data: weeks,
         averageVelocity,
       };
     }),
 });
-
-// Helpers
-function getStatusColor(status: string): string {
-  const map: Record<string, string> = {
-    IDEA: '#94a3b8',
-    PLANNING: '#60a5fa',
-    ACTIVE: '#4ade80',
-    ON_HOLD: '#fbbf24',
-    COMPLETED: '#a78bfa',
-    KILLED: '#f87171',
-  };
-  return map[status] || '#94a3b8';
-}
-
-function getRandomColor(str: string): string {
-  const colors = [
-    '#60a5fa',
-    '#4ade80',
-    '#fbbf24',
-    '#f87171',
-    '#a78bfa',
-    '#2dd4bf',
-  ];
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-}

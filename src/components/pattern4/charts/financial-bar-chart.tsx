@@ -20,35 +20,37 @@ interface FinancialBarChartProps {
     revenue: number;
     profit: number;
   }>;
-  title?: string;
   className?: string;
+  title?: string;
 }
 
 export function FinancialBarChart({
   data,
-  title,
   className,
+  title,
 }: FinancialBarChartProps) {
   return (
-    <div className={cn('w-full h-[300px]', className)}>
+    <div className={cn('w-full h-64', className)}>
       {title && (
-        <h3 className="text-sm font-medium text-foreground mb-4">{title}</h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-4">
+          {title}
+        </h3>
       )}
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
-          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+          margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
           <XAxis
             dataKey="name"
-            stroke="#94a3b8"
+            stroke="#ffffff50"
             fontSize={12}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
-            stroke="#94a3b8"
+            stroke="#ffffff50"
             fontSize={12}
             tickLine={false}
             axisLine={false}
@@ -57,32 +59,17 @@ export function FinancialBarChart({
           <Tooltip
             cursor={{ fill: '#ffffff05' }}
             contentStyle={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #ffffff20',
+              backgroundColor: '#1f2937',
+              border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '8px',
             }}
-            formatter={(value: number) => [formatCurrency(value), '']}
-            itemStyle={{ color: '#fff' }}
+            formatter={(value: number) => formatCurrency(value)}
+            labelStyle={{ color: '#9ca3af' }}
           />
           <Legend />
-          <Bar
-            dataKey="cost"
-            fill="#f87171"
-            name="Cost"
-            radius={[4, 4, 0, 0]}
-          />
-          <Bar
-            dataKey="revenue"
-            fill="#10b981"
-            name="Revenue"
-            radius={[4, 4, 0, 0]}
-          />
-          <Bar
-            dataKey="profit"
-            fill="#8b5cf6"
-            name="Profit"
-            radius={[4, 4, 0, 0]}
-          />
+          <Bar dataKey="cost" fill="#ef4444" name="Cost" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="revenue" fill="#10b981" name="Revenue" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="profit" fill="#6366f1" name="Profit" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
