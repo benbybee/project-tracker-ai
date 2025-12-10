@@ -1,13 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Lightbulb, Filter } from 'lucide-react';
+import { Plus, Lightbulb, Filter, Upload } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { OpportunityCard } from '@/components/pattern4/opportunity-card';
 import { OpportunityForm } from '@/components/pattern4/opportunity-form';
+import { OpportunityBulkUpload } from '@/components/pattern4/opportunity-bulk-upload';
+
+type CreateMode = 'none' | 'single' | 'bulk';
 
 export default function OpportunitiesPage() {
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createMode, setCreateMode] = useState<CreateMode>('none');
   const [statusFilter, setStatusFilter] = useState<
     'ALL' | 'IDEA' | 'PLANNING' | 'ACTIVE' | 'ON_HOLD'
   >('ALL');
@@ -31,7 +34,7 @@ export default function OpportunitiesPage() {
   const createOpportunity = trpc.pattern4.opportunities.create.useMutation({
     onSuccess: () => {
       utils.pattern4.opportunities.list.invalidate();
-      setShowCreateForm(false);
+      setCreateMode('none');
     },
   });
 
@@ -40,6 +43,11 @@ export default function OpportunitiesPage() {
       ...data,
       sprintId: activeSprint?.id,
     });
+  };
+
+  const handleBulkUploadSuccess = (count: number) => {
+    utils.pattern4.opportunities.list.invalidate();
+    setCreateMode('none');
   };
 
   if (isLoading) {
@@ -69,24 +77,47 @@ export default function OpportunitiesPage() {
             Track and manage your business opportunities
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition-opacity"
-        >
-          <Plus className="h-5 w-5" />
-          New Opportunity
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setCreateMode('bulk')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-foreground font-medium hover:bg-white/10 transition-colors"
+          >
+            <Upload className="h-5 w-5" />
+            Bulk Upload
+          </button>
+          <button
+            onClick={() => setCreateMode('single')}
+            className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition-opacity"
+          >
+            <Plus className="h-5 w-5" />
+            New Opportunity
+          </button>
+        </div>
       </div>
 
       {/* Create Form */}
-      {showCreateForm && (
+      {createMode === 'single' && (
         <div className="p-6 rounded-xl bg-white/5 border border-white/10">
           <h2 className="text-xl font-semibold text-foreground mb-4">
             Create New Opportunity
           </h2>
           <OpportunityForm
             onSubmit={handleCreateOpportunity}
-            onCancel={() => setShowCreateForm(false)}
+            onCancel={() => setCreateMode('none')}
+          />
+        </div>
+      )}
+
+      {/* Bulk Upload */}
+      {createMode === 'bulk' && (
+        <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            Bulk Upload Opportunities
+          </h2>
+          <OpportunityBulkUpload
+            sprintId={activeSprint?.id}
+            onSuccess={handleBulkUploadSuccess}
+            onCancel={() => setCreateMode('none')}
           />
         </div>
       )}
@@ -130,14 +161,23 @@ export default function OpportunitiesPage() {
             Create your first opportunity to start tracking your business ideas
             and initiatives.
           </p>
-          {!showCreateForm && (
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition-opacity mx-auto"
-            >
-              <Plus className="h-5 w-5" />
-              Create First Opportunity
-            </button>
+          {createMode === 'none' && (
+            <div className="flex items-center gap-3 justify-center">
+              <button
+                onClick={() => setCreateMode('single')}
+                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition-opacity"
+              >
+                <Plus className="h-5 w-5" />
+                Create First Opportunity
+              </button>
+              <button
+                onClick={() => setCreateMode('bulk')}
+                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-foreground font-medium hover:bg-white/10 transition-colors"
+              >
+                <Upload className="h-5 w-5" />
+                Or Bulk Upload
+              </button>
+            </div>
           )}
         </div>
       )}
