@@ -9,8 +9,11 @@ import {
   uuid,
   bigint,
   index,
+  decimal,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { sprints, sprintWeeks, opportunities } from './schema/pattern4';
+
 
 // Enums
 export const taskStatusEnum = pgTable('task_status_enum', {
@@ -145,6 +148,13 @@ export const tasks = pgTable(
     blockedAt: timestamp('blocked_at'),
     archived: boolean('archived').default(false),
     archivedAt: timestamp('archived_at'),
+    // Pattern 4 fields
+    sprintId: uuid('sprint_id').references(() => sprints.id),
+    sprintWeekId: uuid('sprint_week_id').references(() => sprintWeeks.id),
+    opportunityId: uuid('opportunity_id').references(() => opportunities.id),
+    priority: integer('priority'), // 1-4
+    budgetPlanned: decimal('budget_planned'),
+    budgetSpent: decimal('budget_spent'),
     // Recurring task fields
     isRecurring: boolean('is_recurring').default(false),
     recurrenceRule: jsonb('recurrence_rule'), // RRULE format (RFC 5545)
@@ -214,6 +224,18 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
   }),
   subtasks: many(subtasks),
   attachments: many(taskAttachments),
+  sprint: one(sprints, {
+    fields: [tasks.sprintId],
+    references: [sprints.id],
+  }),
+  sprintWeek: one(sprintWeeks, {
+    fields: [tasks.sprintWeekId],
+    references: [sprintWeeks.id],
+  }),
+  opportunity: one(opportunities, {
+    fields: [tasks.opportunityId],
+    references: [opportunities.id],
+  }),
 }));
 
 export const subtasksRelations = relations(subtasks, ({ one }) => ({
@@ -580,3 +602,4 @@ export * from './schema/analytics';
 export * from './schema/comments';
 export * from './schema/goals';
 export * from './schema/habits';
+export * from './schema/pattern4';

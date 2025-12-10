@@ -25,7 +25,9 @@ import {
   X,
   Target,
   CheckCircle,
+  Zap,
 } from 'lucide-react';
+import { Pattern4Submenu } from './pattern4-submenu';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +35,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: any;
+  isPattern4?: boolean; // Special flag for Pattern 4 submenu trigger
 }
 
 interface NavGroup {
@@ -84,6 +87,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: '/goals', label: 'Goals', icon: Target },
       { href: '/habits', label: 'Habits', icon: CheckCircle },
+      { href: '#pattern4', label: 'Pattern 4', icon: Zap, isPattern4: true },
     ],
   },
   {
@@ -109,16 +113,25 @@ function NavItem({
   icon: Icon,
   label,
   isCompact,
+  isPattern4,
+  onPattern4Click,
 }: {
   href: string;
   icon: any;
   label: string;
   isCompact: boolean;
   isMobile: boolean;
+  isPattern4?: boolean;
+  onPattern4Click?: () => void;
 }) {
   const pathname = usePathname();
 
   const isActive = useMemo(() => {
+    // Pattern 4 submenu items
+    if (isPattern4) {
+      return pathname.startsWith('/pattern4');
+    }
+
     // Special case for dashboard
     if (href === '/dashboard') {
       return pathname === '/dashboard' || pathname === '/';
@@ -145,7 +158,40 @@ function NavItem({
     }
 
     return false;
-  }, [pathname, href]);
+  }, [pathname, href, isPattern4]);
+
+  // Handle Pattern 4 click
+  if (isPattern4 && onPattern4Click) {
+    return (
+      <button
+        onClick={onPattern4Click}
+        className={cn(
+          'group relative flex items-center gap-3 rounded-xl px-4 py-3 transition-colors duration-200 w-full',
+          'text-foreground hover:text-foreground',
+          'hover:bg-white/10 active:bg-white/20 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
+          isActive &&
+            'bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg'
+        )}
+        aria-current={isActive ? 'page' : undefined}
+      >
+        <Icon className="h-5 w-5 flex-shrink-0" />
+
+        <AnimatePresence>
+          {!isCompact && (
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15 }}
+              className="font-medium overflow-hidden whitespace-nowrap"
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </button>
+    );
+  }
 
   return (
     <Link
@@ -184,10 +230,12 @@ function NavGroup({
   group,
   isCompact,
   isMobile,
+  onPattern4Click,
 }: {
   group: NavGroup;
   isCompact: boolean;
   isMobile: boolean;
+  onPattern4Click: () => void;
 }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -258,6 +306,8 @@ function NavGroup({
             label={item.label}
             isCompact={true}
             isMobile={isMobile}
+            isPattern4={item.isPattern4}
+            onPattern4Click={onPattern4Click}
           />
         ))}
       </>
@@ -302,6 +352,8 @@ function NavGroup({
                     label={item.label}
                     isCompact={false}
                     isMobile={isMobile}
+                    isPattern4={item.isPattern4}
+                    onPattern4Click={onPattern4Click}
                   />
                 ))}
               </motion.div>
@@ -323,6 +375,8 @@ function NavGroup({
               label={item.label}
               isCompact={false}
               isMobile={isMobile}
+              isPattern4={item.isPattern4}
+              onPattern4Click={onPattern4Click}
             />
           ))}
         </>
@@ -340,6 +394,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [isCompact, setIsCompact] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isPattern4Open, setIsPattern4Open] = useState(false);
   const isMobileOpen = isOpen; // Use prop instead of local state
 
   // Debug logging for mobile sidebar state
@@ -398,6 +453,14 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     if (!isMobile) {
       setIsCompact(!isCompact);
     }
+  };
+
+  const handlePattern4Click = () => {
+    setIsPattern4Open(true);
+  };
+
+  const handlePattern4Close = () => {
+    setIsPattern4Open(false);
   };
 
   return (
@@ -489,10 +552,17 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               group={group}
               isCompact={!isMobile && isCompact}
               isMobile={isMobile}
+              onPattern4Click={handlePattern4Click}
             />
           ))}
         </nav>
 
+        {/* Pattern 4 Submenu */}
+        <Pattern4Submenu
+          isOpen={isPattern4Open}
+          onClose={handlePattern4Close}
+          isMobile={isMobile}
+        />
         {/* Settings & Logout Buttons */}
         <div className="mt-auto p-3 border-t border-white/10 space-y-1">
           <Link
