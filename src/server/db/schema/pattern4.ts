@@ -128,4 +128,3 @@ export type NewSprintWeek = typeof sprintWeeks.$inferInsert;
 
 export type Opportunity = typeof opportunities.$inferSelect;
 export type NewOpportunity = typeof opportunities.$inferInsert;
-

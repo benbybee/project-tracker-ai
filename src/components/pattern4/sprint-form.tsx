@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { calculateSprintEndDate, formatDateForSQL } from '@/lib/pattern4-utils';
-import { format } from 'date-fns';
 
 interface SprintFormProps {
   defaultValues?: {
@@ -35,7 +34,9 @@ export function SprintForm({
   const [name, setName] = useState(defaultValues?.name || '');
   const [startDate, setStartDate] = useState(defaultValues?.startDate || '');
   const [endDate, setEndDate] = useState(defaultValues?.endDate || '');
-  const [goalSummary, setGoalSummary] = useState(defaultValues?.goalSummary || '');
+  const [goalSummary, setGoalSummary] = useState(
+    defaultValues?.goalSummary || ''
+  );
 
   const handleStartDateChange = (value: string) => {
     setStartDate(value);
@@ -155,4 +156,3 @@ export function SprintForm({
     </form>
   );
 }
-

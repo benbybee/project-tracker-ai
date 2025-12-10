@@ -8,16 +8,19 @@ import { OpportunityForm } from '@/components/pattern4/opportunity-form';
 
 export default function OpportunitiesPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'IDEA' | 'PLANNING' | 'ACTIVE' | 'ON_HOLD'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<
+    'ALL' | 'IDEA' | 'PLANNING' | 'ACTIVE' | 'ON_HOLD'
+  >('ALL');
   const utils = trpc.useContext();
 
   // Fetch active sprint
   const { data: activeSprint } = trpc.pattern4.sprints.getActive.useQuery();
 
   // Fetch opportunities
-  const { data: opportunities = [], isLoading } = trpc.pattern4.opportunities.list.useQuery({
-    status: statusFilter === 'ALL' ? undefined : statusFilter,
-  });
+  const { data: opportunities = [], isLoading } =
+    trpc.pattern4.opportunities.list.useQuery({
+      status: statusFilter === 'ALL' ? undefined : statusFilter,
+    });
 
   // Filter out completed and killed opportunities
   const activeOpportunities = opportunities.filter(
@@ -92,19 +95,21 @@ export default function OpportunitiesPage() {
       <div className="flex items-center gap-2">
         <Filter className="h-4 w-4 text-muted-foreground" />
         <div className="flex items-center gap-2">
-          {(['ALL', 'IDEA', 'PLANNING', 'ACTIVE', 'ON_HOLD'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                statusFilter === status
-                  ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white'
-                  : 'bg-white/5 text-foreground hover:bg-white/10'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+          {(['ALL', 'IDEA', 'PLANNING', 'ACTIVE', 'ON_HOLD'] as const).map(
+            (status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === status
+                    ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white'
+                    : 'bg-white/5 text-foreground hover:bg-white/10'
+                }`}
+              >
+                {status}
+              </button>
+            )
+          )}
         </div>
       </div>
 
@@ -122,8 +127,8 @@ export default function OpportunitiesPage() {
             No Opportunities Yet
           </h2>
           <p className="text-muted-foreground mb-6">
-            Create your first opportunity to start tracking your business ideas and
-            initiatives.
+            Create your first opportunity to start tracking your business ideas
+            and initiatives.
           </p>
           {!showCreateForm && (
             <button
@@ -140,7 +145,9 @@ export default function OpportunitiesPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {(['IDEA', 'PLANNING', 'ACTIVE', 'ON_HOLD'] as const).map((status) => {
-          const count = opportunities.filter((opp) => opp.status === status).length;
+          const count = opportunities.filter(
+            (opp) => opp.status === status
+          ).length;
           return (
             <div
               key={status}
@@ -155,4 +162,3 @@ export default function OpportunitiesPage() {
     </div>
   );
 }
-

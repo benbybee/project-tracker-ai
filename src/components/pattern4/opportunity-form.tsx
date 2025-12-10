@@ -93,7 +93,9 @@ export function OpportunityForm({
           <select
             id="type"
             value={formData.type}
-            onChange={(e) => updateField('type', e.target.value as 'MAJOR' | 'MICRO')}
+            onChange={(e) =>
+              updateField('type', e.target.value as 'MAJOR' | 'MICRO')
+            }
             className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           >
@@ -248,4 +250,3 @@ export function OpportunityForm({
     </form>
   );
 }
-

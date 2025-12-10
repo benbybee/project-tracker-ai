@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { Lightbulb, DollarSign, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCurrency, getOpportunityStatusColor } from '@/lib/pattern4-utils';
+import {
+  formatCurrency,
+  getOpportunityStatusColor,
+} from '@/lib/pattern4-utils';
 
 interface OpportunityCardProps {
   opportunity: {
@@ -104,4 +107,3 @@ export function OpportunityCard({
     </Link>
   );
 }
-

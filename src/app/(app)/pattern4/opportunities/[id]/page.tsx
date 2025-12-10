@@ -21,9 +21,10 @@ export default function OpportunityDetailPage({
   const utils = trpc.useContext();
 
   // Fetch opportunity
-  const { data: opportunity, isLoading } = trpc.pattern4.opportunities.getById.useQuery({
-    id: resolvedParams.id,
-  });
+  const { data: opportunity, isLoading } =
+    trpc.pattern4.opportunities.getById.useQuery({
+      id: resolvedParams.id,
+    });
 
   // Fetch progress
   const { data: progress } = trpc.pattern4.stats.opportunityProgress.useQuery({
@@ -33,7 +34,9 @@ export default function OpportunityDetailPage({
   // Update mutation
   const updateOpportunity = trpc.pattern4.opportunities.update.useMutation({
     onSuccess: () => {
-      utils.pattern4.opportunities.getById.invalidate({ id: resolvedParams.id });
+      utils.pattern4.opportunities.getById.invalidate({
+        id: resolvedParams.id,
+      });
       setIsEditing(false);
     },
   });
@@ -41,7 +44,9 @@ export default function OpportunityDetailPage({
   // Complete mutation
   const completeOpportunity = trpc.pattern4.opportunities.complete.useMutation({
     onSuccess: () => {
-      utils.pattern4.opportunities.getById.invalidate({ id: resolvedParams.id });
+      utils.pattern4.opportunities.getById.invalidate({
+        id: resolvedParams.id,
+      });
       utils.pattern4.opportunities.list.invalidate();
     },
   });
@@ -49,7 +54,9 @@ export default function OpportunityDetailPage({
   // Kill mutation
   const killOpportunity = trpc.pattern4.opportunities.kill.useMutation({
     onSuccess: () => {
-      utils.pattern4.opportunities.getById.invalidate({ id: resolvedParams.id });
+      utils.pattern4.opportunities.getById.invalidate({
+        id: resolvedParams.id,
+      });
       utils.pattern4.opportunities.list.invalidate();
     },
   });
@@ -88,7 +95,8 @@ export default function OpportunityDetailPage({
     );
   }
 
-  const isCompleted = opportunity.status === 'COMPLETED' || opportunity.status === 'KILLED';
+  const isCompleted =
+    opportunity.status === 'COMPLETED' || opportunity.status === 'KILLED';
 
   return (
     <div className="p-8 space-y-8">
@@ -181,14 +189,18 @@ export default function OpportunityDetailPage({
       {/* Details Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Summary</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Summary
+          </h2>
           <p className="text-foreground/80">
             {opportunity.summary || 'No summary provided'}
           </p>
         </div>
 
         <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Details</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Details
+          </h2>
           <div className="space-y-2 text-sm">
             {opportunity.complexity && (
               <p>
@@ -295,4 +307,3 @@ export default function OpportunityDetailPage({
     </div>
   );
 }
-

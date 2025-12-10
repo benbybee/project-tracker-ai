@@ -76,4 +76,3 @@ export function WeekProgressCard({
     </Link>
   );
 }
-

@@ -7,7 +7,11 @@ import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { useState } from 'react';
 
-export default function WeekDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function WeekDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const resolvedParams = use(params);
   const [isEditingTheme, setIsEditingTheme] = useState(false);
   const [theme, setTheme] = useState('');
@@ -182,12 +186,11 @@ export default function WeekDetailPage({ params }: { params: Promise<{ id: strin
         <h2 className="text-xl font-semibold text-foreground mb-4">Tasks</h2>
         <div className="p-8 text-center rounded-xl bg-white/5 border border-white/10">
           <p className="text-muted-foreground">
-            Task management integration coming soon. Use the existing task system
-            and link tasks to this week via sprint week assignment.
+            Task management integration coming soon. Use the existing task
+            system and link tasks to this week via sprint week assignment.
           </p>
         </div>
       </div>
     </div>
   );
 }
-

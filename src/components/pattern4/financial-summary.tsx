@@ -24,7 +24,8 @@ export function FinancialSummary({
   const cost = actualCost || estimatedCost || '0';
   const rev = revenue || '0';
   const prof = profit || String(parseFloat(rev) - parseFloat(cost));
-  const roi = showROI && revenue && actualCost ? calculateROI(revenue, actualCost) : null;
+  const roi =
+    showROI && revenue && actualCost ? calculateROI(revenue, actualCost) : null;
   const isProfitable = parseFloat(prof) >= 0;
 
   return (
@@ -93,4 +94,3 @@ export function FinancialSummary({
     </div>
   );
 }
-

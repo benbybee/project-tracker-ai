@@ -14,7 +14,6 @@ import {
 import { relations } from 'drizzle-orm';
 import { sprints, sprintWeeks, opportunities } from './schema/pattern4';
 
-
 // Enums
 export const taskStatusEnum = pgTable('task_status_enum', {
   value: text('value', {

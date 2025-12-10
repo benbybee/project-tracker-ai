@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { sprints, sprintWeeks, opportunities, tasks } from '@/server/db';
-import { eq, and, desc, sql, isNull } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 
 // Input schemas
@@ -187,7 +187,9 @@ export const pattern4Router = createTRPCRouter({
             ...updateData,
             updatedAt: new Date(),
           })
-          .where(and(eq(sprints.id, id), eq(sprints.userId, ctx.session.user.id)))
+          .where(
+            and(eq(sprints.id, id), eq(sprints.userId, ctx.session.user.id))
+          )
           .returning();
 
         if (!updatedSprint) {
@@ -210,7 +212,10 @@ export const pattern4Router = createTRPCRouter({
             updatedAt: new Date(),
           })
           .where(
-            and(eq(sprints.id, input.id), eq(sprints.userId, ctx.session.user.id))
+            and(
+              eq(sprints.id, input.id),
+              eq(sprints.userId, ctx.session.user.id)
+            )
           )
           .returning();
 
@@ -230,7 +235,10 @@ export const pattern4Router = createTRPCRouter({
         const [deletedSprint] = await ctx.db
           .delete(sprints)
           .where(
-            and(eq(sprints.id, input.id), eq(sprints.userId, ctx.session.user.id))
+            and(
+              eq(sprints.id, input.id),
+              eq(sprints.userId, ctx.session.user.id)
+            )
           )
           .returning();
 
@@ -362,10 +370,7 @@ export const pattern4Router = createTRPCRouter({
           .from(sprintWeeks)
           .innerJoin(sprints, eq(sprintWeeks.sprintId, sprints.id))
           .where(
-            and(
-              eq(sprintWeeks.id, id),
-              eq(sprints.userId, ctx.session.user.id)
-            )
+            and(eq(sprintWeeks.id, id), eq(sprints.userId, ctx.session.user.id))
           );
 
         if (!week) {
@@ -428,7 +433,14 @@ export const pattern4Router = createTRPCRouter({
         z
           .object({
             status: z
-              .enum(['IDEA', 'PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'KILLED'])
+              .enum([
+                'IDEA',
+                'PLANNING',
+                'ACTIVE',
+                'ON_HOLD',
+                'COMPLETED',
+                'KILLED',
+              ])
               .optional(),
             sprintId: z.string().uuid().optional(),
           })
@@ -593,7 +605,8 @@ export const pattern4Router = createTRPCRouter({
           .update(opportunities)
           .set({
             status: 'COMPLETED',
-            actualCost: performanceData.actualCost || totalBudgetSpent.toString(),
+            actualCost:
+              performanceData.actualCost || totalBudgetSpent.toString(),
             revenue: performanceData.revenue,
             profit: performanceData.profit,
             decision: performanceData.decision,
@@ -833,4 +846,3 @@ export const pattern4Router = createTRPCRouter({
       }),
   }),
 });
-

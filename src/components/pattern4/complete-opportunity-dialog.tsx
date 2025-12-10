@@ -29,7 +29,9 @@ export function CompleteOpportunityDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actualCost, setActualCost] = useState(estimatedCost || '');
   const [revenue, setRevenue] = useState('');
-  const [decision, setDecision] = useState<'KEEP' | 'ADJUST' | 'CANCEL' | 'UNDECIDED'>('UNDECIDED');
+  const [decision, setDecision] = useState<
+    'KEEP' | 'ADJUST' | 'CANCEL' | 'UNDECIDED'
+  >('UNDECIDED');
   const [outcomeNotes, setOutcomeNotes] = useState('');
 
   const calculateProfit = () => {
@@ -94,7 +96,10 @@ export function CompleteOpportunityDialog({
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Completing: <span className="font-semibold text-foreground">{opportunityName}</span>
+                    Completing:{' '}
+                    <span className="font-semibold text-foreground">
+                      {opportunityName}
+                    </span>
                   </p>
                 </div>
 
@@ -140,10 +145,14 @@ export function CompleteOpportunityDialog({
                   <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                     <p className="text-sm text-muted-foreground">
                       Calculated Profit:{' '}
-                      <span className={cn(
-                        'font-bold',
-                        parseFloat(calculateProfit()) >= 0 ? 'text-green-400' : 'text-red-400'
-                      )}>
+                      <span
+                        className={cn(
+                          'font-bold',
+                          parseFloat(calculateProfit()) >= 0
+                            ? 'text-green-400'
+                            : 'text-red-400'
+                        )}
+                      >
                         ${calculateProfit()}
                       </span>
                     </p>
@@ -194,7 +203,9 @@ export function CompleteOpportunityDialog({
                     disabled={isSubmitting}
                     className="flex items-center gap-2 px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                   >
-                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {isSubmitting && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
                     Complete Opportunity
                   </button>
                   <button
@@ -213,4 +224,3 @@ export function CompleteOpportunityDialog({
     </AnimatePresence>
   );
 }
-

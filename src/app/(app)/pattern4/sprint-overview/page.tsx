@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Plus, Calendar, Target, TrendingUp } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { SprintProgressBar } from '@/components/pattern4/sprint-progress-bar';
@@ -25,10 +26,11 @@ export default function SprintOverviewPage() {
   );
 
   // Fetch opportunities
-  const { data: opportunities = [] } = trpc.pattern4.opportunities.list.useQuery(
-    { sprintId: activeSprint?.id },
-    { enabled: !!activeSprint }
-  );
+  const { data: opportunities = [] } =
+    trpc.pattern4.opportunities.list.useQuery(
+      { sprintId: activeSprint?.id },
+      { enabled: !!activeSprint }
+    );
 
   // Get sprint progress
   const { data: sprintProgress } = trpc.pattern4.stats.sprintProgress.useQuery(
@@ -81,7 +83,8 @@ export default function SprintOverviewPage() {
               Start Your First Sprint
             </h1>
             <p className="text-muted-foreground">
-              Create a 90-day sprint to organize your opportunities, weeks, and tasks.
+              Create a 90-day sprint to organize your opportunities, weeks, and
+              tasks.
             </p>
           </div>
 
@@ -159,12 +162,12 @@ export default function SprintOverviewPage() {
           <h2 className="text-xl font-semibold text-foreground">
             Opportunities
           </h2>
-          <a
+          <Link
             href="/pattern4/opportunities"
             className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
           >
             View All →
-          </a>
+          </Link>
         </div>
         {opportunities.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,7 +179,8 @@ export default function SprintOverviewPage() {
           <div className="p-8 text-center rounded-xl bg-white/5 border border-white/10">
             <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground">
-              No opportunities yet. Create your first opportunity to get started.
+              No opportunities yet. Create your first opportunity to get
+              started.
             </p>
           </div>
         )}
@@ -204,4 +208,3 @@ export default function SprintOverviewPage() {
     </div>
   );
 }
-

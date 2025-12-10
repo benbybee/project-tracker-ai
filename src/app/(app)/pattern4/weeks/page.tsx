@@ -32,7 +32,9 @@ export default function WeeksPage() {
 
     setIsCreating(true);
     try {
-      const generatedWeeks = generateSprintWeeks(parseISO(activeSprint.startDate));
+      const generatedWeeks = generateSprintWeeks(
+        parseISO(activeSprint.startDate)
+      );
 
       for (const week of generatedWeeks) {
         await createWeek.mutateAsync({
@@ -130,7 +132,8 @@ export default function WeeksPage() {
             No Weeks Created Yet
           </h2>
           <p className="text-muted-foreground mb-6">
-            Generate all 13 weeks for your sprint to start planning your execution.
+            Generate all 13 weeks for your sprint to start planning your
+            execution.
           </p>
           <button
             onClick={handleGenerateWeeks}
@@ -151,4 +154,3 @@ export default function WeeksPage() {
     </div>
   );
 }
-

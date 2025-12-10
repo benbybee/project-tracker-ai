@@ -73,7 +73,9 @@ export default function CompletedOpportunitiesPage() {
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-5 w-5 text-green-400" />
-              <span className="text-sm text-muted-foreground">Total Revenue</span>
+              <span className="text-sm text-muted-foreground">
+                Total Revenue
+              </span>
             </div>
             <p className="text-2xl font-bold text-foreground">
               {formatCurrency(totals.totalRevenue)}
@@ -87,7 +89,9 @@ export default function CompletedOpportunitiesPage() {
               ) : (
                 <TrendingDown className="h-5 w-5 text-red-400" />
               )}
-              <span className="text-sm text-muted-foreground">Total Profit</span>
+              <span className="text-sm text-muted-foreground">
+                Total Profit
+              </span>
             </div>
             <p
               className={cn(
@@ -139,7 +143,10 @@ export default function CompletedOpportunitiesPage() {
                     {opportunity.completedAt && (
                       <p className="text-xs text-muted-foreground mt-1">
                         Completed:{' '}
-                        {format(new Date(opportunity.completedAt), 'MMM d, yyyy')}
+                        {format(
+                          new Date(opportunity.completedAt),
+                          'MMM d, yyyy'
+                        )}
                       </p>
                     )}
                   </div>
@@ -148,7 +155,9 @@ export default function CompletedOpportunitiesPage() {
                   <div className="flex items-center gap-6 text-sm">
                     {opportunity.actualCost && (
                       <div>
-                        <p className="text-muted-foreground text-xs mb-1">Cost</p>
+                        <p className="text-muted-foreground text-xs mb-1">
+                          Cost
+                        </p>
                         <p className="text-foreground font-semibold">
                           {formatCurrency(opportunity.actualCost)}
                         </p>
@@ -166,7 +175,9 @@ export default function CompletedOpportunitiesPage() {
                     )}
                     {opportunity.profit && (
                       <div>
-                        <p className="text-muted-foreground text-xs mb-1">Profit</p>
+                        <p className="text-muted-foreground text-xs mb-1">
+                          Profit
+                        </p>
                         <p
                           className={cn(
                             'font-bold',
@@ -210,4 +221,3 @@ export default function CompletedOpportunitiesPage() {
     </div>
   );
 }
-

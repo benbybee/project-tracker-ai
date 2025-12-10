@@ -144,4 +144,3 @@ export function Pattern4Submenu({
     </>
   );
 }
-
