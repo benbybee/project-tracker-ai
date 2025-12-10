@@ -48,6 +48,7 @@ interface UnifiedAiChatProps {
   onSendMessage?: (message: string, context?: ChatContext) => Promise<string>;
   className?: string;
   showHeader?: boolean;
+  initialMessage?: string | null;
 }
 
 const ANALYTICS_PROMPTS: QuickPrompt[] = [
@@ -130,6 +131,7 @@ export function UnifiedAiChat({
   onSendMessage,
   className = '',
   showHeader = true,
+  initialMessage,
 }: UnifiedAiChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -138,6 +140,7 @@ export function UnifiedAiChat({
   const [confirmationData, setConfirmationData] =
     useState<ConfirmationData | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [initialMessageSent, setInitialMessageSent] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -148,6 +151,15 @@ export function UnifiedAiChat({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Auto-send initial message when provided
+  useEffect(() => {
+    if (initialMessage && !initialMessageSent && !isLoading) {
+      setInitialMessageSent(true);
+      handleSend(initialMessage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMessage, initialMessageSent, isLoading]);
 
   const handleSend = async (messageContent?: string) => {
     const content = messageContent || input.trim();

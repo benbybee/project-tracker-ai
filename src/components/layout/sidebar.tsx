@@ -115,6 +115,7 @@ function NavItem({
   isCompact,
   isPattern4,
   onPattern4Click,
+  isPattern4Open,
 }: {
   href: string;
   icon: any;
@@ -123,6 +124,7 @@ function NavItem({
   isMobile: boolean;
   isPattern4?: boolean;
   onPattern4Click?: () => void;
+  isPattern4Open?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -183,12 +185,21 @@ function NavItem({
               animate={{ opacity: 1, width: 'auto' }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.15 }}
-              className="font-medium overflow-hidden whitespace-nowrap"
+              className="font-medium overflow-hidden whitespace-nowrap flex-1"
             >
               {label}
             </motion.span>
           )}
         </AnimatePresence>
+
+        {!isCompact && (
+          <ChevronRight
+            className={cn(
+              'h-4 w-4 flex-shrink-0 ml-auto transition-transform duration-200',
+              isPattern4Open && 'rotate-90'
+            )}
+          />
+        )}
       </button>
     );
   }
@@ -231,11 +242,13 @@ function NavGroup({
   isCompact,
   isMobile,
   onPattern4Click,
+  isPattern4Open,
 }: {
   group: NavGroup;
   isCompact: boolean;
   isMobile: boolean;
   onPattern4Click: () => void;
+  isPattern4Open: boolean;
 }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -308,6 +321,7 @@ function NavGroup({
             isMobile={isMobile}
             isPattern4={item.isPattern4}
             onPattern4Click={onPattern4Click}
+            isPattern4Open={isPattern4Open}
           />
         ))}
       </>
@@ -354,6 +368,7 @@ function NavGroup({
                     isMobile={isMobile}
                     isPattern4={item.isPattern4}
                     onPattern4Click={onPattern4Click}
+                    isPattern4Open={isPattern4Open}
                   />
                 ))}
               </motion.div>
@@ -377,6 +392,7 @@ function NavGroup({
               isMobile={isMobile}
               isPattern4={item.isPattern4}
               onPattern4Click={onPattern4Click}
+              isPattern4Open={isPattern4Open}
             />
           ))}
         </>
@@ -456,7 +472,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   };
 
   const handlePattern4Click = () => {
-    setIsPattern4Open(true);
+    setIsPattern4Open(!isPattern4Open);
   };
 
   const handlePattern4Close = () => {
@@ -553,6 +569,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               isCompact={!isMobile && isCompact}
               isMobile={isMobile}
               onPattern4Click={handlePattern4Click}
+              isPattern4Open={isPattern4Open}
             />
           ))}
         </nav>

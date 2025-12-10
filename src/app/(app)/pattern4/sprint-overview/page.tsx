@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Calendar, Target, TrendingUp, Activity } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { SprintProgressBar } from '@/components/pattern4/sprint-progress-bar';
@@ -12,11 +12,15 @@ import { BurndownChart } from '@/components/pattern4/charts/burndown-chart';
 import { VelocityChart } from '@/components/pattern4/charts/velocity-chart';
 import { OpportunityPieChart } from '@/components/pattern4/charts/opportunity-pie-chart';
 import { AIActionButton } from '@/components/pattern4/ai-action-button';
+import { UnifiedAiChatModal } from '@/components/ai/unified-ai-chat-modal';
 import { format, parseISO } from 'date-fns';
 import { getCurrentSprintWeek } from '@/lib/pattern4-utils';
 
 export default function SprintOverviewPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [aiChatContext, setAiChatContext] = useState<any>(null);
+  const [initialMessage, setInitialMessage] = useState<string | null>(null);
   const utils = trpc.useContext();
 
   // Fetch active sprint
@@ -122,6 +126,21 @@ export default function SprintOverviewPage() {
     await createSprint.mutateAsync(data);
   };
 
+  // Listen for AI chat open events from AIActionButton
+  useEffect(() => {
+    const handleAiChatOpen = (event: CustomEvent) => {
+      const { message, context } = event.detail;
+      setInitialMessage(message);
+      setAiChatContext(context);
+      setAiChatOpen(true);
+    };
+
+    window.addEventListener('ai-chat-open' as any, handleAiChatOpen);
+    return () => {
+      window.removeEventListener('ai-chat-open' as any, handleAiChatOpen);
+    };
+  }, []);
+
   if (sprintLoading) {
     return (
       <div className="p-8">
@@ -171,6 +190,17 @@ export default function SprintOverviewPage() {
             </button>
           )}
         </div>
+
+        {/* AI Chat Modal */}
+        <UnifiedAiChatModal
+          isOpen={aiChatOpen}
+          onClose={() => {
+            setAiChatOpen(false);
+            setInitialMessage(null);
+          }}
+          context={aiChatContext || { mode: 'pattern4' }}
+          initialMessage={initialMessage}
+        />
       </div>
     );
   }
@@ -362,6 +392,17 @@ export default function SprintOverviewPage() {
           </div>
         )}
       </div>
+
+      {/* AI Chat Modal */}
+      <UnifiedAiChatModal
+        isOpen={aiChatOpen}
+        onClose={() => {
+          setAiChatOpen(false);
+          setInitialMessage(null);
+        }}
+        context={aiChatContext || { mode: 'pattern4' }}
+        initialMessage={initialMessage}
+      />
     </div>
   );
 }

@@ -60,31 +60,17 @@ export function Pattern4Submenu({
 
   return (
     <>
-      {/* Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
-            onClick={onClose}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Submenu Drawer */}
+      {/* Submenu Panel - No Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.aside
-            initial={{ x: isMobile ? -320 : -280 }}
+            initial={{ x: -280 }}
             animate={{ x: 0 }}
-            exit={{ x: isMobile ? -320 : -280 }}
+            exit={{ x: -280 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className={cn(
               'fixed top-0 z-50 h-dvh',
-              'bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl',
+              'bg-white dark:bg-gray-900',
               'border-r border-white/20 shadow-2xl',
               isMobile ? 'left-0 w-[320px]' : 'left-[256px] w-[280px]'
             )}
