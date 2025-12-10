@@ -1,7 +1,7 @@
 'use client';
 
 import { Archive, TrendingUp, TrendingDown } from 'lucide-react';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 import { formatCurrency, getDecisionColor } from '@/lib/pattern4-utils';
 import { format } from 'date-fns';
 import Link from 'next/link';

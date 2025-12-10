@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, Lightbulb, Filter } from 'lucide-react';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 import { OpportunityCard } from '@/components/pattern4/opportunity-card';
 import { OpportunityForm } from '@/components/pattern4/opportunity-form';
 

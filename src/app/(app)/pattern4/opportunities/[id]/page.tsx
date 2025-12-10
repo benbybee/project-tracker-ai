@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { ArrowLeft, Edit2, CheckCircle, XCircle } from 'lucide-react';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 import Link from 'next/link';
 import { FinancialSummary } from '@/components/pattern4/financial-summary';
 import { CompleteOpportunityDialog } from '@/components/pattern4/complete-opportunity-dialog';

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, Calendar, Target, TrendingUp } from 'lucide-react';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 import { SprintProgressBar } from '@/components/pattern4/sprint-progress-bar';
 import { WeekProgressCard } from '@/components/pattern4/week-progress-card';
 import { OpportunityCard } from '@/components/pattern4/opportunity-card';

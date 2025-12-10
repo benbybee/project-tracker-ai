@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus, Calendar } from 'lucide-react';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 import { WeekProgressCard } from '@/components/pattern4/week-progress-card';
 import { useState } from 'react';
 import { formatDateForSQL, generateSprintWeeks } from '@/lib/pattern4-utils';
