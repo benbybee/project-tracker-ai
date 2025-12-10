@@ -9,6 +9,7 @@ import { CompleteOpportunityDialog } from '@/components/pattern4/complete-opport
 import { OpportunityForm } from '@/components/pattern4/opportunity-form';
 import { getOpportunityStatusColor } from '@/lib/pattern4-utils';
 import { cn } from '@/lib/utils';
+import { TaskList } from '@/components/pattern4/task-list';
 
 export default function OpportunityDetailPage({
   params,
@@ -28,6 +29,11 @@ export default function OpportunityDetailPage({
 
   // Fetch progress
   const { data: progress } = trpc.pattern4.stats.opportunityProgress.useQuery({
+    opportunityId: resolvedParams.id,
+  });
+
+  // Fetch tasks
+  const { data: tasks = [] } = trpc.pattern4.tasks.listByOpportunity.useQuery({
     opportunityId: resolvedParams.id,
   });
 
@@ -58,6 +64,40 @@ export default function OpportunityDetailPage({
         id: resolvedParams.id,
       });
       utils.pattern4.opportunities.list.invalidate();
+    },
+  });
+
+  // Task mutations
+  const createTask = trpc.pattern4.tasks.createForPattern4.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listByOpportunity.invalidate({
+        opportunityId: resolvedParams.id,
+      });
+      utils.pattern4.stats.opportunityProgress.invalidate({
+        opportunityId: resolvedParams.id,
+      });
+    },
+  });
+
+  const updateTask = trpc.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listByOpportunity.invalidate({
+        opportunityId: resolvedParams.id,
+      });
+      utils.pattern4.stats.opportunityProgress.invalidate({
+        opportunityId: resolvedParams.id,
+      });
+    },
+  });
+
+  const deleteTask = trpc.tasks.delete.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listByOpportunity.invalidate({
+        opportunityId: resolvedParams.id,
+      });
+      utils.pattern4.stats.opportunityProgress.invalidate({
+        opportunityId: resolvedParams.id,
+      });
     },
   });
 
@@ -294,6 +334,37 @@ export default function OpportunityDetailPage({
           </div>
         </div>
       )}
+
+      {/* Tasks List */}
+      <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+        <TaskList
+          tasks={tasks.map((t) => ({
+            id: t.id,
+            title: t.title,
+            status: t.status,
+            priorityScore: t.priorityScore,
+            budgetPlanned: t.budgetPlanned,
+            budgetSpent: t.budgetSpent,
+            sprintWeekId: t.sprintWeekId,
+            opportunityId: t.opportunityId,
+          }))}
+          onTaskCreate={async (data) => {
+            await createTask.mutateAsync({
+              ...data,
+              opportunityId: resolvedParams.id,
+              sprintId: opportunity.sprintId,
+            });
+          }}
+          onTaskUpdate={async (id, data) => {
+            await updateTask.mutateAsync({ id, ...data });
+          }}
+          onTaskDelete={async (id) => {
+            await deleteTask.mutateAsync({ id });
+          }}
+          opportunityId={resolvedParams.id}
+          sprintId={opportunity.sprintId || undefined}
+        />
+      </div>
 
       {/* Outcome (if completed) */}
       {opportunity.outcomeNotes && (

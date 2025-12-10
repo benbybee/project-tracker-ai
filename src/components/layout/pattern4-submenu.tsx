@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Target, Calendar, Lightbulb, Archive } from 'lucide-react';
+import { X, Target, Calendar, Lightbulb, Archive, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Pattern4SubmenuProps {
@@ -32,6 +32,11 @@ const pattern4NavItems = [
     href: '/pattern4/completed',
     label: 'Completed Opportunities',
     icon: Archive,
+  },
+  {
+    href: '/pattern4/analytics',
+    label: 'Analytics',
+    icon: BarChart3,
   },
 ];
 

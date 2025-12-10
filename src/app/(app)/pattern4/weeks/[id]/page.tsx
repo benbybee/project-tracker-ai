@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { Calendar, ArrowLeft, Edit2 } from 'lucide-react';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { TaskList } from '@/components/pattern4/task-list';
