@@ -269,7 +269,7 @@ export const pattern4Router = createTRPCRouter({
             projectId: defaultProject!.id,
             title: input.title,
             description: input.description,
-            priority: input.priority?.toString(),
+            priorityScore: (input.priority?.toString() || '3') as '1' | '2' | '3' | '4',
             budgetPlanned: input.budgetPlanned,
             sprintId: input.sprintId,
             sprintWeekId: input.sprintWeekId,
@@ -716,30 +716,21 @@ export const pattern4Router = createTRPCRouter({
       )
       .query(async ({ input, ctx }) => {
         try {
-          let query = ctx.db
+          const conditions = [eq(opportunities.userId, ctx.session.user.id)];
+          
+          if (input?.status) {
+            conditions.push(eq(opportunities.status, input.status));
+          }
+          
+          if (input?.sprintId) {
+            conditions.push(eq(opportunities.sprintId, input.sprintId));
+          }
+
+          const result = await ctx.db
             .select()
             .from(opportunities)
-            .where(eq(opportunities.userId, ctx.session.user.id));
-
-          if (input?.status) {
-            query = query.where(
-              and(
-                eq(opportunities.userId, ctx.session.user.id),
-                eq(opportunities.status, input.status)
-              )
-            );
-          }
-
-          if (input?.sprintId) {
-            query = query.where(
-              and(
-                eq(opportunities.userId, ctx.session.user.id),
-                eq(opportunities.sprintId, input.sprintId)
-              )
-            );
-          }
-
-          const result = await query.orderBy(desc(opportunities.createdAt));
+            .where(and(...conditions))
+            .orderBy(desc(opportunities.createdAt));
 
           return result;
         } catch (error) {

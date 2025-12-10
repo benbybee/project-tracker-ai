@@ -40,7 +40,11 @@ export function VelocityChart({
           data={data}
           margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#ffffff10"
+            vertical={false}
+          />
           <XAxis
             dataKey="week"
             stroke="#ffffff50"

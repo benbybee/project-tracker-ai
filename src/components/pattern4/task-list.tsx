@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, Circle, MoreHorizontal, DollarSign } from 'lucide-react';
+import {
+  CheckCircle,
+  Circle,
+  MoreHorizontal,
+  DollarSign,
+  Calendar,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/pattern4-utils';
 import { format, parseISO } from 'date-fns';

@@ -73,7 +73,9 @@ export function OpportunityPieChart({
           <Legend
             verticalAlign="bottom"
             height={36}
-            formatter={(value) => <span className="text-sm text-gray-400 ml-1">{value}</span>}
+            formatter={(value) => (
+              <span className="text-sm text-gray-400 ml-1">{value}</span>
+            )}
           />
         </PieChart>
       </ResponsiveContainer>

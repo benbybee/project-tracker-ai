@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, Calendar, Target, TrendingUp, Activity } from 'lucide-react';
-import { trpc } from '@/lib/trpc/client';
+import { trpc } from '@/lib/trpc';
 import { SprintProgressBar } from '@/components/pattern4/sprint-progress-bar';
 import { WeekProgressCard } from '@/components/pattern4/week-progress-card';
 import { OpportunityCard } from '@/components/pattern4/opportunity-card';
@@ -11,6 +11,7 @@ import { TaskList } from '@/components/pattern4/task-list';
 import { BurndownChart } from '@/components/pattern4/charts/burndown-chart';
 import { VelocityChart } from '@/components/pattern4/charts/velocity-chart';
 import { OpportunityPieChart } from '@/components/pattern4/charts/opportunity-pie-chart';
+import { AIActionButton } from '@/components/pattern4/ai-action-button';
 import { format, parseISO } from 'date-fns';
 import { getCurrentSprintWeek } from '@/lib/pattern4-utils';
 
@@ -29,10 +30,11 @@ export default function SprintOverviewPage() {
   );
 
   // Fetch opportunities
-  const { data: opportunities = [] } = trpc.pattern4.opportunities.list.useQuery(
-    { sprintId: activeSprint?.id },
-    { enabled: !!activeSprint }
-  );
+  const { data: opportunities = [] } =
+    trpc.pattern4.opportunities.list.useQuery(
+      { sprintId: activeSprint?.id },
+      { enabled: !!activeSprint }
+    );
 
   // Get sprint progress
   const { data: sprintProgress } = trpc.pattern4.stats.sprintProgress.useQuery(
@@ -41,20 +43,23 @@ export default function SprintOverviewPage() {
   );
 
   // Analytics data for mini-charts
-  const { data: burndownData } = trpc.analyticsPattern4.getBurndownData.useQuery(
-    { sprintId: activeSprint?.id! },
-    { enabled: !!activeSprint }
-  );
+  const { data: burndownData } =
+    trpc.analyticsPattern4.getBurndownData.useQuery(
+      { sprintId: activeSprint?.id! },
+      { enabled: !!activeSprint }
+    );
 
-  const { data: velocityData } = trpc.analyticsPattern4.getVelocityData.useQuery(
-    { sprintId: activeSprint?.id! },
-    { enabled: !!activeSprint }
-  );
+  const { data: velocityData } =
+    trpc.analyticsPattern4.getVelocityData.useQuery(
+      { sprintId: activeSprint?.id! },
+      { enabled: !!activeSprint }
+    );
 
-  const { data: distributionData } = trpc.analyticsPattern4.getOpportunityDistribution.useQuery(
-    { sprintId: activeSprint?.id! },
-    { enabled: !!activeSprint }
-  );
+  const { data: distributionData } =
+    trpc.analyticsPattern4.getOpportunityDistribution.useQuery(
+      { sprintId: activeSprint?.id! },
+      { enabled: !!activeSprint }
+    );
 
   // Get current week
   const currentWeekNumber = activeSprint
@@ -139,8 +144,16 @@ export default function SprintOverviewPage() {
               Start Your First Sprint
             </h1>
             <p className="text-muted-foreground">
-              Create a 90-day sprint to organize your opportunities, weeks, and tasks.
+              Create a 90-day sprint to organize your opportunities, weeks, and
+              tasks.
             </p>
+          </div>
+
+          <div className="flex justify-center gap-4 mb-8">
+            <AIActionButton
+              label="AI: Plan My Sprint"
+              prompt="Help me plan a new 90-day sprint. Ask me about my goals."
+            />
           </div>
 
           {showCreateForm ? (
@@ -180,16 +193,25 @@ export default function SprintOverviewPage() {
             </div>
           </div>
           {activeSprint.goalSummary && (
-            <p className="mt-3 text-foreground/80">{activeSprint.goalSummary}</p>
+            <p className="mt-3 text-foreground/80">
+              {activeSprint.goalSummary}
+            </p>
           )}
         </div>
-        <a
-          href="/pattern4/analytics"
-          className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium transition-colors"
-        >
-          <Activity className="h-4 w-4 text-indigo-400" />
-          View Full Analytics
-        </a>
+        <div className="flex items-center gap-2">
+          <AIActionButton
+            label="AI: Analyze Sprint"
+            prompt={`Analyze the current status of sprint "${activeSprint.name}". Review progress, burndown, and suggest adjustments.`}
+            context={{ sprintId: activeSprint.id }}
+          />
+          <a
+            href="/pattern4/analytics"
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Activity className="h-4 w-4 text-indigo-400" />
+            View Full Analytics
+          </a>
+        </div>
       </div>
 
       {/* Sprint Progress */}
@@ -227,9 +249,17 @@ export default function SprintOverviewPage() {
       {currentWeek && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              Current Week
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-foreground">
+                Current Week
+              </h2>
+              <AIActionButton
+                label="AI"
+                prompt={`Review week ${currentWeek.weekIndex} of the sprint. Suggest task rebalancing if needed.`}
+                context={{ sprintId: activeSprint.id, weekId: currentWeek.id }}
+                className="h-8 px-3 text-xs"
+              />
+            </div>
             <WeekProgressCard
               week={currentWeek}
               progress={{
@@ -240,8 +270,9 @@ export default function SprintOverviewPage() {
                 completionPercentage:
                   currentWeekTasks.length > 0
                     ? Math.round(
-                        (currentWeekTasks.filter((t) => t.status === 'completed')
-                          .length /
+                        (currentWeekTasks.filter(
+                          (t) => t.status === 'completed'
+                        ).length /
                           currentWeekTasks.length) *
                           100
                       )
@@ -271,10 +302,14 @@ export default function SprintOverviewPage() {
                 onTaskUpdate={async (taskId, data) => {
                   await updateTask.mutateAsync({
                     id: taskId,
-                    ...data,
+                    title: data.title,
+                    status: data.status as any,
                     priority: data.priorityScore
                       ? parseInt(data.priorityScore)
                       : undefined,
+                    budgetPlanned: data.budgetPlanned ?? undefined,
+                    budgetSpent: data.budgetSpent ?? undefined,
+                    sprintWeekId: data.sprintWeekId ?? undefined,
                   });
                 }}
                 onTaskDelete={async (taskIds) => {
@@ -296,12 +331,20 @@ export default function SprintOverviewPage() {
           <h2 className="text-xl font-semibold text-foreground">
             Opportunities
           </h2>
-          <a
-            href="/pattern4/opportunities"
-            className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-          >
-            View All →
-          </a>
+          <div className="flex items-center gap-4">
+            <AIActionButton
+              label="AI: Suggest Opportunity"
+              prompt="Suggest a new opportunity for this sprint based on my goals."
+              context={{ sprintId: activeSprint.id }}
+              className="h-8 px-3 text-xs"
+            />
+            <a
+              href="/pattern4/opportunities"
+              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              View All →
+            </a>
+          </div>
         </div>
         {opportunities.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -313,7 +356,8 @@ export default function SprintOverviewPage() {
           <div className="p-8 text-center rounded-xl bg-white/5 border border-white/10">
             <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground">
-              No opportunities yet. Create your first opportunity to get started.
+              No opportunities yet. Create your first opportunity to get
+              started.
             </p>
           </div>
         )}

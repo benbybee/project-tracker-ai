@@ -1,14 +1,15 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
-import {
-  sprints,
-  sprintWeeks,
-  opportunities,
-  tasks,
-} from '@/server/db';
+import { sprints, sprintWeeks, opportunities, tasks } from '@/server/db';
 import { eq, and, desc, sql, gte, lte } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
-import { differenceInDays, startOfDay, endOfDay, addDays, format } from 'date-fns';
+import {
+  differenceInDays,
+  startOfDay,
+  endOfDay,
+  addDays,
+  format,
+} from 'date-fns';
 
 export const analyticsPattern4Router = createTRPCRouter({
   getSprintTrends: protectedProcedure
@@ -63,14 +64,22 @@ export const analyticsPattern4Router = createTRPCRouter({
 
         // Tasks completed by end of this week
         const completedCount = tasksInScope.filter(
-          (t) =>
-            t.status === 'completed' && new Date(t.updatedAt) <= weekEnd
+          (t) => t.status === 'completed' && new Date(t.updatedAt) <= weekEnd
         ).length;
 
         // Ideal progress (linear)
-        const totalDuration = differenceInDays(endDate, new Date(sprint.startDate));
-        const daysElapsed = differenceInDays(weekEnd, new Date(sprint.startDate));
-        const progressPercent = Math.min(100, Math.round((daysElapsed / totalDuration) * 100));
+        const totalDuration = differenceInDays(
+          endDate,
+          new Date(sprint.startDate)
+        );
+        const daysElapsed = differenceInDays(
+          weekEnd,
+          new Date(sprint.startDate)
+        );
+        const progressPercent = Math.min(
+          100,
+          Math.round((daysElapsed / totalDuration) * 100)
+        );
 
         // Actual progress
         const totalCount = Math.max(tasksInScope.length, 1);
@@ -92,48 +101,38 @@ export const analyticsPattern4Router = createTRPCRouter({
   getFinancialSummary: protectedProcedure
     .input(z.object({ sprintId: z.string().uuid().optional() }))
     .query(async ({ input, ctx }) => {
-      let query = ctx.db
-        .select()
-        .from(opportunities)
-        .where(eq(opportunities.userId, ctx.session.user.id));
-
+      const conditions = [eq(opportunities.userId, ctx.session.user.id)];
       if (input.sprintId) {
-        query = query.where(
-          and(
-            eq(opportunities.userId, ctx.session.user.id),
-            eq(opportunities.sprintId, input.sprintId)
-          )
-        );
+        conditions.push(eq(opportunities.sprintId, input.sprintId));
       }
 
-      const opps = await query;
+      const opps = await ctx.db
+        .select()
+        .from(opportunities)
+        .where(and(...conditions));
 
-      return opps.map((opp) => ({
-        name: opp.name,
-        cost: parseFloat(opp.actualCost || opp.estimatedCost || '0'),
-        revenue: parseFloat(opp.revenue || '0'),
-        profit: parseFloat(opp.profit || '0'),
-      })).filter(item => item.cost > 0 || item.revenue > 0);
+      return opps
+        .map((opp) => ({
+          name: opp.name,
+          cost: parseFloat(opp.actualCost || opp.estimatedCost || '0'),
+          revenue: parseFloat(opp.revenue || '0'),
+          profit: parseFloat(opp.profit || '0'),
+        }))
+        .filter((item) => item.cost > 0 || item.revenue > 0);
     }),
 
   getOpportunityDistribution: protectedProcedure
     .input(z.object({ sprintId: z.string().uuid().optional() }))
     .query(async ({ input, ctx }) => {
-      let query = ctx.db
-        .select()
-        .from(opportunities)
-        .where(eq(opportunities.userId, ctx.session.user.id));
-
+      const conditions = [eq(opportunities.userId, ctx.session.user.id)];
       if (input.sprintId) {
-        query = query.where(
-          and(
-            eq(opportunities.userId, ctx.session.user.id),
-            eq(opportunities.sprintId, input.sprintId)
-          )
-        );
+        conditions.push(eq(opportunities.sprintId, input.sprintId));
       }
 
-      const opps = await query;
+      const opps = await ctx.db
+        .select()
+        .from(opportunities)
+        .where(and(...conditions));
 
       // By Status
       const statusData = [
@@ -143,10 +142,12 @@ export const analyticsPattern4Router = createTRPCRouter({
         'ON_HOLD',
         'COMPLETED',
         'KILLED',
-      ].map((status) => ({
-        name: status,
-        value: opps.filter((o) => o.status === status).length,
-      })).filter(d => d.value > 0);
+      ]
+        .map((status) => ({
+          name: status,
+          value: opps.filter((o) => o.status === status).length,
+        }))
+        .filter((d) => d.value > 0);
 
       // By Lane
       const laneMap = new Map<string, number>();
@@ -164,7 +165,7 @@ export const analyticsPattern4Router = createTRPCRouter({
       const typeData = [
         { name: 'MAJOR', value: opps.filter((o) => o.type === 'MAJOR').length },
         { name: 'MICRO', value: opps.filter((o) => o.type === 'MICRO').length },
-      ].filter(d => d.value > 0);
+      ].filter((d) => d.value > 0);
 
       return { statusData, laneData, typeData };
     }),
@@ -215,7 +216,7 @@ export const analyticsPattern4Router = createTRPCRouter({
         if (currentDate > today) break;
 
         const dayEnd = endOfDay(currentDate);
-        
+
         // Tasks completed by this day
         const completedCount = sprintTasks.filter(
           (t) => t.status === 'completed' && new Date(t.updatedAt) <= dayEnd
@@ -225,9 +226,18 @@ export const analyticsPattern4Router = createTRPCRouter({
         const remaining = Math.max(0, totalTasks - completedCount);
 
         // Ideal line
-        const totalDuration = differenceInDays(endDate, new Date(sprint.startDate));
-        const daysElapsed = differenceInDays(currentDate, new Date(sprint.startDate));
-        const ideal = Math.max(0, totalTasks - (totalTasks * (daysElapsed / totalDuration)));
+        const totalDuration = differenceInDays(
+          endDate,
+          new Date(sprint.startDate)
+        );
+        const daysElapsed = differenceInDays(
+          currentDate,
+          new Date(sprint.startDate)
+        );
+        const ideal = Math.max(
+          0,
+          totalTasks - totalTasks * (daysElapsed / totalDuration)
+        );
 
         data.push({
           day: format(currentDate, 'MMM d'),
@@ -240,9 +250,18 @@ export const analyticsPattern4Router = createTRPCRouter({
 
       // Fill future ideal line
       while (currentDate <= endDate) {
-        const totalDuration = differenceInDays(endDate, new Date(sprint.startDate));
-        const daysElapsed = differenceInDays(currentDate, new Date(sprint.startDate));
-        const ideal = Math.max(0, totalTasks - (totalTasks * (daysElapsed / totalDuration)));
+        const totalDuration = differenceInDays(
+          endDate,
+          new Date(sprint.startDate)
+        );
+        const daysElapsed = differenceInDays(
+          currentDate,
+          new Date(sprint.startDate)
+        );
+        const ideal = Math.max(
+          0,
+          totalTasks - totalTasks * (daysElapsed / totalDuration)
+        );
 
         data.push({
           day: format(currentDate, 'MMM d'),
@@ -300,12 +319,10 @@ export const analyticsPattern4Router = createTRPCRouter({
         const weekEnd = endOfDay(addDays(currentDate, 6));
 
         // Tasks completed this week
-        const weeklyCompleted = sprintTasks.filter(
-          (t) => {
-            const completedAt = new Date(t.updatedAt);
-            return completedAt >= weekStart && completedAt <= weekEnd;
-          }
-        ).length;
+        const weeklyCompleted = sprintTasks.filter((t) => {
+          const completedAt = new Date(t.updatedAt);
+          return completedAt >= weekStart && completedAt <= weekEnd;
+        }).length;
 
         weeks.push({
           week: `Week ${weekCount}`,
@@ -318,10 +335,11 @@ export const analyticsPattern4Router = createTRPCRouter({
       }
 
       // Calculate average velocity (excluding future weeks if 0)
-      const activeWeeks = weeks.filter(w => w.completed > 0).length;
-      const averageVelocity = activeWeeks > 0 
-        ? Math.round((totalCompleted / activeWeeks) * 10) / 10 
-        : 0;
+      const activeWeeks = weeks.filter((w) => w.completed > 0).length;
+      const averageVelocity =
+        activeWeeks > 0
+          ? Math.round((totalCompleted / activeWeeks) * 10) / 10
+          : 0;
 
       return {
         data: weeks,

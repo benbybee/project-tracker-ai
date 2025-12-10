@@ -21,11 +21,7 @@ interface BurndownChartProps {
   title?: string;
 }
 
-export function BurndownChart({
-  data,
-  className,
-  title,
-}: BurndownChartProps) {
+export function BurndownChart({ data, className, title }: BurndownChartProps) {
   return (
     <div className={cn('w-full h-64', className)}>
       {title && (

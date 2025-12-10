@@ -41,7 +41,11 @@ export function FinancialBarChart({
           data={data}
           margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#ffffff10"
+            vertical={false}
+          />
           <XAxis
             dataKey="name"
             stroke="#ffffff50"
@@ -67,9 +71,24 @@ export function FinancialBarChart({
             labelStyle={{ color: '#9ca3af' }}
           />
           <Legend />
-          <Bar dataKey="cost" fill="#ef4444" name="Cost" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="revenue" fill="#10b981" name="Revenue" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="profit" fill="#6366f1" name="Profit" radius={[4, 4, 0, 0]} />
+          <Bar
+            dataKey="cost"
+            fill="#ef4444"
+            name="Cost"
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="revenue"
+            fill="#10b981"
+            name="Revenue"
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="profit"
+            fill="#6366f1"
+            name="Profit"
+            radius={[4, 4, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

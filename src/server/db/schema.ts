@@ -168,6 +168,9 @@ export const tasks = pgTable(
     priorityScoreIdx: index('tasks_priority_score_idx').on(table.priorityScore),
     projectIdIdx: index('tasks_project_id_idx').on(table.projectId),
     userIdIdx: index('tasks_user_id_idx').on(table.userId),
+    sprintIdIdx: index('tasks_sprint_id_idx').on(table.sprintId),
+    sprintWeekIdIdx: index('tasks_sprint_week_id_idx').on(table.sprintWeekId),
+    opportunityIdIdx: index('tasks_opportunity_id_idx').on(table.opportunityId),
   })
 );
 
