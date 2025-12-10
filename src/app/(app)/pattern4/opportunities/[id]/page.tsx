@@ -169,7 +169,18 @@ export default function OpportunityDetailPage({
             Edit Opportunity
           </h2>
           <OpportunityForm
-            defaultValues={opportunity}
+            defaultValues={{
+              name: opportunity.name,
+              type: opportunity.type,
+              lane: opportunity.lane || undefined,
+              summary: opportunity.summary || undefined,
+              complexity: opportunity.complexity || undefined,
+              estimatedCost: opportunity.estimatedCost || undefined,
+              goToMarket: opportunity.goToMarket || undefined,
+              details: opportunity.details || undefined,
+              priority: opportunity.priority || undefined,
+              notes: opportunity.notes || undefined,
+            }}
             onSubmit={handleUpdate}
             onCancel={() => setIsEditing(false)}
             submitLabel="Update Opportunity"
