@@ -185,7 +185,7 @@ function NavItem({
               animate={{ opacity: 1, width: 'auto' }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.15 }}
-              className="font-medium overflow-hidden whitespace-nowrap flex-1"
+              className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap flex-1"
             >
               {label}
             </motion.span>
@@ -226,7 +226,7 @@ function NavItem({
             animate={{ opacity: 1, width: 'auto' }}
             exit={{ opacity: 0, width: 0 }}
             transition={{ duration: 0.15 }}
-            className="font-medium overflow-hidden whitespace-nowrap"
+            className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap"
           >
             {label}
           </motion.span>
@@ -601,7 +601,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   animate={{ opacity: 1, width: 'auto' }}
                   exit={{ opacity: 0, width: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="font-medium overflow-hidden whitespace-nowrap"
+                  className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap"
                 >
                   Settings
                 </motion.span>
@@ -626,7 +626,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   animate={{ opacity: 1, width: 'auto' }}
                   exit={{ opacity: 0, width: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="font-medium overflow-hidden whitespace-nowrap"
+                  className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap"
                 >
                   Logout
                 </motion.span>
