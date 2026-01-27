@@ -231,9 +231,15 @@ export function KanbanBoard({
     }
 
     const task: Task | undefined = active.data.current?.task;
-    const toCol = task
+    const directCol =
+      (over.data.current?.col as TaskStatus | undefined) ||
+      (columns.includes(String(over.id) as TaskStatus)
+        ? (String(over.id) as TaskStatus)
+        : undefined);
+    const inferredCol = task
       ? (findColumnForTask(task.id, columnsState) as TaskStatus | undefined)
       : undefined;
+    const toCol = directCol ?? inferredCol;
 
     if (!task || !toCol || task.status === toCol) return;
 
