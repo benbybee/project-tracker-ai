@@ -306,7 +306,7 @@ export const projectsRouter = createTRPCRouter({
         });
       }
 
-      const [deletedProject] = await ctx.db.transaction(async (tx) => {
+      const deletedProject = await ctx.db.transaction(async (tx) => {
         // Remove activity logs tied to this project to avoid FK violations
         await tx.delete(activityLog).where(eq(activityLog.projectId, input.id));
 
