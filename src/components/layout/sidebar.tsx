@@ -147,6 +147,7 @@ function NavItem({
   isCompact,
   isMobile,
   children,
+  isSubItem = false,
 }: {
   href: string;
   icon: any;
@@ -154,6 +155,7 @@ function NavItem({
   isCompact: boolean;
   isMobile: boolean;
   children?: NavItem[];
+  isSubItem?: boolean;
 }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -198,10 +200,14 @@ function NavItem({
   }, [isActive, children]);
 
   const itemClasses = cn(
-    'group relative flex items-center gap-3 rounded-xl px-4 py-3 transition-colors duration-200 w-full',
+    'group relative flex items-center gap-3 transition-colors duration-200 w-full',
+    isSubItem ? 'rounded-lg px-6 py-2' : 'rounded-xl px-4 py-3',
     'text-foreground hover:text-foreground',
     'hover:bg-white/10 active:bg-white/20 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
-    isActive && 'bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg'
+    isActive &&
+      (isSubItem
+        ? 'bg-white/10 text-foreground'
+        : 'bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg')
   );
 
   if (!children?.length) {
@@ -212,7 +218,7 @@ function NavItem({
         className={itemClasses}
         aria-current={isActive ? 'page' : undefined}
       >
-        <Icon className="h-5 w-5 flex-shrink-0" />
+        <Icon className={cn('flex-shrink-0', isSubItem ? 'h-4 w-4' : 'h-5 w-5')} />
         <AnimatePresence>
           {!isCompact && (
             <motion.span
@@ -220,7 +226,10 @@ function NavItem({
               animate={{ opacity: 1, width: 'auto' }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.15 }}
-              className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap"
+            className={cn(
+              'font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap',
+              isSubItem ? 'text-[11px]' : 'text-xs'
+            )}
             >
               {label}
             </motion.span>
@@ -238,7 +247,7 @@ function NavItem({
         className={itemClasses}
         aria-expanded={isOpen}
       >
-        <Icon className="h-5 w-5 flex-shrink-0" />
+        <Icon className={cn('flex-shrink-0', isSubItem ? 'h-4 w-4' : 'h-5 w-5')} />
         <AnimatePresence>
           {!isCompact && (
             <motion.span
@@ -246,7 +255,10 @@ function NavItem({
               animate={{ opacity: 1, width: 'auto' }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.15 }}
-              className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap"
+            className={cn(
+              'font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap',
+              isSubItem ? 'text-[11px]' : 'text-xs'
+            )}
             >
               {label}
             </motion.span>
@@ -279,6 +291,7 @@ function NavItem({
                   label={child.label}
                   isCompact={false}
                   isMobile={isMobile}
+                  isSubItem={true}
                 />
               ))}
             </div>
