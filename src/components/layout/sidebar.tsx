@@ -145,6 +145,7 @@ function NavItem({
   icon: Icon,
   label,
   isCompact,
+  isMobile,
   children,
 }: {
   href: string;
