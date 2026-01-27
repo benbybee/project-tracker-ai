@@ -1,0 +1,408 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Plus, Calendar, Target, TrendingUp, Activity } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
+import { SprintProgressBar } from '@/components/pattern4/sprint-progress-bar';
+import { WeekProgressCard } from '@/components/pattern4/week-progress-card';
+import { OpportunityCard } from '@/components/pattern4/opportunity-card';
+import { SprintForm } from '@/components/pattern4/sprint-form';
+import { TaskList } from '@/components/pattern4/task-list';
+import { BurndownChart } from '@/components/pattern4/charts/burndown-chart';
+import { VelocityChart } from '@/components/pattern4/charts/velocity-chart';
+import { OpportunityPieChart } from '@/components/pattern4/charts/opportunity-pie-chart';
+import { AIActionButton } from '@/components/pattern4/ai-action-button';
+import { UnifiedAiChatModal } from '@/components/ai/unified-ai-chat-modal';
+import { format, parseISO } from 'date-fns';
+import { getCurrentSprintWeek } from '@/lib/pattern4-utils';
+
+export default function SprintOverviewPage() {
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [aiChatContext, setAiChatContext] = useState<any>(null);
+  const [initialMessage, setInitialMessage] = useState<string | null>(null);
+  const utils = trpc.useContext();
+
+  // Fetch active sprint
+  const { data: activeSprint, isLoading: sprintLoading } =
+    trpc.pattern4.sprints.getActive.useQuery();
+
+  // Fetch sprint weeks
+  const { data: weeks = [] } = trpc.pattern4.weeks.list.useQuery(
+    { sprintId: activeSprint?.id! },
+    { enabled: !!activeSprint }
+  );
+
+  // Fetch opportunities
+  const { data: opportunities = [] } =
+    trpc.pattern4.opportunities.list.useQuery(
+      { sprintId: activeSprint?.id },
+      { enabled: !!activeSprint }
+    );
+
+  // Get sprint progress
+  const { data: sprintProgress } = trpc.pattern4.stats.sprintProgress.useQuery(
+    { sprintId: activeSprint?.id! },
+    { enabled: !!activeSprint }
+  );
+
+  // Analytics data for mini-charts
+  const { data: burndownData } =
+    trpc.analyticsPattern4.getBurndownData.useQuery(
+      { sprintId: activeSprint?.id! },
+      { enabled: !!activeSprint }
+    );
+
+  const { data: velocityData } =
+    trpc.analyticsPattern4.getVelocityData.useQuery(
+      { sprintId: activeSprint?.id! },
+      { enabled: !!activeSprint }
+    );
+
+  const { data: distributionData } =
+    trpc.analyticsPattern4.getOpportunityDistribution.useQuery(
+      { sprintId: activeSprint?.id! },
+      { enabled: !!activeSprint }
+    );
+
+  // Get current week
+  const currentWeekNumber = activeSprint
+    ? getCurrentSprintWeek(parseISO(activeSprint.startDate))
+    : 1;
+  const currentWeek = weeks.find((w) => w.weekIndex === currentWeekNumber);
+
+  // Fetch current week tasks
+  const { data: currentWeekTasks = [] } =
+    trpc.pattern4.tasks.listBySprintCurrent.useQuery(
+      {
+        sprintId: activeSprint?.id!,
+        weekId: currentWeek?.id!,
+      },
+      { enabled: !!activeSprint && !!currentWeek }
+    );
+
+  // Create sprint mutation
+  const createSprint = trpc.pattern4.sprints.create.useMutation({
+    onSuccess: () => {
+      utils.pattern4.sprints.getActive.invalidate();
+      setShowCreateForm(false);
+    },
+  });
+
+  // Task mutations
+  const createTask = trpc.pattern4.tasks.create.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listBySprintCurrent.invalidate();
+      utils.pattern4.stats.sprintProgress.invalidate();
+      utils.analyticsPattern4.getBurndownData.invalidate();
+      utils.analyticsPattern4.getVelocityData.invalidate();
+    },
+  });
+
+  const updateTask = trpc.pattern4.tasks.update.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listBySprintCurrent.invalidate();
+      utils.pattern4.stats.sprintProgress.invalidate();
+      utils.analyticsPattern4.getBurndownData.invalidate();
+      utils.analyticsPattern4.getVelocityData.invalidate();
+    },
+  });
+
+  const deleteTask = trpc.pattern4.tasks.delete.useMutation({
+    onSuccess: () => {
+      utils.pattern4.tasks.listBySprintCurrent.invalidate();
+      utils.pattern4.stats.sprintProgress.invalidate();
+      utils.analyticsPattern4.getBurndownData.invalidate();
+      utils.analyticsPattern4.getVelocityData.invalidate();
+    },
+  });
+
+  const handleCreateSprint = async (data: {
+    name: string;
+    startDate: string;
+    endDate: string;
+    goalSummary?: string;
+  }) => {
+    await createSprint.mutateAsync(data);
+  };
+
+  // Listen for AI chat open events from AIActionButton
+  useEffect(() => {
+    const handleAiChatOpen = (event: CustomEvent) => {
+      const { message, context } = event.detail;
+      setInitialMessage(message);
+      setAiChatContext(context);
+      setAiChatOpen(true);
+    };
+
+    window.addEventListener('ai-chat-open' as any, handleAiChatOpen);
+    return () => {
+      window.removeEventListener('ai-chat-open' as any, handleAiChatOpen);
+    };
+  }, []);
+
+  if (sprintLoading) {
+    return (
+      <div className="p-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-white/10 rounded w-1/3" />
+          <div className="h-32 bg-white/10 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  // No active sprint
+  if (!activeSprint) {
+    return (
+      <div className="p-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <Target className="h-16 w-16 text-indigo-500 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Start Your First Sprint
+            </h1>
+            <p className="text-muted-foreground">
+              Create a 90-day sprint to organize your opportunities, weeks, and
+              tasks.
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-4 mb-8">
+            <AIActionButton
+              label="AI: Plan My Sprint"
+              prompt="Help me plan a new 90-day sprint. Ask me about my goals."
+            />
+          </div>
+
+          {showCreateForm ? (
+            <SprintForm
+              onSubmit={handleCreateSprint}
+              onCancel={() => setShowCreateForm(false)}
+            />
+          ) : (
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="mx-auto flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium hover:opacity-90 transition-opacity"
+            >
+              <Plus className="h-5 w-5" />
+              Create Sprint
+            </button>
+          )}
+        </div>
+
+        {/* AI Chat Modal */}
+        <UnifiedAiChatModal
+          isOpen={aiChatOpen}
+          onClose={() => {
+            setAiChatOpen(false);
+            setInitialMessage(null);
+          }}
+          context={aiChatContext || { mode: 'pattern4' }}
+          initialMessage={initialMessage}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {activeSprint.name}
+          </h1>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {format(parseISO(activeSprint.startDate), 'MMM d, yyyy')} -{' '}
+                {format(parseISO(activeSprint.endDate), 'MMM d, yyyy')}
+              </span>
+            </div>
+          </div>
+          {activeSprint.goalSummary && (
+            <p className="mt-3 text-foreground/80">
+              {activeSprint.goalSummary}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <AIActionButton
+            label="AI: Analyze Sprint"
+            prompt={`Analyze the current status of sprint "${activeSprint.name}". Review progress, burndown, and suggest adjustments.`}
+            context={{ sprintId: activeSprint.id }}
+          />
+          <a
+            href="/pattern4/analytics"
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Activity className="h-4 w-4 text-indigo-400" />
+            View Full Analytics
+          </a>
+        </div>
+      </div>
+
+      {/* Sprint Progress */}
+      {sprintProgress && (
+        <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+          <SprintProgressBar
+            completionPercentage={sprintProgress.completionPercentage}
+            totalTasks={sprintProgress.totalTasks}
+            completedTasks={sprintProgress.completedTasks}
+          />
+        </div>
+      )}
+
+      {/* Analytics Mini-Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <BurndownChart data={burndownData || []} title="Burndown" />
+        </div>
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <VelocityChart
+            data={(velocityData?.data || []).slice(-5)}
+            averageVelocity={velocityData?.averageVelocity || 0}
+            title="Recent Velocity"
+          />
+        </div>
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <OpportunityPieChart
+            data={distributionData?.statusData || []}
+            title="Opportunity Status"
+          />
+        </div>
+      </div>
+
+      {/* Current Week */}
+      {currentWeek && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-foreground">
+                Current Week
+              </h2>
+              <AIActionButton
+                label="AI"
+                prompt={`Review week ${currentWeek.weekIndex} of the sprint. Suggest task rebalancing if needed.`}
+                context={{ sprintId: activeSprint.id, weekId: currentWeek.id }}
+                className="h-8 px-3 text-xs"
+              />
+            </div>
+            <WeekProgressCard
+              week={currentWeek}
+              progress={{
+                totalTasks: currentWeekTasks.length,
+                completedTasks: currentWeekTasks.filter(
+                  (t) => t.status === 'completed'
+                ).length,
+                completionPercentage:
+                  currentWeekTasks.length > 0
+                    ? Math.round(
+                        (currentWeekTasks.filter(
+                          (t) => t.status === 'completed'
+                        ).length /
+                          currentWeekTasks.length) *
+                          100
+                      )
+                    : 0,
+              }}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
+              Current Tasks
+            </h2>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <TaskList
+                tasks={currentWeekTasks.map((t) => ({
+                  ...t,
+                  priorityScore: t.priority?.toString() || '4',
+                  budgetPlanned: t.budgetPlanned?.toString(),
+                  budgetSpent: t.budgetSpent?.toString(),
+                }))}
+                onTaskCreate={async (data) => {
+                  await createTask.mutateAsync({
+                    ...data,
+                    sprintId: activeSprint.id,
+                    sprintWeekId: currentWeek.id,
+                  });
+                }}
+                onTaskUpdate={async (taskId, data) => {
+                  await updateTask.mutateAsync({
+                    id: taskId,
+                    title: data.title,
+                    status: data.status as any,
+                    priority: data.priorityScore
+                      ? parseInt(data.priorityScore)
+                      : undefined,
+                    budgetPlanned: data.budgetPlanned ?? undefined,
+                    budgetSpent: data.budgetSpent ?? undefined,
+                    sprintWeekId: data.sprintWeekId ?? undefined,
+                  });
+                }}
+                onTaskDelete={async (taskIds) => {
+                  await deleteTask.mutateAsync(taskIds);
+                }}
+                context={{
+                  sprintId: activeSprint.id,
+                  sprintWeekId: currentWeek.id,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Opportunities */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-foreground">
+            Opportunities
+          </h2>
+          <div className="flex items-center gap-4">
+            <AIActionButton
+              label="AI: Suggest Opportunity"
+              prompt="Suggest a new opportunity for this sprint based on my goals."
+              context={{ sprintId: activeSprint.id }}
+              className="h-8 px-3 text-xs"
+            />
+            <a
+              href="/pattern4/opportunities"
+              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              View All →
+            </a>
+          </div>
+        </div>
+        {opportunities.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {opportunities.slice(0, 4).map((opp) => (
+              <OpportunityCard key={opp.id} opportunity={opp} />
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 text-center rounded-xl bg-white/5 border border-white/10">
+            <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">
+              No opportunities yet. Create your first opportunity to get
+              started.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* AI Chat Modal */}
+      <UnifiedAiChatModal
+        isOpen={aiChatOpen}
+        onClose={() => {
+          setAiChatOpen(false);
+          setInitialMessage(null);
+        }}
+        context={aiChatContext || { mode: 'pattern4' }}
+        initialMessage={initialMessage}
+      />
+    </div>
+  );
+}

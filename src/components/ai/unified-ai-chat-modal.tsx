@@ -12,6 +12,7 @@ interface UnifiedAiChatModalProps {
   onClose: () => void;
   context?: ChatContext;
   onSendMessage?: (message: string, context?: ChatContext) => Promise<string>;
+  initialMessage?: string | null;
 }
 
 export function UnifiedAiChatModal({
@@ -19,6 +20,7 @@ export function UnifiedAiChatModal({
   onClose,
   context,
   onSendMessage,
+  initialMessage,
 }: UnifiedAiChatModalProps) {
   // Handle escape key
   useEffect(() => {
@@ -82,6 +84,7 @@ export function UnifiedAiChatModal({
               <UnifiedAiChat
                 context={context}
                 onSendMessage={onSendMessage}
+                initialMessage={initialMessage}
                 className="flex-1 border-0 shadow-none"
               />
             </GlassCard>

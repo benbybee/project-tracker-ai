@@ -4,6 +4,8 @@ import { GlassCard } from '@/components/ui/glass-card';
 import type { Habit, HabitLog } from '@/server/db/schema/habits';
 import { Flame, Trophy, CheckCircle2 } from 'lucide-react';
 
+import { format } from 'date-fns';
+
 interface HabitStatsProps {
   habits: Habit[];
   logs: HabitLog[];
@@ -12,10 +14,14 @@ interface HabitStatsProps {
 export function HabitStats({ habits, logs }: HabitStatsProps) {
   // Simple stats
   const totalHabits = habits.length;
-  const today = new Date().toISOString().split('T')[0];
-  const completedToday = logs.filter(
-    (log) => log.completedDate === today
-  ).length;
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const completedToday = logs.filter((log) => {
+    const logDate =
+      (log.completedDate as unknown) instanceof Date
+        ? (log.completedDate as unknown as Date).toISOString().split('T')[0]
+        : log.completedDate;
+    return logDate === today;
+  }).length;
   const completionRate =
     totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0;
 

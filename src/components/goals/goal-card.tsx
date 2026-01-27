@@ -6,6 +6,13 @@ import { format } from 'date-fns';
 import { Edit2, Trash2, Target, Calendar, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Goal } from '@/server/db/schema/goals';
+import { trpc } from '@/lib/trpc';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface GoalCardProps {
   goal: Goal;
@@ -14,6 +21,13 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
+  const utils = trpc.useUtils();
+  const updateGoal = trpc.goals.update.useMutation({
+    onSuccess: () => {
+      utils.goals.list.invalidate();
+    },
+  });
+
   const statusColors = {
     not_started: 'bg-slate-500/20 text-slate-500 dark:text-slate-400',
     in_progress: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
@@ -26,6 +40,13 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
     in_progress: 'In Progress',
     completed: 'Completed',
     on_hold: 'On Hold',
+  };
+
+  const handleStatusChange = (newStatus: string) => {
+    updateGoal.mutate({
+      id: goal.id,
+      status: newStatus as any,
+    });
   };
 
   const categoryColors = {
@@ -50,14 +71,29 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
           >
             {goal.category}
           </span>
-          <span
-            className={cn(
-              'text-xs font-medium px-2.5 py-0.5 rounded-full',
-              statusColors[goal.status as keyof typeof statusColors]
-            )}
-          >
-            {statusLabels[goal.status as keyof typeof statusLabels]}
-          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <span
+                className={cn(
+                  'text-xs font-medium px-2.5 py-0.5 rounded-full cursor-pointer hover:opacity-80 transition-opacity',
+                  statusColors[goal.status as keyof typeof statusColors]
+                )}
+              >
+                {statusLabels[goal.status as keyof typeof statusLabels]}
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {Object.entries(statusLabels).map(([key, label]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => handleStatusChange(key)}
+                  className="cursor-pointer"
+                >
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
