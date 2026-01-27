@@ -10,6 +10,7 @@ import {
   Columns3,
   CalendarDays,
   Calendar,
+  Lightbulb,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -34,6 +35,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: any;
+  children?: NavItem[];
 }
 
 interface NavGroup {
@@ -98,6 +100,29 @@ const navGroups: NavGroup[] = [
         href: '/pattern4/sprint-overview',
         label: 'Pattern 4',
         icon: Zap,
+        children: [
+          {
+            href: '/pattern4/sprint-overview',
+            label: 'Sprint Overview',
+            icon: Target,
+          },
+          { href: '/pattern4/weeks', label: 'Weeks', icon: Calendar },
+          {
+            href: '/pattern4/opportunities',
+            label: 'Opportunities',
+            icon: Lightbulb,
+          },
+          {
+            href: '/pattern4/analytics',
+            label: 'Analytics',
+            icon: BarChart3,
+          },
+          {
+            href: '/pattern4/completed',
+            label: 'Completed',
+            icon: Archive,
+          },
+        ],
       },
     ],
   },
@@ -120,14 +145,17 @@ function NavItem({
   icon: Icon,
   label,
   isCompact,
+  children,
 }: {
   href: string;
   icon: any;
   label: string;
   isCompact: boolean;
   isMobile: boolean;
+  children?: NavItem[];
 }) {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   const isActive = useMemo(() => {
     if (href.startsWith('/pattern4')) {
@@ -161,7 +189,14 @@ function NavItem({
     return false;
   }, [pathname, href]);
 
-  return (
+  useEffect(() => {
+    if (!children?.length) return;
+    if (isActive) {
+      setIsOpen(true);
+    }
+  }, [isActive, children]);
+
+  const link = (
     <Link
       href={href}
       prefetch={true}
@@ -191,6 +226,57 @@ function NavItem({
       </AnimatePresence>
     </Link>
   );
+
+  if (!children?.length) {
+    return link;
+  }
+
+  return (
+    <div className="space-y-1">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="w-full"
+        aria-expanded={isOpen}
+      >
+        <div className="flex items-center justify-between w-full">
+          {link}
+          {!isCompact && (
+            <ChevronRight
+              className={cn(
+                'h-4 w-4 -ml-8 mr-3 text-foreground transition-transform duration-200',
+                isOpen && 'rotate-90'
+              )}
+            />
+          )}
+        </div>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && !isCompact && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="ml-4 space-y-1">
+              {children.map((child) => (
+                <NavItem
+                  key={child.href}
+                  href={child.href}
+                  icon={child.icon}
+                  label={child.label}
+                  isCompact={false}
+                  isMobile={isMobile}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 // NavGroup component with collapsible functionality
@@ -209,6 +295,17 @@ function NavGroup({
   // Check if any item in this group is active
   const hasActiveItem = useMemo(() => {
     return group.items.some((item) => {
+      if (item.children?.length) {
+        if (item.href.startsWith('/pattern4') && pathname.startsWith('/pattern4')) {
+          return true;
+        }
+        const childActive = item.children.some((child) => {
+          if (pathname === child.href) return true;
+          if (pathname.startsWith(child.href + '/')) return true;
+          return false;
+        });
+        if (childActive) return true;
+      }
       if (item.href === '/dashboard') {
         return pathname === '/dashboard' || pathname === '/';
       }

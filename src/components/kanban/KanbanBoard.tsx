@@ -4,6 +4,7 @@ import {
   DndContext,
   DragEndEvent,
   DragOverlay,
+  DragOverEvent,
   DragStartEvent,
   closestCenter,
   PointerSensor,
@@ -12,7 +13,8 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { useState, useMemo } from 'react';
+import { arrayMove } from '@dnd-kit/sortable';
+import { useEffect, useMemo, useState } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanTask } from './KanbanTask';
 import KanbanFilters from './KanbanFilters';
@@ -80,6 +82,7 @@ export function KanbanBoard({
   );
 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [columnsState, setColumnsState] = useState<Record<string, Task[]>>({});
   const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
   const realtime = useRealtime();
 
@@ -148,6 +151,19 @@ export function KanbanBoard({
     return bucket;
   }, [tasks, roleFilter, columns]);
 
+  useEffect(() => {
+    setColumnsState(tasksByCol);
+  }, [tasksByCol]);
+
+  const findColumnForTask = (
+    taskId: string,
+    source: Record<string, Task[]>
+  ) => {
+    return Object.keys(source).find((status) =>
+      source[status]?.some((t) => t.id === taskId)
+    );
+  };
+
   const onDragStart = (event: DragStartEvent) => {
     const task: Task | undefined = event.active.data.current?.task;
     if (task) {
@@ -155,16 +171,69 @@ export function KanbanBoard({
     }
   };
 
+  const onDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    setColumnsState((prev) => {
+      const sourceCol = findColumnForTask(activeId, prev);
+      const targetCol = columns.includes(overId as TaskStatus)
+        ? (overId as TaskStatus)
+        : findColumnForTask(overId, prev);
+
+      if (!sourceCol || !targetCol) return prev;
+
+      if (sourceCol === targetCol) {
+        const items = prev[sourceCol] || [];
+        const oldIndex = items.findIndex((t) => t.id === activeId);
+        const newIndex = items.findIndex((t) => t.id === overId);
+        if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+          return prev;
+        }
+        return {
+          ...prev,
+          [sourceCol]: arrayMove(items, oldIndex, newIndex),
+        };
+      }
+
+      const sourceItems = prev[sourceCol] || [];
+      const targetItems = prev[targetCol] || [];
+      const moving = sourceItems.find((t) => t.id === activeId);
+      if (!moving) return prev;
+
+      const filteredSource = sourceItems.filter((t) => t.id !== activeId);
+      const overIndex = targetItems.findIndex((t) => t.id === overId);
+      const insertIndex = overIndex >= 0 ? overIndex : targetItems.length;
+      const nextTarget = [
+        ...targetItems.slice(0, insertIndex),
+        { ...moving, status: targetCol },
+        ...targetItems.slice(insertIndex),
+      ];
+
+      return {
+        ...prev,
+        [sourceCol]: filteredSource,
+        [targetCol]: nextTarget,
+      };
+    });
+  };
+
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
 
-    if (!over) return;
+    if (!over) {
+      setColumnsState(tasksByCol);
+      return;
+    }
 
     const task: Task | undefined = active.data.current?.task;
-    const toCol =
-      (over.data.current?.col as TaskStatus | undefined) ||
-      (typeof over.id === 'string' ? (over.id as TaskStatus) : undefined);
+    const toCol = task
+      ? (findColumnForTask(task.id, columnsState) as TaskStatus | undefined)
+      : undefined;
 
     if (!task || !toCol || task.status === toCol) return;
 
@@ -189,6 +258,7 @@ export function KanbanBoard({
       });
     } catch (error) {
       console.error('Failed to update task:', error);
+      setColumnsState(tasksByCol);
     }
   };
 
@@ -223,12 +293,13 @@ export function KanbanBoard({
       <DndContext
         sensors={sensors}
         onDragStart={onDragStart}
+        onDragOver={onDragOver}
         onDragEnd={onDragEnd}
         collisionDetection={closestCenter}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full min-w-0 overflow-x-auto">
           {columns.map((status) => {
-            const items = tasksByCol[status] || [];
+            const items = columnsState[status] || [];
             return (
               <KanbanColumn
                 key={status}
