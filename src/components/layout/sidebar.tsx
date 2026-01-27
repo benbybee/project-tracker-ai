@@ -197,39 +197,37 @@ function NavItem({
     }
   }, [isActive, children]);
 
-  const link = (
-    <Link
-      href={href}
-      prefetch={true}
-      className={cn(
-        'group relative flex items-center gap-3 rounded-xl px-4 py-3 transition-colors duration-200',
-        'text-foreground hover:text-foreground',
-        'hover:bg-white/10 active:bg-white/20 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
-        isActive &&
-          'bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg'
-      )}
-      aria-current={isActive ? 'page' : undefined}
-    >
-      <Icon className="h-5 w-5 flex-shrink-0" />
-
-      <AnimatePresence>
-        {!isCompact && (
-          <motion.span
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: 'auto' }}
-            exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.15 }}
-            className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap"
-          >
-            {label}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </Link>
+  const itemClasses = cn(
+    'group relative flex items-center gap-3 rounded-xl px-4 py-3 transition-colors duration-200 w-full',
+    'text-foreground hover:text-foreground',
+    'hover:bg-white/10 active:bg-white/20 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50',
+    isActive && 'bg-gradient-to-r from-indigo-500/60 to-violet-500/60 text-white shadow-lg'
   );
 
   if (!children?.length) {
-    return link;
+    return (
+      <Link
+        href={href}
+        prefetch={true}
+        className={itemClasses}
+        aria-current={isActive ? 'page' : undefined}
+      >
+        <Icon className="h-5 w-5 flex-shrink-0" />
+        <AnimatePresence>
+          {!isCompact && (
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15 }}
+              className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap"
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </Link>
+    );
   }
 
   return (
@@ -237,20 +235,31 @@ function NavItem({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="w-full"
+        className={itemClasses}
         aria-expanded={isOpen}
       >
-        <div className="flex items-center justify-between w-full">
-          {link}
+        <Icon className="h-5 w-5 flex-shrink-0" />
+        <AnimatePresence>
           {!isCompact && (
-            <ChevronRight
-              className={cn(
-                'h-4 w-4 -ml-8 mr-3 text-foreground transition-transform duration-200',
-                isOpen && 'rotate-90'
-              )}
-            />
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15 }}
+              className="text-xs font-semibold uppercase tracking-wider overflow-hidden whitespace-nowrap"
+            >
+              {label}
+            </motion.span>
           )}
-        </div>
+        </AnimatePresence>
+        {!isCompact && (
+          <ChevronRight
+            className={cn(
+              'h-4 w-4 ml-auto text-foreground transition-transform duration-200',
+              isOpen && 'rotate-90'
+            )}
+          />
+        )}
       </button>
       <AnimatePresence initial={false}>
         {isOpen && !isCompact && (
