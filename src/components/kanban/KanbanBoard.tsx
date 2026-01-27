@@ -162,7 +162,9 @@ export function KanbanBoard({
     if (!over) return;
 
     const task: Task | undefined = active.data.current?.task;
-    const toCol: TaskStatus | undefined = over.data.current?.col;
+    const toCol =
+      (over.data.current?.col as TaskStatus | undefined) ||
+      (typeof over.id === 'string' ? (over.id as TaskStatus) : undefined);
 
     if (!task || !toCol || task.status === toCol) return;
 

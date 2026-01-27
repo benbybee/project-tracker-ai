@@ -49,32 +49,41 @@ const navGroups: NavGroup[] = [
     items: [{ href: '/dashboard', label: 'Dashboard', icon: Home }],
   },
   {
-    id: 'plan',
-    label: 'Plan',
+    id: 'projects',
+    label: 'Projects',
     collapsible: true,
     items: [
       { href: '/projects', label: 'Projects', icon: FolderKanban },
-      { href: '/calendar', label: 'Calendar', icon: Calendar },
-      { href: '/daily', label: 'Daily', icon: CalendarDays },
-    ],
-  },
-  {
-    id: 'execute',
-    label: 'Execute',
-    collapsible: true,
-    items: [
       { href: '/board', label: 'Board', icon: Columns3 },
-      { href: '/tickets', label: 'Tickets', icon: MessagesSquare },
       { href: '/projects/website', label: 'Website Boards', icon: Globe },
     ],
   },
   {
-    id: 'capture',
-    label: 'Capture',
+    id: 'schedule',
+    label: 'Schedule',
     collapsible: true,
     items: [
+      { href: '/calendar', label: 'Calendar', icon: Calendar },
+      { href: '/daily', label: 'Daily Plan', icon: CalendarDays },
+    ],
+  },
+  {
+    id: 'inbox',
+    label: 'Inbox',
+    collapsible: true,
+    items: [
+      { href: '/tickets', label: 'Tickets', icon: MessagesSquare },
       { href: '/notes', label: 'Notes', icon: FileText },
-      { href: '/plaud', label: 'Plaud AI', icon: Bot },
+    ],
+  },
+  {
+    id: 'insights',
+    label: 'Insights',
+    collapsible: true,
+    items: [
+      { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+      { href: '/summary', label: 'Summary', icon: BarChart3 },
+      { href: '/completed', label: 'Completed', icon: Archive },
     ],
   },
   {
@@ -87,14 +96,10 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    id: 'review',
-    label: 'Review',
+    id: 'ai',
+    label: 'AI',
     collapsible: true,
-    items: [
-      { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-      { href: '/summary', label: 'Summary', icon: BarChart3 },
-      { href: '/completed', label: 'Completed', icon: Archive },
-    ],
+    items: [{ href: '/plaud', label: 'Plaud AI', icon: Bot }],
   },
 ];
 

@@ -126,28 +126,28 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
         )}
         onClick={handleCardClick}
       >
-        {/* Priority corner ribbon */}
-        <div
-          className="absolute top-0 right-0 w-0 h-0 pointer-events-none"
-          style={{
-            borderStyle: 'solid',
-            borderWidth: '0 28px 28px 0',
-            borderColor: `transparent ${getPriorityColor(p)} transparent transparent`,
-          }}
-          aria-label={`Priority ${p}`}
-        />
-
-        {/* Header with title and badges */}
-        <div className="flex items-start justify-between gap-2 min-w-0">
-          <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 break-words flex items-center gap-1">
-            {task.isRecurring && (
-              <span title="Recurring task" className="flex-shrink-0">
-                <Repeat className="h-3 w-3 text-blue-600 shrink-0" />
-              </span>
-            )}
-            <span className="break-words">{task.title}</span>
-          </h4>
-          <div className="flex gap-1 shrink-0 flex-wrap max-w-[40%]">
+        {/* Header */}
+        <div className="flex flex-col gap-2 min-w-0">
+          <div className="flex items-start justify-between gap-2 min-w-0">
+            <h4 className="font-semibold text-sm leading-snug flex-1 min-w-0 break-words flex items-center gap-1">
+              {task.isRecurring && (
+                <span title="Recurring task" className="flex-shrink-0">
+                  <Repeat className="h-3 w-3 text-blue-600 shrink-0" />
+                </span>
+              )}
+              <span className="break-words">{task.title}</span>
+            </h4>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            <span
+              className="px-2 py-0.5 text-xs rounded-full font-medium"
+              style={{
+                backgroundColor: `${getPriorityColor(p)}1A`,
+                color: getPriorityColor(p),
+              }}
+            >
+              Priority P{p}
+            </span>
             {overdue && (
               <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 font-medium">
                 Overdue

@@ -12,7 +12,8 @@ export function useTouchDevice() {
 
   useEffect(() => {
     // Method 1: CSS media query (most reliable)
-    const mediaQuery = window.matchMedia('(pointer: coarse)');
+    const coarsePointer = window.matchMedia('(pointer: coarse)');
+    const finePointer = window.matchMedia('(pointer: fine)');
 
     // Method 2: User agent check (fallback)
     const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(
@@ -24,19 +25,27 @@ export function useTouchDevice() {
       'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     // Combine all methods for best accuracy
-    const isTouch = mediaQuery.matches || (isMobileUA && hasTouchEvents);
+    // Treat hybrid devices with a fine pointer as non-touch for drag behavior
+    const isTouch =
+      (coarsePointer.matches && !finePointer.matches) ||
+      (isMobileUA && hasTouchEvents && !finePointer.matches);
 
     setIsTouchDevice(isTouch);
 
     // Listen for changes (e.g., device orientation change)
-    const handler = (e: MediaQueryListEvent) => {
-      setIsTouchDevice(e.matches || (isMobileUA && hasTouchEvents));
+    const handler = () => {
+      const nextIsTouch =
+        (coarsePointer.matches && !finePointer.matches) ||
+        (isMobileUA && hasTouchEvents && !finePointer.matches);
+      setIsTouchDevice(nextIsTouch);
     };
 
-    mediaQuery.addEventListener('change', handler);
+    coarsePointer.addEventListener('change', handler);
+    finePointer.addEventListener('change', handler);
 
     return () => {
-      mediaQuery.removeEventListener('change', handler);
+      coarsePointer.removeEventListener('change', handler);
+      finePointer.removeEventListener('change', handler);
     };
   }, []);
 

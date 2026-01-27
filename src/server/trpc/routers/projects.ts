@@ -1,7 +1,15 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
-import { projects, roles, tasks } from '@/server/db';
-import { eq, and, like, or, desc, gte, lte } from 'drizzle-orm';
+import {
+  activityLog,
+  embeddings,
+  goals,
+  projects,
+  roles,
+  tasks,
+  tickets,
+} from '@/server/db';
+import { eq, and, like, or, desc, gte, lte, inArray } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { upsertEmbedding } from '@/server/search/upsertEmbedding';
 import { logProjectActivity } from '@/lib/activity-logger';
@@ -277,15 +285,82 @@ export const projectsRouter = createTRPCRouter({
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const [deletedProject] = await ctx.db
-        .delete(projects)
+      const [existingProject] = await ctx.db
+        .select({
+          id: projects.id,
+          name: projects.name,
+        })
+        .from(projects)
         .where(
           and(
             eq(projects.id, input.id),
             eq(projects.userId, ctx.session.user.id)
           )
         )
-        .returning();
+        .limit(1);
+
+      if (!existingProject) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Project not found',
+        });
+      }
+
+      const [deletedProject] = await ctx.db.transaction(async (tx) => {
+        // Remove activity logs tied to this project to avoid FK violations
+        await tx.delete(activityLog).where(eq(activityLog.projectId, input.id));
+
+        // Remove project goals
+        await tx.delete(goals).where(eq(goals.projectId, input.id));
+
+        // Null out ticket suggestions pointing to this project
+        await tx
+          .update(tickets)
+          .set({ suggestedProjectId: null })
+          .where(eq(tickets.suggestedProjectId, input.id));
+
+        // Collect task IDs for embedding cleanup
+        const projectTasks = await tx
+          .select({ id: tasks.id })
+          .from(tasks)
+          .where(eq(tasks.projectId, input.id));
+
+        if (projectTasks.length > 0) {
+          const taskIds = projectTasks.map((t) => t.id);
+          await tx
+            .delete(embeddings)
+            .where(
+              and(
+                eq(embeddings.entityType, 'task'),
+                inArray(embeddings.entityId, taskIds)
+              )
+            );
+        }
+
+        // Remove project embeddings
+        await tx
+          .delete(embeddings)
+          .where(
+            and(
+              eq(embeddings.entityType, 'project'),
+              eq(embeddings.entityId, input.id)
+            )
+          );
+
+        // Remove tasks before deleting the project
+        await tx.delete(tasks).where(eq(tasks.projectId, input.id));
+
+        const [removed] = await tx
+          .delete(projects)
+          .where(
+            and(
+              eq(projects.id, input.id),
+              eq(projects.userId, ctx.session.user.id)
+            )
+          )
+          .returning();
+        return removed;
+      });
 
       if (!deletedProject) {
         throw new TRPCError({
