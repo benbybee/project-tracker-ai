@@ -32,7 +32,6 @@ export function KanbanTask({ task, isTouchDevice = false }: KanbanTaskProps) {
   } = useSortable({
     id: task.id,
     data: { task, col: task.status },
-    disabled: isTouchDevice, // Disable drag on touch devices
   });
 
   const utils = trpc.useUtils();

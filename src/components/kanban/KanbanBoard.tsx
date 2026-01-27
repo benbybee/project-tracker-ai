@@ -72,11 +72,11 @@ export function KanbanBoard({
     },
   });
 
-  // Conditionally compose sensors based on device type
-  // Disable touch/pointer sensors on touch devices to prevent UX issues
+  // Always include pointer/mouse; add touch for touch-capable devices
   const sensors = useSensors(
+    pointerSensor,
     mouseSensor,
-    ...(isTouchDevice ? [] : [touchSensor, pointerSensor])
+    ...(isTouchDevice ? [touchSensor] : [])
   );
 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
