@@ -379,6 +379,7 @@ function NavGroup({
             label={item.label}
             isCompact={true}
             isMobile={isMobile}
+            children={item.children}
           />
         ))}
       </>
@@ -423,6 +424,7 @@ function NavGroup({
                     label={item.label}
                     isCompact={false}
                     isMobile={isMobile}
+                    children={item.children}
                   />
                 ))}
               </motion.div>
@@ -444,6 +446,7 @@ function NavGroup({
               label={item.label}
               isCompact={false}
               isMobile={isMobile}
+              children={item.children}
             />
           ))}
         </>
