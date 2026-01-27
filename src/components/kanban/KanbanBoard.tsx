@@ -209,7 +209,7 @@ export function KanbanBoard({
       const insertIndex = overIndex >= 0 ? overIndex : targetItems.length;
       const nextTarget = [
         ...targetItems.slice(0, insertIndex),
-        { ...moving, status: targetCol },
+        { ...moving, status: targetCol as TaskStatus },
         ...targetItems.slice(insertIndex),
       ];
 
