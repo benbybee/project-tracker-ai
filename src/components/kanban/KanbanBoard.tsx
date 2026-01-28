@@ -164,6 +164,14 @@ export function KanbanBoard({
     );
   };
 
+  const findTaskById = (taskId: string, source: Record<string, Task[]>) => {
+    for (const status of Object.keys(source)) {
+      const found = source[status]?.find((t) => t.id === taskId);
+      if (found) return found;
+    }
+    return undefined;
+  };
+
   const onDragStart = (event: DragStartEvent) => {
     const task: Task | undefined = event.active.data.current?.task;
     if (task) {
@@ -230,7 +238,9 @@ export function KanbanBoard({
       return;
     }
 
-    const task: Task | undefined = active.data.current?.task;
+    const activeId = String(active.id);
+    const task: Task | undefined =
+      active.data.current?.task || findTaskById(activeId, columnsState);
     const directCol =
       (over.data.current?.col as TaskStatus | undefined) ||
       (columns.includes(String(over.id) as TaskStatus)
