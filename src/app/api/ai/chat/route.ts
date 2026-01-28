@@ -174,7 +174,7 @@ export async function POST(req: Request) {
       .limit(10);
 
     const history = [...recentMessages].reverse().map((msg) => ({
-      role: msg.role as 'user' | 'assistant' | 'tool',
+      role: (msg.role as any) === 'tool' ? 'tool' : (msg.role as 'user' | 'assistant'),
       content: msg.content,
     }));
 
@@ -199,7 +199,7 @@ export async function POST(req: Request) {
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
-        ...history,
+        ...(history as any[]),
         { role: 'user', content: message },
       ],
       temperature: 0.4,
