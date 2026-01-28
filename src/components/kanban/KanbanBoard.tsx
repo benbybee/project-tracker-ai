@@ -251,12 +251,15 @@ export function KanbanBoard({
       : undefined;
     const toCol = directCol ?? inferredCol;
 
-    if (!task || !toCol || task.status === toCol) return;
+    const currentCol = findColumnForTask(activeId, tasksByCol) as
+      | TaskStatus
+      | undefined;
+    if (!toCol || !currentCol || currentCol === toCol) return;
 
     try {
       // Update via tRPC mutation
       await updateTask.mutateAsync({
-        id: task.id,
+        id: activeId,
         status: toCol,
       });
 
