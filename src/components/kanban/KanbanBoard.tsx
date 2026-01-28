@@ -239,22 +239,27 @@ export function KanbanBoard({
     }
 
     const activeId = String(active.id);
+    const taskFromActive: Task | undefined = active.data.current?.task;
+    const taskFromServer = findTaskById(activeId, tasksByCol);
     const task: Task | undefined =
-      active.data.current?.task || findTaskById(activeId, columnsState);
+      taskFromActive || taskFromServer || findTaskById(activeId, columnsState);
+    const overId = String(over.id);
     const directCol =
       (over.data.current?.col as TaskStatus | undefined) ||
-      (columns.includes(String(over.id) as TaskStatus)
-        ? (String(over.id) as TaskStatus)
+      (columns.includes(overId as TaskStatus)
+        ? (overId as TaskStatus)
         : undefined);
+    const targetCol =
+      directCol ||
+      (findColumnForTask(overId, columnsState) as TaskStatus | undefined) ||
+      (findColumnForTask(overId, tasksByCol) as TaskStatus | undefined);
     const inferredCol = task
       ? (findColumnForTask(task.id, columnsState) as TaskStatus | undefined)
       : undefined;
-    const toCol = directCol ?? inferredCol;
+    const toCol = targetCol ?? inferredCol;
 
-    const currentCol = findColumnForTask(activeId, tasksByCol) as
-      | TaskStatus
-      | undefined;
-    if (!toCol || !currentCol || currentCol === toCol) return;
+    if (!toCol) return;
+    if (taskFromServer?.status === toCol) return;
 
     try {
       // Update via tRPC mutation

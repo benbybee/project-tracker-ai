@@ -76,6 +76,18 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     });
   };
 
+  const normalizeDueDate = (value: unknown): string | null => {
+    if (value === null || value === undefined || value === '') return null;
+    if (value instanceof Date) {
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, '0');
+      const day = String(value.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    if (typeof value === 'string') return value;
+    return null;
+  };
+
   const handleSave = async () => {
     if (!form.title || form.title.trim().length === 0) {
       alert('Please enter a task title');
@@ -90,12 +102,14 @@ export function TaskEditModal({ task, open, onClose }: TaskEditModalProps) {
     setSaving(true);
 
     try {
+      const dueDateValue = normalizeDueDate(form.dueDate as unknown);
+
       const updatedTask = await updateTask.mutateAsync({
         id: task.id,
         title: form.title.trim(),
         description: form.description,
         status: form.status,
-        dueDate: form.dueDate,
+        dueDate: dueDateValue,
         priorityScore: form.priorityScore?.toString() as '1' | '2' | '3' | '4',
         projectId: form.projectId,
       });

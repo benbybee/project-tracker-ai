@@ -82,12 +82,34 @@ const StatusEnum = z.enum([
 
 const PriorityEnum = z.enum(['1', '2', '3', '4']);
 
+const normalizeDueDateInput = (value: unknown) => {
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  if (value instanceof Date) return value.toISOString().split('T')[0];
+  if (typeof value === 'string') return value.split('T')[0];
+  return value;
+};
+
+const DueDateSchema = z.preprocess(
+  normalizeDueDateInput,
+  z.string().nullable()
+);
+
+const toDateOnlyString = (
+  value: Date | string | null | undefined
+): string | null => {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString().split('T')[0];
+  if (typeof value === 'string') return value.split('T')[0];
+  return null;
+};
+
 const TaskCreateSchema = z.object({
   projectId: z.string(),
   title: z.string().min(2),
   description: z.string().nullable().optional(),
   // dueDate can be null if "Add to Daily" (no date)
-  dueDate: z.string().nullable().optional(),
+  dueDate: DueDateSchema.optional(),
   isDaily: z.boolean().optional(),
   priorityScore: z.enum(['1', '2', '3', '4']).default('2'),
   status: StatusEnum.default('not_started'),
@@ -108,7 +130,7 @@ const TaskUpdateSchema = z.object({
   projectId: z.string().nullable().optional(),
   title: z.string().min(2).optional(),
   description: z.string().nullable().optional(),
-  dueDate: z.string().nullable().optional(),
+  dueDate: DueDateSchema.optional(),
   isDaily: z.boolean().optional(),
   priorityScore: z
     .union([
@@ -242,7 +264,7 @@ export const tasksRouter = createTRPCRouter({
         createdAt: task.createdAt?.toISOString() ?? null,
         updatedAt: task.updatedAt?.toISOString() ?? null,
         blockedAt: task.blockedAt?.toISOString() ?? null,
-        dueDate: task.dueDate ?? null, // Explicitly return dueDate as string or null
+        dueDate: toDateOnlyString(task.dueDate),
         isDaily: task.isDaily ?? undefined,
         archived: task.archived ?? undefined,
         priorityScore: (task.priorityScore ?? undefined) as
@@ -306,7 +328,7 @@ export const tasksRouter = createTRPCRouter({
         createdAt: task.createdAt?.toISOString() ?? null,
         updatedAt: task.updatedAt?.toISOString() ?? null,
         blockedAt: task.blockedAt?.toISOString() ?? null,
-        dueDate: task.dueDate ?? null, // Explicitly return dueDate as string or null
+        dueDate: toDateOnlyString(task.dueDate),
         isDaily: task.isDaily ?? undefined,
         priorityScore: (task.priorityScore ?? undefined) as
           | '1'
@@ -401,7 +423,7 @@ export const tasksRouter = createTRPCRouter({
         ...inserted,
         createdAt: inserted.createdAt?.toISOString() ?? null,
         updatedAt: inserted.updatedAt?.toISOString() ?? null,
-        dueDate: inserted.dueDate ?? null,
+        dueDate: toDateOnlyString(inserted.dueDate),
         isDaily: inserted.isDaily ?? undefined,
         priorityScore: (inserted.priorityScore ?? undefined) as
           | '1'
@@ -536,7 +558,7 @@ export const tasksRouter = createTRPCRouter({
         createdAt: updated.createdAt?.toISOString() ?? null,
         updatedAt: updated.updatedAt?.toISOString() ?? null,
         blockedAt: updated.blockedAt?.toISOString() ?? null,
-        dueDate: updated.dueDate ?? null, // Explicitly return dueDate
+        dueDate: toDateOnlyString(updated.dueDate),
         isDaily: updated.isDaily ?? undefined,
         priorityScore: (updated.priorityScore ?? undefined) as
           | '1'
@@ -641,7 +663,7 @@ export const tasksRouter = createTRPCRouter({
         createdAt: updatedTask.createdAt?.toISOString() ?? null,
         updatedAt: updatedTask.updatedAt?.toISOString() ?? null,
         blockedAt: updatedTask.blockedAt?.toISOString() ?? null,
-        dueDate: updatedTask.dueDate ?? null,
+        dueDate: toDateOnlyString(updatedTask.dueDate),
         isDaily: updatedTask.isDaily ?? undefined,
         priorityScore: (updatedTask.priorityScore ?? undefined) as
           | '1'
@@ -987,7 +1009,7 @@ export const tasksRouter = createTRPCRouter({
           ...inserted,
           createdAt: inserted.createdAt?.toISOString() ?? null,
           updatedAt: inserted.updatedAt?.toISOString() ?? null,
-          dueDate: inserted.dueDate ?? null,
+          dueDate: toDateOnlyString(inserted.dueDate),
           isDaily: inserted.isDaily ?? undefined,
           priorityScore: (inserted.priorityScore ?? undefined) as
             | '1'
@@ -1031,7 +1053,7 @@ export const tasksRouter = createTRPCRouter({
           createdAt: updated.createdAt?.toISOString() ?? null,
           updatedAt: updated.updatedAt?.toISOString() ?? null,
           blockedAt: updated.blockedAt?.toISOString() ?? null,
-          dueDate: updated.dueDate ?? null,
+          dueDate: toDateOnlyString(updated.dueDate),
           isDaily: updated.isDaily ?? undefined,
           priorityScore: (updated.priorityScore ?? undefined) as
             | '1'
