@@ -264,17 +264,19 @@ export function KanbanBoard({
       });
 
       // Broadcast real-time update
-      realtime.broadcastActivity({
-        type: 'task_updated',
-        entityType: 'task',
-        entityId: task.id,
-        data: {
-          taskId: task.id,
-          status: toCol,
-          projectId: task.projectId,
-          ticketId: task.ticketId, // Include ticketId so tickets page can update
-        },
-      });
+      if (task) {
+        realtime.broadcastActivity({
+          type: 'task_updated',
+          entityType: 'task',
+          entityId: task.id,
+          data: {
+            taskId: task.id,
+            status: toCol,
+            projectId: task.projectId,
+            ticketId: task.ticketId, // Include ticketId so tickets page can update
+          },
+        });
+      }
     } catch (error) {
       console.error('Failed to update task:', error);
       setColumnsState(tasksByCol);
