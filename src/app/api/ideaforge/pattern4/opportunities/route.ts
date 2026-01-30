@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 
   const conditions = [eq(opportunities.userId, authResult.auth.userId)];
   if (status) {
-    conditions.push(eq(opportunities.status, status));
+    conditions.push(eq(opportunities.status, status as any));
   }
   if (sprintId) {
     conditions.push(eq(opportunities.sprintId, sprintId));
