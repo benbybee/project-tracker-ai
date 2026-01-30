@@ -1,0 +1,387 @@
+openapi: 3.0.3
+info:
+  title: IdeaForge Integration API
+  version: 1.0.0
+  description: Project Tracker endpoints for IdeaForge integration.
+servers:
+  - url: https://your-project-tracker.com
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: object
+      required: [error]
+    Sprint:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        name: { type: string }
+        startDate: { type: string }
+        endDate: { type: string }
+        goalSummary: { type: string, nullable: true }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    SprintWeek:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        sprintId: { type: string, format: uuid }
+        weekIndex: { type: integer }
+        startDate: { type: string }
+        endDate: { type: string }
+        theme: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+    Opportunity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        sprintId: { type: string, format: uuid, nullable: true }
+        name: { type: string }
+        type: { type: string, enum: [MAJOR, MICRO] }
+        lane: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        complexity: { type: string, nullable: true }
+        estimatedCost: { type: string, nullable: true }
+        goToMarket: { type: string, nullable: true }
+        details: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [IDEA, PLANNING, ACTIVE, ON_HOLD, COMPLETED, KILLED]
+        priority: { type: integer, minimum: 1, maximum: 4 }
+        notes: { type: string, nullable: true }
+        actualCost: { type: string, nullable: true }
+        revenue: { type: string, nullable: true }
+        profit: { type: string, nullable: true }
+        decision: { type: string, enum: [KEEP, ADJUST, CANCEL, UNDECIDED] }
+        outcomeNotes: { type: string, nullable: true }
+        completedAt: { type: string, format: date-time, nullable: true }
+    TaskSyncRequest:
+      type: object
+      properties:
+        ideaId: { type: string }
+        planVersion: { type: string }
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              planTaskId: { type: string }
+              title: { type: string }
+              description: { type: string, nullable: true }
+              priority: { type: integer, minimum: 1, maximum: 4 }
+              budgetPlanned: { type: string, nullable: true }
+              sprintId: { type: string, format: uuid, nullable: true }
+              sprintWeekId: { type: string, format: uuid, nullable: true }
+              opportunityId: { type: string, format: uuid, nullable: true }
+              dueDate: { type: string, nullable: true }
+              projectId: { type: string, format: uuid, nullable: true }
+              projectName: { type: string, nullable: true }
+            required: [planTaskId, title]
+      required: [ideaId, planVersion, tasks]
+    TaskSyncResponse:
+      type: object
+      properties:
+        ideaId: { type: string }
+        planVersion: { type: string }
+        mappedTasks:
+          type: array
+          items:
+            type: object
+            properties:
+              planTaskId: { type: string }
+              taskId: { type: string, format: uuid }
+              created: { type: boolean }
+        syncedAt: { type: string, format: date-time }
+paths:
+  /api/ideaforge/pattern4/sprints:
+    get:
+      summary: List sprints
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create sprint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                startDate: { type: string }
+                endDate: { type: string }
+                goalSummary: { type: string }
+              required: [name, startDate, endDate]
+      responses:
+        '201':
+          description: Created
+  /api/ideaforge/pattern4/sprints/{id}:
+    get:
+      summary: Get sprint
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+    patch:
+      summary: Update sprint
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete sprint
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/pattern4/sprints/{id}/complete:
+    post:
+      summary: Complete sprint
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/pattern4/weeks:
+    get:
+      summary: List weeks for sprint
+      parameters:
+        - in: query
+          name: sprintId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create week
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Created }
+  /api/ideaforge/pattern4/weeks/generate:
+    post:
+      summary: Generate 13 weeks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sprintId: { type: string, format: uuid }
+              required: [sprintId]
+      responses:
+        '201': { description: Created }
+  /api/ideaforge/pattern4/weeks/{id}:
+    patch:
+      summary: Update week
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete week
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/pattern4/opportunities:
+    get:
+      summary: List opportunities
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema: { type: string }
+        - in: query
+          name: sprintId
+          required: false
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Created }
+  /api/ideaforge/pattern4/opportunities/{id}:
+    get:
+      summary: Get opportunity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+    patch:
+      summary: Update opportunity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete opportunity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/pattern4/opportunities/{id}/complete:
+    post:
+      summary: Complete opportunity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/pattern4/opportunities/{id}/kill:
+    post:
+      summary: Kill opportunity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/pattern4/stats/sprint/{id}:
+    get:
+      summary: Sprint stats
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/pattern4/stats/week/{id}:
+    get:
+      summary: Week stats
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/pattern4/stats/opportunity/{id}:
+    get:
+      summary: Opportunity stats
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/tasks/sync:
+    post:
+      summary: Upsert plan tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskSyncRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskSyncResponse'
+  /api/ideaforge/tasks/changes:
+    get:
+      summary: Changes feed
+      parameters:
+        - in: query
+          name: since
+          required: false
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /api/ideaforge/tasks/{id}/notes:
+    post:
+      summary: Append-only note
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content: { type: string }
+                contentHtml: { type: string }
+      responses:
+        '201': { description: Created }

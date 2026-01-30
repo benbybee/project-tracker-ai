@@ -602,6 +602,7 @@ export * from './schema/notifications';
 export * from './schema/activity';
 export * from './schema/analytics';
 export * from './schema/comments';
+export * from './schema/ideaforge';
 export * from './schema/goals';
 export * from './schema/habits';
 export * from './schema/pattern4';

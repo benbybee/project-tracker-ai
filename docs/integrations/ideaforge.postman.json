@@ -1,0 +1,141 @@
+{
+  "info": {
+    "name": "IdeaForge Integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Sprints",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{integration_key}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/ideaforge/pattern4/sprints",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ideaforge", "pattern4", "sprints"]
+        }
+      }
+    },
+    {
+      "name": "Create Sprint",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{integration_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Q1 Sprint\",\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-03-31\",\n  \"goalSummary\": \"High-level objective\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ideaforge/pattern4/sprints",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ideaforge", "pattern4", "sprints"]
+        }
+      }
+    },
+    {
+      "name": "Generate Weeks",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{integration_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sprintId\": \"{{sprint_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ideaforge/pattern4/weeks/generate",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ideaforge", "pattern4", "weeks", "generate"]
+        }
+      }
+    },
+    {
+      "name": "Create Opportunity",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{integration_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Launch micro-product\",\n  \"type\": \"MICRO\",\n  \"sprintId\": \"{{sprint_id}}\",\n  \"lane\": \"Marketing\",\n  \"summary\": \"One-liner\",\n  \"estimatedCost\": \"1500\",\n  \"priority\": 2\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ideaforge/pattern4/opportunities",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ideaforge", "pattern4", "opportunities"]
+        }
+      }
+    },
+    {
+      "name": "Sync Tasks",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{integration_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ideaId\": \"idea_123\",\n  \"planVersion\": \"v3\",\n  \"tasks\": [\n    {\n      \"planTaskId\": \"task_1\",\n      \"title\": \"Design landing page\",\n      \"description\": \"Draft hero + CTA\",\n      \"priority\": 2,\n      \"dueDate\": \"2026-02-01\",\n      \"sprintId\": \"{{sprint_id}}\",\n      \"sprintWeekId\": \"{{week_id}}\",\n      \"opportunityId\": \"{{opportunity_id}}\",\n      \"budgetPlanned\": \"500\",\n      \"projectName\": \"IdeaForge\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ideaforge/tasks/sync",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ideaforge", "tasks", "sync"]
+        }
+      }
+    },
+    {
+      "name": "Changes Feed",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{integration_key}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/ideaforge/tasks/changes?since={{since}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ideaforge", "tasks", "changes"],
+          "query": [{ "key": "since", "value": "{{since}}" }]
+        }
+      }
+    },
+    {
+      "name": "Add Task Note",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{integration_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"IdeaForge note text\",\n  \"contentHtml\": \"<p>Optional HTML</p>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ideaforge/tasks/{{task_id}}/notes",
+          "host": ["{{base_url}}"],
+          "path": ["api", "ideaforge", "tasks", "{{task_id}}", "notes"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "https://your-project-tracker.com" },
+    { "key": "integration_key", "value": "replace-me" },
+    { "key": "sprint_id", "value": "replace-me" },
+    { "key": "week_id", "value": "replace-me" },
+    { "key": "opportunity_id", "value": "replace-me" },
+    { "key": "task_id", "value": "replace-me" },
+    { "key": "since", "value": "2026-01-31T12:00:00.000Z" }
+  ]
+}

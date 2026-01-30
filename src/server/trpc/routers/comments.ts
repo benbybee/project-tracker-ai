@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 import { db } from '@/server/db';
 import { taskComments, tasks } from '@/server/db/schema';
+import { emitIdeaForgeTaskWebhook } from '@/lib/ideaforge-webhook';
 import { eq, desc, and, or, like, sql } from 'drizzle-orm';
 
 export const commentsRouter = createTRPCRouter({
@@ -69,6 +70,20 @@ export const commentsRouter = createTRPCRouter({
           attachments: input.attachments,
         })
         .returning();
+
+      await emitIdeaForgeTaskWebhook(
+        {
+          type: 'task.note_added',
+          taskId: input.taskId,
+          userId: ctx.session.user.id,
+          data: {
+            commentId: comment[0]?.id,
+            content: input.content,
+            source: 'app',
+          },
+        },
+        'task_app'
+      );
 
       return comment[0];
     }),

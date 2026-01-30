@@ -13,6 +13,7 @@ import { eq, and, gte, lte, isNotNull, asc, desc } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import { upsertEmbedding } from '@/server/search/upsertEmbedding';
 import { logTaskActivity } from '@/lib/activity-logger';
+import { emitIdeaForgeTaskWebhook } from '@/lib/ideaforge-webhook';
 
 // Helper function to track task time automatically
 async function trackTaskTime(
@@ -553,6 +554,55 @@ export const tasksRouter = createTRPCRouter({
         },
       });
 
+      const previousDueDate = toDateOnlyString(currentTask.dueDate);
+      const nextDueDate = toDateOnlyString(
+        'dueDate' in updateData ? updateData.dueDate : updated.dueDate
+      );
+      const statusChanged =
+        updateData.status !== undefined && updateData.status !== currentTask.status;
+      const dueDateChanged =
+        'dueDate' in updateData && previousDueDate !== nextDueDate;
+
+      if (statusChanged) {
+        await emitIdeaForgeTaskWebhook(
+          {
+            type: 'task.status_changed',
+            taskId: updated.id,
+            userId: ctx.session.user.id,
+            data: {
+              previousStatus: currentTask.status,
+              status: updateData.status,
+            },
+          },
+          'task_app'
+        );
+      } else if (dueDateChanged) {
+        await emitIdeaForgeTaskWebhook(
+          {
+            type: 'task.due_date_changed',
+            taskId: updated.id,
+            userId: ctx.session.user.id,
+            data: {
+              previousDueDate,
+              dueDate: nextDueDate,
+            },
+          },
+          'task_app'
+        );
+      } else if (changedFields.length > 0) {
+        await emitIdeaForgeTaskWebhook(
+          {
+            type: 'task.updated',
+            taskId: updated.id,
+            userId: ctx.session.user.id,
+            data: {
+              changedFields,
+            },
+          },
+          'task_app'
+        );
+      }
+
       const result = {
         ...updated,
         createdAt: updated.createdAt?.toISOString() ?? null,
@@ -740,28 +790,74 @@ export const tasksRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      const [currentTask] = await ctx.db
+        .select({ dueDate: tasks.dueDate })
+        .from(tasks)
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
+        .limit(1);
       const [row] = await ctx.db
         .update(tasks)
         .set({
           dueDate: today.toISOString().split('T')[0],
           isDaily: false,
         })
-        .where(eq(tasks.id, input.id))
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
         .returning();
+      if (row) {
+        await emitIdeaForgeTaskWebhook(
+          {
+            type: 'task.due_date_changed',
+            taskId: row.id,
+            userId: ctx.session.user.id,
+            data: {
+              previousDueDate: toDateOnlyString(currentTask?.dueDate),
+              dueDate: toDateOnlyString(row.dueDate),
+            },
+          },
+          'task_app'
+        );
+      }
       return row;
     }),
 
   moveToNoDue: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
+      const [currentTask] = await ctx.db
+        .select({ dueDate: tasks.dueDate })
+        .from(tasks)
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
+        .limit(1);
       const [row] = await ctx.db
         .update(tasks)
         .set({
           dueDate: null,
           isDaily: true,
         })
-        .where(eq(tasks.id, input.id))
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
         .returning();
+      if (row) {
+        await emitIdeaForgeTaskWebhook(
+          {
+            type: 'task.due_date_changed',
+            taskId: row.id,
+            userId: ctx.session.user.id,
+            data: {
+              previousDueDate: toDateOnlyString(currentTask?.dueDate),
+              dueDate: toDateOnlyString(row.dueDate),
+            },
+          },
+          'task_app'
+        );
+      }
       return row;
     }),
 
@@ -776,14 +872,37 @@ export const tasksRouter = createTRPCRouter({
       const target = new Date();
       target.setHours(0, 0, 0, 0);
       target.setDate(target.getDate() + input.daysFromToday);
+      const [currentTask] = await ctx.db
+        .select({ dueDate: tasks.dueDate })
+        .from(tasks)
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
+        .limit(1);
       const [row] = await ctx.db
         .update(tasks)
         .set({
           dueDate: target.toISOString().split('T')[0],
           isDaily: false,
         })
-        .where(eq(tasks.id, input.id))
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
         .returning();
+      if (row) {
+        await emitIdeaForgeTaskWebhook(
+          {
+            type: 'task.due_date_changed',
+            taskId: row.id,
+            userId: ctx.session.user.id,
+            data: {
+              previousDueDate: toDateOnlyString(currentTask?.dueDate),
+              dueDate: toDateOnlyString(row.dueDate),
+            },
+          },
+          'task_app'
+        );
+      }
       return row;
     }),
 
@@ -827,6 +946,21 @@ export const tasksRouter = createTRPCRouter({
           projectId: row.projectId,
           payload: { completedAt: new Date() },
         });
+
+        if (currentTask) {
+          await emitIdeaForgeTaskWebhook(
+            {
+              type: 'task.status_changed',
+              taskId: row.id,
+              userId: ctx.session.user.id,
+              data: {
+                previousStatus: currentTask.status,
+                status: 'completed',
+              },
+            },
+            'task_app'
+          );
+        }
 
         // Auto-generate next occurrence if this task has a recurring parent
         if (row.recurrenceParentId) {
@@ -899,6 +1033,13 @@ export const tasksRouter = createTRPCRouter({
       const target = new Date();
       target.setHours(0, 0, 0, 0);
       target.setDate(target.getDate() + input.days);
+      const [currentTask] = await ctx.db
+        .select({ dueDate: tasks.dueDate })
+        .from(tasks)
+        .where(
+          and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
+        )
+        .limit(1);
       const [row] = await ctx.db
         .update(tasks)
         .set({ dueDate: target.toISOString().split('T')[0], isDaily: false })
@@ -906,6 +1047,20 @@ export const tasksRouter = createTRPCRouter({
           and(eq(tasks.id, input.id), eq(tasks.userId, ctx.session.user.id))
         )
         .returning();
+      if (row) {
+        await emitIdeaForgeTaskWebhook(
+          {
+            type: 'task.due_date_changed',
+            taskId: row.id,
+            userId: ctx.session.user.id,
+            data: {
+              previousDueDate: toDateOnlyString(currentTask?.dueDate),
+              dueDate: toDateOnlyString(row.dueDate),
+            },
+          },
+          'task_app'
+        );
+      }
       return row;
     }),
 

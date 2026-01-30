@@ -15,6 +15,8 @@ interface EnvironmentVariables {
   SUPABASE_ANON_KEY?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   CRON_SECRET?: string;
+  IDEAFORGE_WEBHOOK_URL?: string;
+  IDEAFORGE_WEBHOOK_SECRET?: string;
 
   // Node environment
   NODE_ENV: 'development' | 'production' | 'test';
@@ -51,6 +53,8 @@ export function validateEnv(): EnvironmentVariables {
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
+    IDEAFORGE_WEBHOOK_URL: process.env.IDEAFORGE_WEBHOOK_URL,
+    IDEAFORGE_WEBHOOK_SECRET: process.env.IDEAFORGE_WEBHOOK_SECRET,
     NODE_ENV: (process.env.NODE_ENV || 'development') as
       | 'development'
       | 'production'
@@ -82,4 +86,7 @@ export const features = {
   hasSupabase: () =>
     !!process.env.SUPABASE_URL && !!process.env.SUPABASE_ANON_KEY,
   hasCronSecret: () => !!process.env.CRON_SECRET,
+  hasIdeaForgeWebhook: () =>
+    !!process.env.IDEAFORGE_WEBHOOK_URL &&
+    !!process.env.IDEAFORGE_WEBHOOK_SECRET,
 };

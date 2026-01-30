@@ -24,6 +24,9 @@ export const taskComments = pgTable('task_comments', {
   attachments: jsonb('attachments'),
   // For emoji reactions (array of {emoji, userId})
   reactions: jsonb('reactions'),
+  source: text('source', { enum: ['app', 'ideaforge'] })
+    .notNull()
+    .default('app'),
   isEdited: boolean('is_edited').default(false),
   isPinned: boolean('is_pinned').default(false),
   editedAt: timestamp('edited_at'),
