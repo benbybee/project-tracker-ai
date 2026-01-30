@@ -15,8 +15,9 @@ const SprintUpdateSchema = z.object({
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const authResult = await requireIdeaForgeAuth(req);
   if ('response' in authResult) return authResult.response;
 
@@ -37,8 +38,9 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const authResult = await requireIdeaForgeAuth(req);
   if ('response' in authResult) return authResult.response;
 
@@ -70,8 +72,9 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   const authResult = await requireIdeaForgeAuth(req);
   if ('response' in authResult) return authResult.response;
 
