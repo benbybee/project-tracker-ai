@@ -543,6 +543,20 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div>
                   <label
+                    htmlFor="profileId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    User ID
+                  </label>
+                  <Input
+                    id="profileId"
+                    value={session?.user?.id ?? ''}
+                    placeholder="Not available"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label
                     htmlFor="profileName"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
