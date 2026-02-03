@@ -2,13 +2,21 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Lightbulb, Plus, ArrowRight } from 'lucide-react';
+import { Lightbulb, Plus, ArrowRight, Trash2 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +37,16 @@ export default function IdeaForgePage() {
   const [oneLiner, setOneLiner] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+
+  const deleteIdea = trpc.ideaforge.ideas.remove.useMutation({
+    onSuccess: () => {
+      utils.ideaforge.ideas.list.invalidate();
+    },
+  });
 
   const createIdea = trpc.ideaforge.ideas.create.useMutation({
     onSuccess: () => {
@@ -59,6 +77,19 @@ export default function IdeaForgePage() {
       oneLiner: oneLiner.trim() || undefined,
       notes: notes.trim() || undefined,
     });
+  };
+
+  const handleDelete = (ideaId: string) => {
+    const idea = ideas.find((item) => item.id === ideaId);
+    setDeleteTarget(
+      idea ? { id: idea.id, title: idea.title } : { id: ideaId, title: 'Idea' }
+    );
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteIdea.mutate({ id: deleteTarget.id });
+    setDeleteTarget(null);
   };
 
   return (
@@ -115,23 +146,35 @@ export default function IdeaForgePage() {
           ) : (
             <div className="grid gap-3">
               {sortedIdeas.map((idea) => (
-                <Link
+                <div
                   key={idea.id}
-                  href={`/ideaforge/${idea.id}`}
                   className="rounded-lg border border-gray-200 bg-white hover:border-indigo-200 transition-colors p-4 flex flex-col gap-2"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="font-semibold text-gray-900">
-                      {idea.title}
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/ideaforge/${idea.id}`}
+                        className="font-semibold text-gray-900 hover:text-indigo-600"
+                      >
+                        {idea.title}
+                      </Link>
+                      <span
+                        className={cn(
+                          'text-xs font-semibold px-2 py-1 rounded-full',
+                          statusStyles[idea.status] ?? 'bg-gray-100 text-gray-700'
+                        )}
+                      >
+                        {idea.status}
+                      </span>
                     </div>
-                    <span
-                      className={cn(
-                        'text-xs font-semibold px-2 py-1 rounded-full',
-                        statusStyles[idea.status] ?? 'bg-gray-100 text-gray-700'
-                      )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(idea.id)}
+                      aria-label="Delete idea"
                     >
-                      {idea.status}
-                    </span>
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
                   </div>
                   {idea.oneLiner && (
                     <p className="text-sm text-gray-600">{idea.oneLiner}</p>
@@ -140,16 +183,39 @@ export default function IdeaForgePage() {
                     <span>
                       Updated {new Date(idea.updatedAt).toLocaleDateString()}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-indigo-600">
+                    <Link
+                      href={`/ideaforge/${idea.id}`}
+                      className="inline-flex items-center gap-1 text-indigo-600"
+                    >
                       Open <ArrowRight className="h-3 w-3" />
-                    </span>
+                    </Link>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete idea?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove “{deleteTarget?.title}” and its related data.
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

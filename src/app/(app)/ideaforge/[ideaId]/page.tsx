@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Check,
@@ -11,6 +11,7 @@ import {
   Plus,
   Save,
   Sparkles,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
@@ -26,8 +27,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UnifiedAiChatEmbedded } from '@/components/ai/unified-ai-chat-embedded';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +59,7 @@ type PlanDraftTask = {
 
 export default function IdeaForgeDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const ideaId = params.ideaId as string;
 
   const utils = trpc.useUtils();
@@ -88,6 +97,10 @@ export default function IdeaForgeDetailPage() {
     useState<'freeform' | 'guided' | 'critical'>('freeform');
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [ttsUrl, setTtsUrl] = useState<string | null>(null);
+  const [exploreInput, setExploreInput] = useState('');
+  const [exploreSending, setExploreSending] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
 
   const [scheduleMode, setScheduleMode] =
     useState<'realistic' | 'aggressive' | 'deadline'>('realistic');
@@ -106,6 +119,14 @@ export default function IdeaForgeDetailPage() {
     onSuccess: () => {
       utils.ideaforge.ideas.get.invalidate({ id: ideaId });
       utils.ideaforge.ideas.list.invalidate();
+    },
+  });
+
+  const deleteIdea = trpc.ideaforge.ideas.remove.useMutation({
+    onSuccess: () => {
+      utils.ideaforge.ideas.list.invalidate();
+      setDeleteOpen(false);
+      router.push('/ideaforge');
     },
   });
 
@@ -151,6 +172,10 @@ export default function IdeaForgeDetailPage() {
   }, [plans, selectedPlanId]);
 
   useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [transcriptsByTime.length]);
+
+  useEffect(() => {
     return () => {
       if (ttsUrl) {
         URL.revokeObjectURL(ttsUrl);
@@ -173,6 +198,16 @@ export default function IdeaForgeDetailPage() {
     });
   };
 
+  const handleDeleteIdea = () => {
+    if (!idea) return;
+    setDeleteOpen(true);
+  };
+
+  const confirmDeleteIdea = () => {
+    if (!idea) return;
+    deleteIdea.mutate({ id: idea.id });
+  };
+
   const handleMemorySave = () => {
     try {
       const parsed = memoryJson.trim() ? JSON.parse(memoryJson) : {};
@@ -184,6 +219,7 @@ export default function IdeaForgeDetailPage() {
   };
 
   const handleExploreSend = async (message: string) => {
+    setExploreSending(true);
     const response = await fetch('/api/ideaforge/ai/explore', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -195,6 +231,7 @@ export default function IdeaForgeDetailPage() {
     });
 
     if (!response.ok) {
+      setExploreSending(false);
       throw new Error('Failed to explore idea');
     }
 
@@ -218,7 +255,19 @@ export default function IdeaForgeDetailPage() {
       }
     }
 
+    setExploreSending(false);
     return data.reply || '';
+  };
+
+  const handleExploreSubmit = async () => {
+    const message = exploreInput.trim();
+    if (!message) return;
+    setExploreInput('');
+    try {
+      await handleExploreSend(message);
+    } catch (error) {
+      console.error('Explore message failed:', error);
+    }
   };
 
   const handleVoiceExplore = async () => {
@@ -350,6 +399,12 @@ export default function IdeaForgeDetailPage() {
           icon={Lightbulb}
           title={idea.title}
           subtitle="Explore, plan, and commit this idea into execution."
+          actions={
+            <Button variant="ghost" onClick={handleDeleteIdea}>
+              <Trash2 className="h-4 w-4 mr-2 text-red-600" />
+              Delete Idea
+            </Button>
+          }
         />
 
         <Tabs defaultValue="overview">
@@ -426,41 +481,75 @@ export default function IdeaForgeDetailPage() {
           </TabsContent>
 
           <TabsContent value="explore">
-            <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-              <div className="rounded-xl border border-gray-200 bg-white/80 backdrop-blur p-4 space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-semibold">AI Exploration</h3>
-                    <p className="text-xs text-gray-500">
-                      Use the IdeaForge assistant to pressure-test this idea.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={exploreMode}
-                      onValueChange={(value) =>
-                        setExploreMode(value as 'freeform' | 'guided' | 'critical')
-                      }
-                    >
-                      <SelectTrigger className="w-[150px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="freeform">Freeform</SelectItem>
-                        <SelectItem value="guided">Guided</SelectItem>
-                        <SelectItem value="critical">Critical</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+            <div className="rounded-xl border border-gray-200 bg-white/80 backdrop-blur p-4 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold">Idea Chat</h3>
+                  <p className="text-xs text-gray-500">
+                    Chat directly about this idea with the AI.
+                  </p>
                 </div>
+                <Select
+                  value={exploreMode}
+                  onValueChange={(value) =>
+                    setExploreMode(value as 'freeform' | 'guided' | 'critical')
+                  }
+                >
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="freeform">Freeform</SelectItem>
+                    <SelectItem value="guided">Guided</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <UnifiedAiChatEmbedded
-                  onSendMessage={handleExploreSend}
-                  className="bg-transparent"
-                  height="h-[520px]"
+              <div className="rounded-lg border border-gray-200 bg-white p-3 max-h-[420px] overflow-auto space-y-3 text-sm">
+                {transcriptsByTime.length === 0 ? (
+                  <p className="text-xs text-gray-500">
+                    No messages yet. Start the conversation below.
+                  </p>
+                ) : (
+                  transcriptsByTime.map((item) => (
+                    <div key={item.id} className="space-y-1">
+                      <div className="text-[10px] uppercase text-gray-400">
+                        {item.role}
+                      </div>
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-2 text-gray-800">
+                        {item.content}
+                      </div>
+                    </div>
+                  ))
+                )}
+                <div ref={transcriptEndRef} />
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Input
+                  value={exploreInput}
+                  onChange={(e) => setExploreInput(e.target.value)}
+                  placeholder="Ask about this idea..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleExploreSubmit();
+                    }
+                  }}
                 />
-
                 <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    onClick={handleExploreSubmit}
+                    disabled={!exploreInput.trim() || exploreSending}
+                  >
+                    {exploreSending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-2" />
+                    )}
+                    Send
+                  </Button>
                   <Button
                     onClick={isRecording ? stopRecording : startRecording}
                     variant="secondary"
@@ -492,27 +581,6 @@ export default function IdeaForgeDetailPage() {
                     <audio controls src={ttsUrl} className="h-8" />
                   )}
                 </div>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 bg-white/80 backdrop-blur p-4 space-y-3">
-                <h3 className="text-sm font-semibold">Transcript History</h3>
-                {transcriptsByTime.length === 0 ? (
-                  <p className="text-xs text-gray-500">No transcripts yet.</p>
-                ) : (
-                  <div className="space-y-3 text-xs text-gray-700 max-h-[520px] overflow-auto">
-                    {transcriptsByTime.map((item) => (
-                      <div key={item.id} className="rounded-lg border p-2">
-                        <div className="flex items-center justify-between text-[10px] text-gray-500">
-                          <span>{item.role.toUpperCase()}</span>
-                          <span>
-                            {new Date(item.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="mt-1 whitespace-pre-wrap">{item.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </TabsContent>
@@ -817,6 +885,26 @@ export default function IdeaForgeDetailPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete idea?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove the idea and its transcripts, plans, and tasks.
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteIdea}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

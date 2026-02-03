@@ -9,6 +9,7 @@ import {
   ideaforgeUserMemory,
   ideaforgeTaskNotes,
   ideaforgeSyncMap,
+  ideaforgeNotifications,
 } from '@/server/db/schema/ideaforge';
 import { projects, tasks } from '@/server/db';
 import { and, desc, eq, sql } from 'drizzle-orm';
@@ -175,6 +176,46 @@ export const ideaforgeRouter = createTRPCRouter({
         }
 
         return updated;
+      }),
+
+    remove: protectedProcedure
+      .input(z.object({ id: z.string().uuid() }))
+      .mutation(async ({ input, ctx }) => {
+        return ctx.db.transaction(async (tx) => {
+          await tx
+            .delete(ideaforgeNotifications)
+            .where(
+              and(
+                eq(ideaforgeNotifications.userId, ctx.session.user.id),
+                eq(ideaforgeNotifications.ideaId, input.id)
+              )
+            );
+
+          await tx
+            .delete(ideaforgeSyncMap)
+            .where(
+              and(
+                eq(ideaforgeSyncMap.userId, ctx.session.user.id),
+                eq(ideaforgeSyncMap.ideaId, input.id)
+              )
+            );
+
+          const [deleted] = await tx
+            .delete(ideaforgeIdeas)
+            .where(
+              and(
+                eq(ideaforgeIdeas.id, input.id),
+                eq(ideaforgeIdeas.userId, ctx.session.user.id)
+              )
+            )
+            .returning();
+
+          if (!deleted) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Idea not found' });
+          }
+
+          return deleted;
+        });
       }),
   }),
 
