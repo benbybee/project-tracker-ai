@@ -96,6 +96,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: '/goals', label: 'Goals', icon: Target },
       { href: '/habits', label: 'Habits', icon: CheckCircle },
+      { href: '/ideaforge', label: 'IdeaForge', icon: Lightbulb },
       {
         href: '/pattern4/sprint-overview',
         label: 'Pattern 4',

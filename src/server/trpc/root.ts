@@ -21,6 +21,7 @@ import { goalsRouter } from './routers/goals';
 import { habitsRouter } from './routers/habits';
 import { pattern4Router } from './routers/pattern4';
 import { analyticsPattern4Router } from './routers/analytics-pattern4';
+import { ideaforgeRouter } from './routers/ideaforge';
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -45,6 +46,7 @@ export const appRouter = createTRPCRouter({
   habits: habitsRouter,
   pattern4: pattern4Router,
   analyticsPattern4: analyticsPattern4Router,
+  ideaforge: ideaforgeRouter,
 });
 
 export type AppRouter = typeof appRouter;

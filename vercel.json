@@ -9,7 +9,8 @@
     { "path": "/api/ai/patterns/cron", "schedule": "0 0 * * 0" },
     { "path": "/api/slack/daily-standup", "schedule": "0 9 * * 1-5" },
     { "path": "/api/notifications/check-due-dates", "schedule": "0 8 * * *" },
-    { "path": "/api/ai/chat/cleanup", "schedule": "0 */6 * * *" }
+    { "path": "/api/ai/chat/cleanup", "schedule": "0 */6 * * *" },
+    { "path": "/api/ideaforge/notifications/reconcile", "schedule": "15 8 * * *" }
   ],
   "regions": ["iad1"],
   "headers": [
